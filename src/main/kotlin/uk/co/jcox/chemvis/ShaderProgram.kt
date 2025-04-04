@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis
 
 import org.joml.Matrix4f
+import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL20
@@ -92,6 +93,10 @@ class ShaderProgram (
         GL30.glUniform3f(getUniformLocation(name), value.x, value.y, value.z)
     }
 
+    fun uniform(name: String, value: Vector2f) {
+        GL30.glUniform2f(getUniformLocation(name), value.x, value.y)
+    }
+
     fun uniform(name: String, value: Matrix4f) {
         val location = getUniformLocation(name)
         val buff = BufferUtils.createFloatBuffer(16)
@@ -101,6 +106,9 @@ class ShaderProgram (
 
     private fun getUniformLocation(name: String): Int {
         val location = GL30.glGetUniformLocation(this.program, name)
+        if (location == -1) {
+            throw RuntimeException("Error - No uniform location found with ${name} at loc ${location}")
+        }
         bind()
         return location
     }

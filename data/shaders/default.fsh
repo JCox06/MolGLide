@@ -2,7 +2,10 @@
 
 out vec4 colour;
 
+in vec2 lTexCoord;
+uniform sampler2D uFontTexture;
+
 void main() {
     //Cool Colour
-    colour = vec4(0.5f, 0.6f, 0.3f, 1.0f);
+    colour = texture(uFontTexture, lTexCoord);
 }

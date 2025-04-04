@@ -5,11 +5,14 @@ import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.*;
 
+import javax.swing.*;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.JarFile;
 
 public class ChemVis {
 
@@ -43,17 +46,14 @@ public class ChemVis {
 
         GLFW.glfwSetMouseButtonCallback(this.winPointer, (win, button, action, mods) -> {
             if (button == GLFW.GLFW_MOUSE_BUTTON_1 && action == GLFW.GLFW_PRESS) {
-                System.out.println("Pressed");
                 double[] x = new double[1];
                 double[] y = new double[1];
-                
 
                 GLFW.glfwGetCursorPos(this.winPointer, x, y);
                 positions.add(new Vector3f((float) x[0], 800 - (float) y[0], 0.0f));
             }
 
             if (button == GLFW.GLFW_MOUSE_BUTTON_1 && action == GLFW.GLFW_RELEASE) {
-                System.out.println("And Released");
             }
         });
 
@@ -77,6 +77,10 @@ public class ChemVis {
 
         program.uniform("per", perspective);
         program.uniform("cam", camera);
+
+
+//        Font
+        BitmapFont font = BitmapFont.generate(new File("data/fonts/UbuntuMono-Regular.ttf"), 32, true);
 
 
         //TESTING - Create some basic geometry
@@ -104,12 +108,18 @@ public class ChemVis {
 
             positions.forEach(pos -> {
                 Matrix4f model = new Matrix4f().translate(pos);
+                GL30.glBindVertexArray(vertexArray);
                 GL11.glDrawElements(GL11.GL_TRIANGLES, 6, GL11.GL_UNSIGNED_INT, 0);
-                System.out.println(pos);
                 program.uniform("model", model);
             });
 
 
+            //Font Rendering
+            font.text(program, "Hi!", 100, 600);
+            font.text(program, "I am rendering this in", 100, 500);
+            font.text(program, "OpenGL", 100, 400);
+
+            font.text(program, "It's a bit laggy at the moment", 100, 200);
 
             GLFW.glfwSwapBuffers(this.winPointer);
             GLFW.glfwPollEvents();
