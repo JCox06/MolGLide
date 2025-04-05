@@ -157,6 +157,14 @@
             <artifactId>joml-primitives</artifactId>
             <version>${joml-primitives.version}</version>
         </dependency>
+
+
+<!--        Chemistry Development Kit-->
+        <dependency>
+            <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-bundle</artifactId>
+            <version>2.11</version>
+        </dependency>
     </dependencies>
 
 </project>

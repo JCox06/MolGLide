@@ -1,4 +1,4 @@
-package uk.co.jcox.chemvis
+package uk.co.jcox.chemvis.cvengine
 
 import org.joml.Matrix4f
 import org.joml.Vector2f
@@ -21,18 +21,17 @@ class ShaderProgram (
         GL30.glCompileShader(vertexShader)
 
         if (! checkShaderCompilation(vertexShader)) {
-            println("Error")
+            println(getShaderInfoLog(vertexShader))
         }
 
         val fragmentShader = GL30.glCreateShader(GL30.GL_FRAGMENT_SHADER)
         GL30.glShaderSource(fragmentShader, fragSrc)
         GL30.glCompileShader(fragmentShader)
 
-        if (! checkShaderCompilation(vertexShader)) {
-            println("Error")
+        if (! checkShaderCompilation(fragmentShader)) {
+            println(getShaderInfoLog(fragmentShader))
         }
 
-        println("Error")
 
         this.program = GL30.glCreateProgram()
 
@@ -41,7 +40,7 @@ class ShaderProgram (
         GL30.glLinkProgram(this.program)
 
         if (! checkProgramLink()) {
-            println("Error")
+            println(getProgramInfoLog())
         }
 
         validateProgram()
@@ -49,7 +48,6 @@ class ShaderProgram (
         GL30.glDeleteShader(vertexShader)
         GL30.glDeleteShader(fragmentShader)
 
-        println("Error")
     }
 
     private fun checkShaderCompilation(shadType: Int) : Boolean {
@@ -97,6 +95,10 @@ class ShaderProgram (
         GL30.glUniform2f(getUniformLocation(name), value.x, value.y)
     }
 
+    fun uniform(name: String, value: IntArray) {
+        GL30.glUniform1iv(getUniformLocation(name), value)
+    }
+
     fun uniform(name: String, value: Matrix4f) {
         val location = getUniformLocation(name)
         val buff = BufferUtils.createFloatBuffer(16)
@@ -107,7 +109,7 @@ class ShaderProgram (
     private fun getUniformLocation(name: String): Int {
         val location = GL30.glGetUniformLocation(this.program, name)
         if (location == -1) {
-            throw RuntimeException("Error - No uniform location found with ${name} at loc ${location}")
+//            throw RuntimeException("Error - No uniform location found with ${name} at loc ${location}")
         }
         bind()
         return location
