@@ -10,11 +10,16 @@ import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryStack;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
@@ -150,6 +155,124 @@ public class CVEngine implements AutoCloseable{
 
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         return glTexture;
+    }
+
+
+    public BitmapFont loadFontResource(File file, int size, String glyphs, boolean debugImage, TextureManager textureManager) {
+        if (! file.isFile()) {
+            throwFile();
+        }
+
+        //Get the font metrics so we can get glyph size, etc
+        Font font = new Font(file.getPath(), Font.PLAIN, size);
+        FontMetrics fontMetrics = getFontMetrics(font);
+
+        //Each char has a different width, but same height
+        //To avoid a runtime error, assume they are all the largest size
+        int maxCharWidth = 0; //need to calculate
+        int charHeight = fontMetrics.getHeight(); //They have the same height
+
+        for (char c: glyphs.toCharArray()) {
+            maxCharWidth = Math.max(maxCharWidth, fontMetrics.charWidth(c));
+        }
+
+
+        //Now create texture dimensions
+        int textureUnit = (int) Math.sqrt(glyphs.length()) + 1;
+        int proposedWidth = textureUnit * maxCharWidth;
+        int proposedHeight = textureUnit * charHeight;
+        int squareTextureSize = Math.max(proposedHeight, proposedWidth);
+
+        //Create the actual image
+        final Map<Character, BitmapFont.GlyphData> fontAtlas = new HashMap<>();
+        BufferedImage atlasImage = new BufferedImage(squareTextureSize, squareTextureSize, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = atlasImage.createGraphics();
+        g2d.setFont(font);
+        g2d.setColor(Color.WHITE);
+
+        int glyphXPlacement = 0;
+        int glyphYPlacement = charHeight;
+
+        for (char c: glyphs.toCharArray()) {
+
+            if (glyphXPlacement + maxCharWidth >= squareTextureSize) {
+                glyphXPlacement = 0;
+                glyphYPlacement += charHeight;
+            }
+
+            System.out.println("Current Char: " + c);
+
+            g2d.drawString(String.valueOf(c), glyphXPlacement, glyphYPlacement);
+
+            BitmapFont.GlyphData glyphData = new BitmapFont.GlyphData(
+                    (float) glyphXPlacement / squareTextureSize,
+                    (float) glyphYPlacement / squareTextureSize,
+                    (float) maxCharWidth / squareTextureSize,
+                    (float) charHeight / squareTextureSize
+            );
+
+
+            fontAtlas.put(c, glyphData);
+
+            glyphXPlacement += maxCharWidth;
+        }
+
+        //Now save image if debug is enabled
+        if (debugImage) {
+            saveBitmapFont(atlasImage);
+        }
+
+        //Now load this as an image into OpenGL
+        ByteBuffer textureData = convertImageData(atlasImage);
+        int glTextureObject = loadOpenGlTexture(textureData, squareTextureSize, squareTextureSize);
+
+        String textureID = file.getPath();
+        textureManager.manageTexture(textureID, glTextureObject);
+
+        BitmapFont bitmapFont = new BitmapFont(size, textureManager, textureID, fontAtlas);
+
+        g2d.dispose();
+
+        return bitmapFont;
+    }
+
+
+    private ByteBuffer convertImageData(BufferedImage image) {
+        int[] pixelDataInt = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
+        ByteBuffer buffer = ByteBuffer.allocateDirect(image.getWidth() * image.getHeight() * 4);
+
+        for (int y = image.getHeight() - 1; y >= 0; y--) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int pixel = pixelDataInt[image.getWidth() * y + x];
+                buffer.put((byte) ((pixel >> 16) & 0xFF));
+                buffer.put((byte) ((pixel >> 8) & 0xFF));
+                buffer.put((byte) (pixel & 0xFF));
+                buffer.put((byte) ((pixel >> 24) & 0xFF));
+            }
+        }
+
+        buffer.flip();
+
+        return buffer;
+    }
+
+    private void saveBitmapFont(BufferedImage bufferedImage) {
+        File outputFile = new File("data/temp/font-generated.png");
+        try {
+            ImageIO.write(bufferedImage, "png", outputFile);
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+    }
+
+    private FontMetrics getFontMetrics(Font font) {
+        BufferedImage tempImage = new BufferedImage(1, 1, BufferedImage.TYPE_4BYTE_ABGR);
+        Graphics g2d = tempImage.createGraphics();
+        g2d.setFont(font);
+        g2d.setColor(Color.WHITE);
+        FontMetrics metrics = g2d.getFontMetrics();
+        g2d.dispose();
+        return metrics;
     }
 
     private void throwFile() {

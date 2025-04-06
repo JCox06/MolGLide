@@ -57,7 +57,7 @@ class Batch2D (
 
         //Step 2 - Map batch indices to offsetindices
         val mappedIndices = batchIndices.map {
-            it + (max(0, this.vertexCount() - 2))
+            it + (max(0, this.vertexCount()))
         }
 
         //Step 1 - Push everything from this vertex to list into the master list
@@ -99,13 +99,14 @@ class Batch2D (
 
 
     private fun vertexCount(): Int {
-        return this.indices.size
+        return this.vertices.size / VERT_COMP
     }
 
     companion object {
         //Vertex
         //[3 float pos] [2 float texture] = 5 floats
-        private const val VERT_SIZE = 5 * Float.SIZE_BYTES
+        private const val VERT_COMP = 5
+        private const val VERT_SIZE = VERT_COMP * Float.SIZE_BYTES
         private const val DEFAULT_BATCH_SIZE = VERT_SIZE * 500L
     }
 

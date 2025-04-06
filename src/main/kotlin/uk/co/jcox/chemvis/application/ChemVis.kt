@@ -14,6 +14,7 @@ class ChemVis : IApplication, IEngineInput {
     private lateinit var program: ShaderProgram
     private lateinit var batcher: Batch2D
     private lateinit var textureManager: TextureManager
+    private lateinit var font: BitmapFont
 
     override fun init(engine: CVEngine) {
 
@@ -28,11 +29,14 @@ class ChemVis : IApplication, IEngineInput {
 
 
         program.bind()
-        program.uniform("myText", 0)
 
         textureManager = TextureManager()
         this.textureManager.manageTexture("logo", engine.loadTextureResource(File("data/textures/chemvis_logo.png")))
         this.textureManager.manageTexture("logo1", engine.loadTextureResource(File("data/textures/texture1.png")));
+
+        font = engine.loadFontResource(File("data/fonts/UbuntuMono-Regular.ttf"), 16,
+            "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789. ", true, textureManager)
+
 
         GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
     }
@@ -55,6 +59,9 @@ class ChemVis : IApplication, IEngineInput {
         this.batcher.begin(GL11.GL_TRIANGLES)
         this.batcher.addBatch(Shaper2D.rectangle(200.0f, 200.0f, 100.0f, 100.0f))
         this.batcher.end()
+
+        //Draw Hello World on screen
+        font.text("1", batcher, program, 200.0f, 50.0f)
 
     }
 

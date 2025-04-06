@@ -109,7 +109,7 @@ class ShaderProgram (
     private fun getUniformLocation(name: String): Int {
         val location = GL30.glGetUniformLocation(this.program, name)
         if (location == -1) {
-//            throw RuntimeException("Error - No uniform location found with ${name} at loc ${location}")
+            throw RuntimeException("Error - No uniform location found with ${name} at loc ${location}")
         }
         bind()
         return location
