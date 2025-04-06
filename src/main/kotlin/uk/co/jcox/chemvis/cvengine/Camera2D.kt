@@ -7,8 +7,8 @@ import org.joml.Vector4f
 
 
 class Camera2D (
-    screenWidth: Int,
-    screenHeight: Int,
+    private var screenWidth: Int,
+    private var screenHeight: Int,
 )  {
     var projection: Matrix4f = Matrix4f()
     //The amount visible on the screen by default is set to 500 units width
@@ -24,26 +24,38 @@ class Camera2D (
 
 
     fun update(screenX: Int, screenY:Int) {
+
+        this.screenWidth = screenX
+        this.screenHeight = screenY
+
         //Get size of camera
-        val sf = camWidth / screenX
-        camHeight = sf * screenY
+        val sf = camWidth / this.screenWidth
+        camHeight = sf * this.screenHeight
 
         //Get projection Matrix
         this.projection = Matrix4f().ortho(0.0f, camWidth, 0.0f, camHeight, 0.1f, 100.0f)
     }
 
-    fun screenToWorld(screen: Vector2f): Vector2f {
+    fun screenToView(screenPos: Vector2f): Vector2f {
+
+        //WORLD SPACE -> VIEW SPACE -> CLIP SPACE -> SCREEN SPACE
+        //Currently World Space = View space
+
+        //Convert screen space to normalised clip space
+        val clipSpaceX = ((screenPos.x / screenWidth) * 2) - 1
+        val clipSpaceY = ((screenPos.y / screenHeight) * 2)  - 1
+
+
+        //Convert clip space to view/world space
         val inverse = projection.invert(Matrix4f())
         //Z = 0 - Depth does not matter so it can be anything
         //W = 1 - Indicate the vector is a point
-        val screenSpace = Vector4f(screen, 0.0f, 1.0f)
+        val screenSpace = Vector4f(clipSpaceX, clipSpaceY, 0.0f, 1.0f)
         screenSpace.mul(inverse)
-        return Vector2f(screenSpace.x, screenSpace.y)
+        return Vector2f(screenSpace.x, camHeight - screenSpace.y)
     }
 
-    fun worldToScreen(world: Vector2f): Vector2f {
-        val worldSpace = Vector4f(world, 0.0f, 1.0f)
-        worldSpace.mul(projection)
-        return Vector2f(worldSpace.x, worldSpace.y)
+    fun viewToScreen(world: Vector2f): Vector2f {
+        TODO("Implement this method - Not used for anything yet")
     }
 }

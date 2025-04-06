@@ -79,8 +79,8 @@ public class CVEngine implements AutoCloseable{
 
     public void run(IApplication application) {
         init();
-        application.init(this);
         this.inputHandler = new IEngineInput() {};
+        application.init(this);
 
         while (! GLFW.glfwWindowShouldClose(this.windowHandle)) {
             application.loop(this);
@@ -154,6 +154,10 @@ public class CVEngine implements AutoCloseable{
 
     private void throwFile() {
         throw new RuntimeException("Error when opening file");
+    }
+
+    public void setActiveInputHandler(IEngineInput engineInput) {
+        this.inputHandler = engineInput;
     }
 
     @Override

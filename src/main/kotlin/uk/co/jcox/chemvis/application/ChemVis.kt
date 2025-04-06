@@ -1,38 +1,14 @@
 package uk.co.jcox.chemvis.application
 
 import org.joml.Matrix4f
+import org.joml.Vector2f
+import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
 
-class ChemVis : IApplication {
-
-    private val SF = 50
-
-    private val vertices = listOf(
-        1.0f * SF,  1.0f * SF, -1.0f, 1.0f, 1.0f, 1.0f,  // top right
-        1.0f * SF , -1.0f * SF, -1.0f, 1.0f, 0.0f, 1.0f,  // bottom right
-        -1.0f * SF, -1.0f * SF, -1.0f, 0.0f, 0.0f, 1.0f,  // bottom left
-        -1.0f * SF,  1.0f * SF, -1.0f, 0.0f, 1.0f, 1.0f   // top left
-    )
-
-    private val indices = listOf(
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
-    )
-
-    private val vertices2 = listOf(
-        (1.0f +5) * SF,  (1.0f + 5) * SF, -1.0f, 1.0f, 1.0f, 0.0f,  // top right
-        (1.0f + 5) * SF , (-1.0f + 5) * SF, -1.0f, 1.0f, 0.0f, 0.0f,  // bottom right
-        (-1.0f + 5) * SF, (-1.0f + 5) * SF, -1.0f, 0.0f, 0.0f, 0.0f,  // bottom left
-        (-1.0f + 5) * SF,  (1.0f + 5) * SF, -1.0f, 0.0f, 1.0f, 0.0f   // top left
-    )
-
-    private val indices2 = listOf(
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
-    )
+class ChemVis : IApplication, IEngineInput {
 
     private lateinit var camera: Camera2D
     private lateinit var program: ShaderProgram
@@ -40,6 +16,9 @@ class ChemVis : IApplication {
     private lateinit var textureManager: TextureManager
 
     override fun init(engine: CVEngine) {
+
+        engine.setActiveInputHandler(this)
+
         camera = Camera2D(engine.windowX(), engine.windowY())
 
         program = ShaderProgram(engine.loadShaderSourceResource(File("data/shaders/default2D.vert")), engine.loadShaderSourceResource(File("data/shaders/default2D.frag")))
@@ -49,7 +28,6 @@ class ChemVis : IApplication {
 
 
         program.bind()
-        batcher.mapProgramTextures(program)
         program.uniform("myText", 0)
 
         textureManager = TextureManager()
@@ -71,16 +49,27 @@ class ChemVis : IApplication {
         program.uniform("uModel", Matrix4f())
 //
         this.program.bind()
-        this.batcher.begin(GL11.GL_TRIANGLES)
-//
+        this.program.uniform("mainTexture", 0)
         this.textureManager.useTexture("logo", GL30.GL_TEXTURE0)
-        this.textureManager.useTexture("logo1", GL30.GL_TEXTURE1)
-        this.batcher.addBatch(vertices, indices)
-        this.batcher.addBatch(vertices2, indices2)
-//
-//
+
+        this.batcher.begin(GL11.GL_TRIANGLES)
+        this.batcher.addBatch(Shaper2D.rectangle(200.0f, 200.0f, 100.0f, 100.0f))
         this.batcher.end()
 
+    }
+
+    override fun mouseClickEvent(button: Int, action: Int, mods: Int) {
+        if (action == GLFW.GLFW_PRESS) {
+            val width = DoubleArray(1)
+            val height = DoubleArray(1)
+
+            GLFW.glfwGetCursorPos(GLFW.glfwGetCurrentContext(), width, height)
+            val win = Vector2f(width[0].toFloat(), height[0].toFloat())
+            println("Win X: ${win.x} Y: ${win.y}")
+
+            val proj = camera.screenToView(win)
+            println("World X: ${proj.x} Y: ${proj.y}")
+        }
     }
 
     override fun cleanup() {

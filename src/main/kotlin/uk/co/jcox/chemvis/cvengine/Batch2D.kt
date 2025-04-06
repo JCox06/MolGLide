@@ -15,8 +15,6 @@ class Batch2D (
     private val glVertexBuffer: Int = GL15.glGenBuffers()
     private val glIndexBuffer: Int = GL15.glGenBuffers()
 
-    private val textureUnitArray = IntArray(GL11.glGetInteger(GL30.GL_MAX_TEXTURE_UNITS))
-
     init {
         //Setup up OpenGL Objects
         GL30.glBindVertexArray(this.glVertexArray)
@@ -30,16 +28,9 @@ class Batch2D (
         //Map OpenGL attribute objects
         GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, VERT_SIZE, 0)
         GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, VERT_SIZE, 3L * Float.SIZE_BYTES)
-        GL20.glVertexAttribPointer(2, 1, GL11.GL_FLOAT, false, VERT_SIZE, 5L * Float.SIZE_BYTES)
         GL20.glEnableVertexAttribArray(0)
         GL20.glEnableVertexAttribArray(1)
-        GL20.glEnableVertexAttribArray(2)
 
-
-        //Map texture units
-        for (i in textureUnitArray.indices) {
-            textureUnitArray[i] = i
-        }
     }
 
     private var ready = false
@@ -76,6 +67,11 @@ class Batch2D (
     }
 
 
+    fun addBatch(mesh: Mesh) {
+        this.addBatch(mesh.vertices, mesh.indices)
+    }
+
+
     fun end() {
         if (!this.ready) {
             throw RuntimeException("End called twice - Batcher has already finished")
@@ -101,9 +97,6 @@ class Batch2D (
         this.ready = false
     }
 
-    fun mapProgramTextures(program: ShaderProgram) {
-        program.uniform("textures", textureUnitArray)
-    }
 
     private fun vertexCount(): Int {
         return this.indices.size
@@ -111,8 +104,8 @@ class Batch2D (
 
     companion object {
         //Vertex
-        //[3 float pos] [2 float texture] [1 texID] = 6 floats
-        private const val VERT_SIZE = 6 * Float.SIZE_BYTES
+        //[3 float pos] [2 float texture] = 5 floats
+        private const val VERT_SIZE = 5 * Float.SIZE_BYTES
         private const val DEFAULT_BATCH_SIZE = VERT_SIZE * 500L
     }
 
