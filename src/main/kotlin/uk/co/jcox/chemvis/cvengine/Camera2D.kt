@@ -1,16 +1,17 @@
 package uk.co.jcox.chemvis.cvengine
 
-import org.joml.Matrix4f
-import org.joml.Vector2f
-
-import org.joml.Vector4f
+import Jama.Matrix
+import org.joml.*
 
 
 class Camera2D (
     private var screenWidth: Int,
     private var screenHeight: Int,
 )  {
-    var projection: Matrix4f = Matrix4f()
+    private var projection: Matrix4f = Matrix4f()
+    val cameraPosition: Vector3f = Vector3f(0.0f, 0.0f, 1.0f)
+    val cameraDirection: Vector3f = Vector3f(0.0f, 0.0f, -1.0f)
+    private var lookAt: Matrix4f = Matrix4f()
     //The amount visible on the screen by default is set to 500 units width
     //The amount visible height is calculated
     //This can be changed by "Zooming"
@@ -34,6 +35,12 @@ class Camera2D (
 
         //Get projection Matrix
         this.projection = Matrix4f().ortho(0.0f, camWidth, 0.0f, camHeight, 0.1f, 100.0f)
+        this.lookAt = Matrix4f().lookAt(cameraPosition, cameraPosition + cameraDirection.normalize(), Vector3f(0.0f, 1.0f, 0.0f))
+    }
+
+
+    fun combined(): Matrix4f {
+        return projection * lookAt
     }
 
     fun screenToView(screenPos: Vector2f): Vector2f {
@@ -55,7 +62,4 @@ class Camera2D (
         return Vector2f(screenSpace.x, camHeight - screenSpace.y)
     }
 
-    fun viewToScreen(world: Vector2f): Vector2f {
-        TODO("Implement this method - Not used for anything yet")
-    }
 }

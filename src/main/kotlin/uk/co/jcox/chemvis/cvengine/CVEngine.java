@@ -82,6 +82,10 @@ public class CVEngine implements AutoCloseable{
         GLFW.glfwSetCursorPosCallback(this.windowHandle, (win, xpos, ypos) -> {
             this.inputHandler.mouseMoveEvent(xpos, ypos);
         });
+
+        GLFW.glfwSetScrollCallback(this.windowHandle, (win, xScroll, yScroll) -> {
+           this.inputHandler.mouseScrollEvent(xScroll, yScroll);
+        });
     }
 
     public void run(IApplication application) {

@@ -3,6 +3,7 @@ package uk.co.jcox.chemvis.application
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.joml.plus
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
@@ -16,6 +17,9 @@ class ChemVis : IApplication, IEngineInput {
     private lateinit var batcher: Batch2D
     private lateinit var textureManager: TextureManager
     private lateinit var font: BitmapFont
+
+    private var lastMouseX: Float = 0.0f
+    private var lastMouseY: Float = 0.0f
 
     override fun init(engine: CVEngine) {
 
@@ -50,7 +54,7 @@ class ChemVis : IApplication, IEngineInput {
         camera.update(engine.windowX(), engine.windowY())
 
         //Drawing time
-        program.uniform("uPerspective", camera.projection)
+        program.uniform("uPerspective", camera.combined())
         program.uniform("uModel", Matrix4f())
 //
         this.program.bind()
@@ -66,22 +70,40 @@ class ChemVis : IApplication, IEngineInput {
 
         //Draw Hello World on screen
         font.text("ChemVis2 (C) 2025 Evaluation Copy", Vector3f(1.0f, 0.0f, 0.0f) ,batcher, program, 0.0f, 10.0f, 0.05f)
-        font.text("Welcoming you to ChemVis2", Vector3f(1.0f, 1.0f, 1.0f), batcher, program, (camera.camWidth / 2 ) - 115, (camera.camHeight /2 ) - 30, 0.12f)
-
     }
 
-    override fun mouseClickEvent(button: Int, action: Int, mods: Int) {
-        if (action == GLFW.GLFW_PRESS) {
-            val width = DoubleArray(1)
-            val height = DoubleArray(1)
-
-            GLFW.glfwGetCursorPos(GLFW.glfwGetCurrentContext(), width, height)
-            val win = Vector2f(width[0].toFloat(), height[0].toFloat())
-            println("Win X: ${win.x} Y: ${win.y}")
-
-            val proj = camera.screenToView(win)
-            println("World X: ${proj.x} Y: ${proj.y}")
+    override fun mouseScrollEvent(xScroll: Double, yScroll: Double) {
+        //If CTRL is pressed down, and you scroll, zoom in:
+        if (GLFW.glfwGetKey(GLFW.glfwGetCurrentContext(), GLFW.GLFW_KEY_LEFT_CONTROL) != GLFW.GLFW_PRESS) {
+            return;
         }
+
+        this.camera.camWidth -= yScroll.toFloat()
+    }
+
+
+    override fun mouseMoveEvent(xpos: Double, ypos: Double) {
+
+
+        if (GLFW.glfwGetMouseButton(GLFW.glfwGetCurrentContext(), GLFW.GLFW_MOUSE_BUTTON_3) == GLFW.GLFW_RELEASE) {
+            lastMouseX = xpos.toFloat()
+            lastMouseY = ypos.toFloat()
+        }
+
+        //If middle mouse button is pressed and you move the mouse
+        if (GLFW.glfwGetMouseButton(GLFW.glfwGetCurrentContext(), GLFW.GLFW_MOUSE_BUTTON_3) != GLFW.GLFW_PRESS) {
+            return;
+        }
+
+        val deltaX: Float = xpos.toFloat() - lastMouseX
+        val deltaY: Float = ypos.toFloat() - lastMouseY
+        lastMouseX = xpos.toFloat()
+        lastMouseY = ypos.toFloat()
+
+        val scale = 0.1f
+
+        camera.cameraPosition.add(Vector3f(-deltaX * scale, deltaY * scale, 0.0f))
+        println("The camera is now: ${camera.cameraPosition.x}, ${camera.cameraPosition.y}")
     }
 
     override fun cleanup() {

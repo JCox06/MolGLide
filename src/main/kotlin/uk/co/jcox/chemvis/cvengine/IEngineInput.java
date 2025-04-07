@@ -13,4 +13,8 @@ public interface IEngineInput {
     default void mouseMoveEvent(double xpos, double ypos) {
 
     }
+
+    default void mouseScrollEvent(double xScroll, double yScroll) {
+
+    }
 }
