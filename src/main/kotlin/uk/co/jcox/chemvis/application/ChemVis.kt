@@ -2,6 +2,7 @@ package uk.co.jcox.chemvis.application
 
 import org.joml.Matrix4f
 import org.joml.Vector2f
+import org.joml.Vector3f
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
@@ -34,8 +35,8 @@ class ChemVis : IApplication, IEngineInput {
         this.textureManager.manageTexture("logo", engine.loadTextureResource(File("data/textures/chemvis_logo.png")))
         this.textureManager.manageTexture("logo1", engine.loadTextureResource(File("data/textures/texture1.png")));
 
-        font = engine.loadFontResource(File("data/fonts/UbuntuMono-Regular.ttf"), 16,
-            "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789. ", true, textureManager)
+        font = engine.loadFontResource(File("data/fonts/CourierPrime-Regular.ttf"), 64,
+            "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789. ()", true, textureManager)
 
 
         GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
@@ -57,11 +58,15 @@ class ChemVis : IApplication, IEngineInput {
         this.textureManager.useTexture("logo", GL30.GL_TEXTURE0)
 
         this.batcher.begin(GL11.GL_TRIANGLES)
+
         this.batcher.addBatch(Shaper2D.rectangle(200.0f, 200.0f, 100.0f, 100.0f))
+
+
         this.batcher.end()
 
         //Draw Hello World on screen
-        font.text("1", batcher, program, 200.0f, 50.0f)
+        font.text("ChemVis2 (C) 2025", Vector3f(1.0f, 0.0f, 0.0f) ,batcher, program, 0.0f, 10.0f, 0.15f)
+        font.text("Welcoming you to ChemVis2", Vector3f(0.0f, 1.0f, 0.0f), batcher, program, (camera.camWidth / 2 ) - 115, (camera.camHeight /2 ) - 30, 0.3f)
 
     }
 

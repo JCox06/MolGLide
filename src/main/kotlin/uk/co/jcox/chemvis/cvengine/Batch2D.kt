@@ -4,10 +4,14 @@ import org.lwjgl.opengl.*
 import kotlin.math.max
 
 class Batch2D (
-    private val batchSize: Long = DEFAULT_BATCH_SIZE,
-) : AutoCloseable {
-    private val elementSize: Long = DEFAULT_BATCH_SIZE * 3L
 
+    //Vertex
+    //[3 float pos] [2 float texture] = 5 floats
+    private val vertexCapacity: Int = 200
+) : AutoCloseable {
+
+    private val batchSizeBytes = vertexCapacity * VERTEX_SIZE_BYTES
+    private val elementSizeBytes = vertexCapacity * 3 * Int.SIZE_BYTES
 
     private val vertices: MutableList<Float> = mutableListOf()
     private val indices: MutableList<Int> = mutableListOf()
@@ -20,14 +24,14 @@ class Batch2D (
         GL30.glBindVertexArray(this.glVertexArray)
 
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, this.glVertexBuffer)
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, batchSize, GL15.GL_DYNAMIC_DRAW)
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, batchSizeBytes.toLong(), GL15.GL_DYNAMIC_DRAW)
 
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, this.glIndexBuffer)
-        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, elementSize, GL15.GL_DYNAMIC_DRAW)
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, elementSizeBytes.toLong(), GL15.GL_DYNAMIC_DRAW)
 
         //Map OpenGL attribute objects
-        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, VERT_SIZE, 0)
-        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, VERT_SIZE, 3L * Float.SIZE_BYTES)
+        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, VERTEX_SIZE_BYTES, 0)
+        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, VERTEX_SIZE_BYTES, 3L * Float.SIZE_BYTES)
         GL20.glEnableVertexAttribArray(0)
         GL20.glEnableVertexAttribArray(1)
 
@@ -52,7 +56,13 @@ class Batch2D (
             throw RuntimeException("Batcher not ready for batching")
         }
 
-        //todo stop vertex size extending its limit
+
+        if (vertexCount() + (batchVertices.size / VERTEX_SIZE) >= vertexCapacity) {
+            println("Batcher has reached maxed capacity, drawing now -> then restarting")
+            val modeRestore = mode
+            end()
+            begin(modeRestore)
+        }
 
 
         //Step 2 - Map batch indices to offsetindices
@@ -99,21 +109,20 @@ class Batch2D (
 
 
     private fun vertexCount(): Int {
-        return this.vertices.size / VERT_COMP
+        return this.vertices.size / VERTEX_SIZE
     }
 
-    companion object {
-        //Vertex
-        //[3 float pos] [2 float texture] = 5 floats
-        private const val VERT_COMP = 5
-        private const val VERT_SIZE = VERT_COMP * Float.SIZE_BYTES
-        private const val DEFAULT_BATCH_SIZE = VERT_SIZE * 500L
-    }
 
     override fun close() {
         GL30.glBindVertexArray(0)
         GL15.glDeleteBuffers(this.glVertexBuffer)
         GL15.glDeleteBuffers(this.glIndexBuffer)
         GL30.glDeleteVertexArrays(this.glVertexArray)
+    }
+
+    companion object {
+        //[3 float pos] [2 float texture] = 5 floats
+        private val VERTEX_SIZE = 5
+        private val VERTEX_SIZE_BYTES = 5 * Float.SIZE_BYTES
     }
 }

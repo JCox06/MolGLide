@@ -15,8 +15,8 @@ class Camera2D (
     //The amount visible height is calculated
     //This can be changed by "Zooming"
     //Objects can be placed outside this range!
-    private var camWidth: Float = 500.0f
-    private var camHeight: Float = 500.0f
+    var camWidth: Float = 500.0f
+    var camHeight: Float = 500.0f
 
     init {
         update(screenWidth, screenHeight)

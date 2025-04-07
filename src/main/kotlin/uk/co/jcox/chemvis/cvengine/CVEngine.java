@@ -15,6 +15,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+
+
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Files;
@@ -139,19 +141,29 @@ public class CVEngine implements AutoCloseable{
                 throw new RuntimeException();
             }
 
-            return loadOpenGlTexture(dataBuff, width.get(), height.get());
+            return loadOpenGlTexture(dataBuff, width.get(), height.get(), true);
 
         }
     }
 
-    private int loadOpenGlTexture(ByteBuffer dataBuffer, int width, int height) {
+    private int loadOpenGlTexture(ByteBuffer dataBuffer, int width, int height, boolean stbLoaded) {
+        return loadOpenGlTexture(dataBuffer, width, height, stbLoaded, GL11.GL_LINEAR_MIPMAP_LINEAR, GL11.GL_LINEAR);
+    }
+
+    private int loadOpenGlTexture(ByteBuffer dataBuffer, int width, int height, boolean stbLoaded, int minFilter, int magFilter) {
         int glTexture = GL11.glGenTextures();
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, glTexture);
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, dataBuffer);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR_MIPMAP_LINEAR);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, minFilter);
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, magFilter);
         GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
-        STBImage.stbi_image_free(dataBuffer);
+
+        if (stbLoaded) {
+            STBImage.stbi_image_free(dataBuffer);
+        }
+        //If the texture was loaded elsewhere (Direct ByteBuffer Allocation from JVM)
+        //Then the JVM will automatically free the native heap memory once the GC runs
+        //Do not free random direct bytebuffers as it causes heap corruption
 
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
         return glTexture;
@@ -170,7 +182,7 @@ public class CVEngine implements AutoCloseable{
         //Each char has a different width, but same height
         //To avoid a runtime error, assume they are all the largest size
         int maxCharWidth = 0; //need to calculate
-        int charHeight = fontMetrics.getHeight(); //They have the same height
+        int charHeight = (fontMetrics.getHeight()); //They have the same height
 
         for (char c: glyphs.toCharArray()) {
             maxCharWidth = Math.max(maxCharWidth, fontMetrics.charWidth(c));
@@ -180,6 +192,9 @@ public class CVEngine implements AutoCloseable{
         //Now create texture dimensions
         int textureUnit = (int) Math.sqrt(glyphs.length()) + 1;
         int proposedWidth = textureUnit * maxCharWidth;
+
+        int charHeightPadding = charHeight + size;
+
         int proposedHeight = textureUnit * charHeight;
         int squareTextureSize = Math.max(proposedHeight, proposedWidth);
 
@@ -205,8 +220,10 @@ public class CVEngine implements AutoCloseable{
             g2d.drawString(String.valueOf(c), glyphXPlacement, glyphYPlacement);
 
             BitmapFont.GlyphData glyphData = new BitmapFont.GlyphData(
+                    (float) fontMetrics.charWidth(c),
+                    (float) charHeight,
                     (float) glyphXPlacement / squareTextureSize,
-                    (float) glyphYPlacement / squareTextureSize,
+                    (float) (glyphYPlacement + (0.22f * size)) / squareTextureSize,
                     (float) maxCharWidth / squareTextureSize,
                     (float) charHeight / squareTextureSize
             );
@@ -224,7 +241,7 @@ public class CVEngine implements AutoCloseable{
 
         //Now load this as an image into OpenGL
         ByteBuffer textureData = convertImageData(atlasImage);
-        int glTextureObject = loadOpenGlTexture(textureData, squareTextureSize, squareTextureSize);
+        int glTextureObject = loadOpenGlTexture(textureData, squareTextureSize, squareTextureSize, false, GL11.GL_NEAREST, GL11.GL_NEAREST);
 
         String textureID = file.getPath();
         textureManager.manageTexture(textureID, glTextureObject);
