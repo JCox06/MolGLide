@@ -223,7 +223,7 @@ public class CVEngine implements AutoCloseable{
                     (float) fontMetrics.charWidth(c),
                     (float) charHeight,
                     (float) glyphXPlacement / squareTextureSize,
-                    (float) (glyphYPlacement + (0.22f * size)) / squareTextureSize,
+                    (float) (glyphYPlacement + (0.30f * size)) / squareTextureSize,
                     (float) maxCharWidth / squareTextureSize,
                     (float) charHeight / squareTextureSize
             );
@@ -241,7 +241,7 @@ public class CVEngine implements AutoCloseable{
 
         //Now load this as an image into OpenGL
         ByteBuffer textureData = convertImageData(atlasImage);
-        int glTextureObject = loadOpenGlTexture(textureData, squareTextureSize, squareTextureSize, false, GL11.GL_NEAREST, GL11.GL_NEAREST);
+        int glTextureObject = loadOpenGlTexture(textureData, squareTextureSize, squareTextureSize, false, GL11.GL_LINEAR, GL11.GL_LINEAR);
 
         String textureID = file.getPath();
         textureManager.manageTexture(textureID, glTextureObject);

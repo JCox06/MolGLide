@@ -35,7 +35,7 @@ class ChemVis : IApplication, IEngineInput {
         this.textureManager.manageTexture("logo", engine.loadTextureResource(File("data/textures/chemvis_logo.png")))
         this.textureManager.manageTexture("logo1", engine.loadTextureResource(File("data/textures/texture1.png")));
 
-        font = engine.loadFontResource(File("data/fonts/CourierPrime-Regular.ttf"), 64,
+        font = engine.loadFontResource(File("data/fonts/sourceserif.ttf"), 140,
             "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789. ()", true, textureManager)
 
 
@@ -65,8 +65,8 @@ class ChemVis : IApplication, IEngineInput {
         this.batcher.end()
 
         //Draw Hello World on screen
-        font.text("ChemVis2 (C) 2025", Vector3f(1.0f, 0.0f, 0.0f) ,batcher, program, 0.0f, 10.0f, 0.15f)
-        font.text("Welcoming you to ChemVis2", Vector3f(0.0f, 1.0f, 0.0f), batcher, program, (camera.camWidth / 2 ) - 115, (camera.camHeight /2 ) - 30, 0.3f)
+        font.text("ChemVis2 (C) 2025 Evaluation Copy", Vector3f(1.0f, 0.0f, 0.0f) ,batcher, program, 0.0f, 10.0f, 0.05f)
+        font.text("Welcoming you to ChemVis2", Vector3f(1.0f, 1.0f, 1.0f), batcher, program, (camera.camWidth / 2 ) - 115, (camera.camHeight /2 ) - 30, 0.12f)
 
     }
 

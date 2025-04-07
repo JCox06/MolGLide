@@ -28,8 +28,8 @@ class BitmapFont (
         program.uniform("mainTexture", 0)
         program.uniform("fontColour", colour)
         textureManager.useTexture(textureID, GL15.GL_TEXTURE0)
-//        GL11.glEnable(GL11.GL_BLEND);
-//        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         batcher.begin(GL11.GL_TRIANGLES)
 
