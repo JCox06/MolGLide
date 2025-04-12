@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application
 
+import org.apache.jena.iri.IRIRelativize
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
@@ -17,6 +18,8 @@ class ChemVis : IApplication, IEngineInput {
     private lateinit var batcher: Batch2D
     private lateinit var textureManager: TextureManager
     private lateinit var font: BitmapFont
+
+    private val methanes: MutableList<Vector2f> = mutableListOf()
 
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
@@ -44,6 +47,7 @@ class ChemVis : IApplication, IEngineInput {
 
 
         GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
+
     }
 
     override fun loop(engine: CVEngine) {
@@ -56,20 +60,10 @@ class ChemVis : IApplication, IEngineInput {
         //Drawing time
         program.uniform("uPerspective", camera.combined())
         program.uniform("uModel", Matrix4f())
-//
+
         this.program.bind()
-        this.program.uniform("mainTexture", 0)
-        this.textureManager.useTexture("logo", GL30.GL_TEXTURE0)
 
-        this.batcher.begin(GL11.GL_TRIANGLES)
-
-        this.batcher.addBatch(Shaper2D.rectangle(200.0f, 200.0f, 100.0f, 100.0f))
-
-
-        this.batcher.end()
-
-        //Draw Hello World on screen
-        font.text("ChemVis2 (C) 2025 Evaluation Copy", Vector3f(1.0f, 0.0f, 0.0f) ,batcher, program, 0.0f, 10.0f, 0.05f)
+        font.text("Hello", Vector3f(1.0f, 1.0f, 1.0f), batcher, program, 300.0f, 300.0f, 0.2f)
     }
 
     override fun mouseScrollEvent(xScroll: Double, yScroll: Double) {
@@ -103,7 +97,6 @@ class ChemVis : IApplication, IEngineInput {
         val scale = 0.1f
 
         camera.cameraPosition.add(Vector3f(-deltaX * scale, deltaY * scale, 0.0f))
-        println("The camera is now: ${camera.cameraPosition.x}, ${camera.cameraPosition.y}")
     }
 
     override fun cleanup() {

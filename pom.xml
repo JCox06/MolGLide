@@ -157,6 +157,11 @@
             <artifactId>joml-primitives</artifactId>
             <version>${joml-primitives.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.github.spair</groupId>
+            <artifactId>imgui-java-app</artifactId>
+            <version>1.89.0</version>
+        </dependency>
 
 
 <!--        Chemistry Development Kit-->

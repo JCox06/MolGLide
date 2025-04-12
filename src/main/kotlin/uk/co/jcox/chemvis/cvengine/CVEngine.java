@@ -1,5 +1,10 @@
 package uk.co.jcox.chemvis.cvengine;
 
+import imgui.ImFont;
+import imgui.ImGui;
+import imgui.ImGuiIO;
+import imgui.gl3.ImGuiImplGl3;
+import imgui.glfw.ImGuiImplGlfw;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
@@ -30,6 +35,9 @@ public class CVEngine implements AutoCloseable{
     private final String name;
     private Callback lwjglErrorCallback;
     private long windowHandle;
+
+    private ImGuiImplGl3 openGlImGui;
+    private ImGuiImplGlfw glfwImGui;
 
     private IEngineInput inputHandler;
 
@@ -68,6 +76,22 @@ public class CVEngine implements AutoCloseable{
         GL11.glClearColor(0.02f, 0.02f, 0.02f, 1.0f);
 
         setupInputCallbacks();
+        setupImGui();
+    }
+
+    private void setupImGui() {
+        ImGui.createContext();
+        ImGui.styleColorsDark();
+        glfwImGui = new ImGuiImplGlfw();
+        openGlImGui = new ImGuiImplGl3();
+
+        glfwImGui.init(this.windowHandle, true);
+        openGlImGui.init();
+
+        ImGuiIO io = ImGui.getIO();
+        ImFont font = io.getFonts().addFontDefault();
+        ImFont experience = io.getFonts().addFontFromFileTTF("data/fonts/ubuntu.ttf", 32);
+        io.setFontDefault(experience);
     }
 
     private void setupInputCallbacks() {
@@ -94,7 +118,18 @@ public class CVEngine implements AutoCloseable{
         application.init(this);
 
         while (! GLFW.glfwWindowShouldClose(this.windowHandle)) {
+
+            glfwImGui.newFrame();
+            openGlImGui.newFrame();
+            ImGui.newFrame();
+
             application.loop(this);
+
+
+            ImGui.render();
+            openGlImGui.renderDrawData(ImGui.getDrawData());
+
+
 
             GLFW.glfwSwapBuffers(this.windowHandle);
             GLFW.glfwPollEvents();
@@ -219,8 +254,6 @@ public class CVEngine implements AutoCloseable{
                 glyphYPlacement += charHeight;
             }
 
-            System.out.println("Current Char: " + c);
-
             g2d.drawString(String.valueOf(c), glyphXPlacement, glyphYPlacement);
 
             BitmapFont.GlyphData glyphData = new BitmapFont.GlyphData(
@@ -304,6 +337,11 @@ public class CVEngine implements AutoCloseable{
         this.inputHandler = engineInput;
     }
 
+
+    public void shutdown() {
+        GLFW.glfwSetWindowShouldClose(this.windowHandle, true);
+    }
+
     @Override
     public void close() throws Exception {
         if (this.lwjglErrorCallback != null) {
@@ -315,5 +353,7 @@ public class CVEngine implements AutoCloseable{
         glfwFreeCallbacks(this.windowHandle);
         GLFW.glfwDestroyWindow(this.windowHandle);
         GLFW.glfwTerminate();
+        openGlImGui.shutdown();
+        ImGui.destroyContext();
     }
 }
