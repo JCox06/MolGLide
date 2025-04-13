@@ -3,8 +3,10 @@ package uk.co.jcox.chemvis.cvengine;
 import imgui.ImFont;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.flag.ImGuiConfigFlags;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
+import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
@@ -31,7 +33,7 @@ import java.util.Map;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 
-public class CVEngine implements AutoCloseable{
+public class CVEngine implements ICVServices, AutoCloseable{
     private final String name;
     private Callback lwjglErrorCallback;
     private long windowHandle;
@@ -85,13 +87,19 @@ public class CVEngine implements AutoCloseable{
         glfwImGui = new ImGuiImplGlfw();
         openGlImGui = new ImGuiImplGl3();
 
-        glfwImGui.init(this.windowHandle, true);
-        openGlImGui.init();
-
         ImGuiIO io = ImGui.getIO();
         ImFont font = io.getFonts().addFontDefault();
         ImFont experience = io.getFonts().addFontFromFileTTF("data/fonts/ubuntu.ttf", 32);
         io.setFontDefault(experience);
+        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
+        io.addConfigFlags(ImGuiConfigFlags.DockingEnable);
+        io.setConfigViewportsNoDecoration(false);
+        io.setConfigViewportsNoTaskBarIcon(false);
+        io.setIniFilename(null);
+
+
+        glfwImGui.init(this.windowHandle, true);
+        openGlImGui.init();
     }
 
     private void setupInputCallbacks() {
@@ -123,12 +131,20 @@ public class CVEngine implements AutoCloseable{
             openGlImGui.newFrame();
             ImGui.newFrame();
 
-            application.loop(this);
+            application.loop();
 
 
             ImGui.render();
             openGlImGui.renderDrawData(ImGui.getDrawData());
 
+
+            //ImGui flags
+            if (ImGui.getIO().hasConfigFlags(ImGuiConfigFlags.ViewportsEnable)) {
+                final long toRestore = GLFW.glfwGetCurrentContext();
+                ImGui.updatePlatformWindows();
+                ImGui.renderPlatformWindowsDefault();
+                GLFW.glfwMakeContextCurrent(toRestore);
+            }
 
 
             GLFW.glfwSwapBuffers(this.windowHandle);
@@ -136,22 +152,17 @@ public class CVEngine implements AutoCloseable{
         }
         application.cleanup();
     }
-
-    public int windowX() {
+    
+    
+    public Vector2i windowMetrics() {
         int[] width = new int[1];
         int[] height = new int[1];
         GLFW.glfwGetWindowSize(this.windowHandle, width, height);
-        return width[0];
-    }
-
-    public int windowY() {
-        int[] width = new int[1];
-        int[] height = new int[1];
-        GLFW.glfwGetWindowSize(this.windowHandle, width, height);
-        return height[0];
+        return new Vector2i(width[0], height[0]);
     }
 
 
+    @Override
     public String loadShaderSourceResource(File file) {
         try {
             return Files.readString(file.toPath());
@@ -161,6 +172,12 @@ public class CVEngine implements AutoCloseable{
        return "";
     }
 
+    @Override
+    public long glfwEngineWindow() {
+        return this.windowHandle;
+    }
+
+    @Override
     public int loadTextureResource(File file) {
         if (! file.isFile()) {
             throwFile();
@@ -209,6 +226,7 @@ public class CVEngine implements AutoCloseable{
     }
 
 
+    @Override
     public BitmapFont loadFontResource(File file, int size, String glyphs, boolean debugImage, TextureManager textureManager) {
         if (! file.isFile()) {
             throwFile();
@@ -261,7 +279,7 @@ public class CVEngine implements AutoCloseable{
                     (float) charHeight,
                     (float) glyphXPlacement / squareTextureSize,
                     (float) (glyphYPlacement + (0.30f * size)) / squareTextureSize,
-                    (float) maxCharWidth / squareTextureSize,
+                    (float) fontMetrics.charWidth(c) / squareTextureSize,
                     (float) charHeight / squareTextureSize
             );
 

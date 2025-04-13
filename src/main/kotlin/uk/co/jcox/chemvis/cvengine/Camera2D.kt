@@ -43,23 +43,49 @@ class Camera2D (
         return projection * lookAt
     }
 
-    fun screenToView(screenPos: Vector2f): Vector2f {
 
-        //WORLD SPACE -> VIEW SPACE -> CLIP SPACE -> SCREEN SPACE
-        //Currently World Space = View space
-
-        //Convert screen space to normalised clip space
-        val clipSpaceX = ((screenPos.x / screenWidth) * 2) - 1
-        val clipSpaceY = ((screenPos.y / screenHeight) * 2)  - 1
+    fun screenToWorld(screenPos: Vector4fc) : Vector4f {
+        val viewSpace = screenToView(screenPos)
+        val worldSpace = viewSpacetoWorldSpace(viewSpace)
+        return worldSpace
+    }
 
 
-        //Convert clip space to view/world space
-        val inverse = projection.invert(Matrix4f())
-        //Z = 0 - Depth does not matter so it can be anything
-        //W = 1 - Indicate the vector is a point
-        val screenSpace = Vector4f(clipSpaceX, clipSpaceY, 0.0f, 1.0f)
-        screenSpace.mul(inverse)
-        return Vector2f(screenSpace.x, camHeight - screenSpace.y)
+    fun screenToView(screenPos: Vector4fc) : Vector4f {
+        //Screen -> Clip Space -> View Space
+
+        //1) Convert to clip space
+        val mscreen = Vector4f(screenPos.x(), screenHeight - screenPos.y(), screenPos.z(), screenPos.w())
+        val clipSpace = screenToClipSpace(mscreen)
+
+        //2) Convert to view Space
+        val viewSpace = clipSpaceToViewSpace(clipSpace)
+
+        return viewSpace
+    }
+
+
+    private fun viewSpacetoWorldSpace(viewSpace: Vector4fc) : Vector4f {
+        val viewSpaceInverse = lookAt.invert()
+        val worldSpace = viewSpace.mul(viewSpaceInverse, Vector4f())
+        return worldSpace
+    }
+
+    private fun clipSpaceToViewSpace(clipSpace: Vector4fc): Vector4f {
+        val viewSpaceInverse = projection.invert(Matrix4f())
+        val viewSpace = clipSpace.mul(viewSpaceInverse, Vector4f())
+        return viewSpace
+    }
+
+    //Take a coordinate from the window and turn it into normalised device coordinates
+    private fun screenToClipSpace(screenPos: Vector4fc): Vector4f {
+        val clipSpace = Vector4f()
+        clipSpace.x = ((screenPos.x() / screenWidth) * 2) - 1
+        clipSpace.y = ((screenPos.y() / screenHeight) * 2) - 1
+        clipSpace.z = screenPos.z()
+        clipSpace.w = screenPos.w()
+
+        return clipSpace
     }
 
 }

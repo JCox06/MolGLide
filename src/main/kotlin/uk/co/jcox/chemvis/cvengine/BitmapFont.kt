@@ -43,7 +43,7 @@ class BitmapFont (
             }
 
             //Now start drawing the shapes
-            val glyphData = glyphs[c]
+            val glyphData = glyphs[toDraw]
             if (glyphData == null) {
                 batcher.end()
                 return
