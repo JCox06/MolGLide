@@ -361,7 +361,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         if (this.lwjglErrorCallback != null) {
             this.lwjglErrorCallback.close();
         }

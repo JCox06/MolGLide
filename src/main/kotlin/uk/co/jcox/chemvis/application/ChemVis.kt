@@ -8,6 +8,7 @@ import org.joml.Vector4f
 import org.joml.Vector4fc
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11
+import org.openscience.cdk.templates.MoleculeFactory
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
 
@@ -21,7 +22,7 @@ class ChemVis : IApplication, IEngineInput {
 
     private lateinit var services: ICVServices
 
-    private val methanes: MutableList<Vector4f> = mutableListOf()
+    private val molecules: MutableList<Molecule> = mutableListOf()
 
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
@@ -49,7 +50,7 @@ class ChemVis : IApplication, IEngineInput {
         this.textureManager.manageTexture("logo1", services.loadTextureResource(File("data/textures/texture1.png")));
 
         font = services.loadFontResource(File("data/fonts/sourceserif.ttf"), 140,
-            "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789. ()", true, textureManager)
+            "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789. ():", true, textureManager)
 
 
         GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
@@ -70,12 +71,12 @@ class ChemVis : IApplication, IEngineInput {
 
         this.program.bind()
 
-        font.text("Font rendering Working :)", Vector3f(1.0f, 1.0f, 1.0f), batcher, program, 300.0f, 300.0f, 0.2f)
+        font.text("Font rendering Working :)", Vector3f(1.0f, 1.0f, 1.0f), batcher, program, 300.0f, 300.0f, 0.1f)
 
 
         //Render the methanes as squares for now
-        for (squarePos in methanes) {
-            font.text("CH4", Vector3f(1.0f, 1.0f, 1.0f), batcher, program, squarePos.x, squarePos.y, 0.2f)
+        for (m in molecules) {
+
         }
 
     }
@@ -131,7 +132,15 @@ class ChemVis : IApplication, IEngineInput {
         val clickPos = Vector4f(cursorX[0].toFloat(), cursorY[0].toFloat(), 0.0f, 1.0f)
         val worldSpace = camera.screenToWorld(clickPos)
 
-        methanes.add(worldSpace)
+        //Mocking the carbon tool, First click makes methane
+        val atomContainer = MoleculeFactory.makeAlkane(1)
+        val molecule = Molecule(
+            "Methane",
+            worldSpace,
+            atomContainer,
+        )
+
+        molecules.add(molecule)
     }
 
     override fun cleanup() {
