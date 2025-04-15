@@ -1,16 +1,16 @@
 package uk.co.jcox.chemvis.application
 
-import imgui.ImGui
 import org.joml.Matrix4f
-import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.Vector4f
-import org.joml.Vector4fc
+import org.joml.plus
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11
-import org.openscience.cdk.templates.MoleculeFactory
+import org.openscience.cdk.Atom
+import uk.co.jcox.chemvis.application.levellink.MoleculeManager
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
+import java.util.UUID
 
 class ChemVis : IApplication, IEngineInput {
 
@@ -22,10 +22,12 @@ class ChemVis : IApplication, IEngineInput {
 
     private lateinit var services: ICVServices
 
-    private val molecules: MutableList<Molecule> = mutableListOf()
-
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
+
+    private val molPos: MutableMap<UUID, Vector4f> = mutableMapOf()
+
+    private val molManager: MoleculeManager = MoleculeManager()
 
     override fun init(cvServices: ICVServices) {
 
@@ -74,9 +76,25 @@ class ChemVis : IApplication, IEngineInput {
         font.text("Font rendering Working :)", Vector3f(1.0f, 1.0f, 1.0f), batcher, program, 300.0f, 300.0f, 0.1f)
 
 
-        //Render the methanes as squares for now
-        for (m in molecules) {
+        //Now render the atoms
+        for (molID in molManager.getMolecules()) {
+            //Get the world position
+            val worldPos = molPos[molID]
+            val brdige = molManager.getBridge(molID)
 
+            //Get all the atoms
+            for (atomID in molManager.getAtoms(molID)) {
+                //For each atom get offset positionm
+                val offset = brdige.molLink.atomLinks[atomID]!!.pos
+
+                val actualPosition = worldPos?.plus(offset)
+
+                if (actualPosition != null) {
+                    font.text("C",
+                        Vector3f(1.0f, 1.0f, 1.0f), batcher, program, actualPosition.x, actualPosition.y, 0.1f
+                    )
+                }
+            }
         }
 
     }
@@ -132,15 +150,10 @@ class ChemVis : IApplication, IEngineInput {
         val clickPos = Vector4f(cursorX[0].toFloat(), cursorY[0].toFloat(), 0.0f, 1.0f)
         val worldSpace = camera.screenToWorld(clickPos)
 
-        //Mocking the carbon tool, First click makes methane
-        val atomContainer = MoleculeFactory.makeAlkane(1)
-        val molecule = Molecule(
-            "Methane",
-            worldSpace,
-            atomContainer,
-        )
-
-        molecules.add(molecule)
+        //Assuming clicked with the carbon skeleton tool create a new methane
+        val molecule = molManager.createEmptyMolecule()
+        molPos[molecule] = worldSpace
+        molManager.addAtom(molecule, Atom("C"))
     }
 
     override fun cleanup() {

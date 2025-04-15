@@ -366,12 +366,15 @@ public class CVEngine implements ICVServices, AutoCloseable{
             this.lwjglErrorCallback.close();
         }
 
+        openGlImGui.shutdown();
+//        glfwImGui.shutdown();
+        ImGui.destroyContext();
+
         GLFW.glfwSetErrorCallback(null).free();
 
         glfwFreeCallbacks(this.windowHandle);
         GLFW.glfwDestroyWindow(this.windowHandle);
         GLFW.glfwTerminate();
-        openGlImGui.shutdown();
-        ImGui.destroyContext();
+
     }
 }
