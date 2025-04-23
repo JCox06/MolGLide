@@ -1,13 +1,18 @@
 package uk.co.jcox.chemvis.application
 
+import com.fasterxml.jackson.databind.ser.impl.StringArraySerializer
+import imgui.ImGui
+import imgui.type.ImInt
 import org.joml.Matrix4f
+import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.Vector4f
 import org.joml.plus
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11
 import org.openscience.cdk.Atom
-import uk.co.jcox.chemvis.application.levellink.MoleculeManager
+import uk.co.jcox.chemvis.application.editor.CDKManager
+import uk.co.jcox.chemvis.application.editor.IMoleculeManager
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
 import java.util.UUID
@@ -25,9 +30,11 @@ class ChemVis : IApplication, IEngineInput {
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
 
-    private val molPos: MutableMap<UUID, Vector4f> = mutableMapOf()
+    private val molManager: IMoleculeManager = CDKManager()
 
-    private val molManager: MoleculeManager = MoleculeManager()
+    private val tools = arrayOf("C", "O", "H")
+    private val selectedTool: ImInt = ImInt(0)
+
 
     override fun init(cvServices: ICVServices) {
 
@@ -76,24 +83,40 @@ class ChemVis : IApplication, IEngineInput {
         font.text("Font rendering Working :)", Vector3f(1.0f, 1.0f, 1.0f), batcher, program, 300.0f, 300.0f, 0.1f)
 
 
-        //Now render the atoms
-        for (molID in molManager.getMolecules()) {
-            //Get the world position
-            val worldPos = molPos[molID]
-            val brdige = molManager.getBridge(molID)
+        //Tool setup
+        ImGui.begin("Editor Settings")
+        ImGui.combo("Tool Selection", selectedTool, tools)
+        ImGui.end()
 
-            //Get all the atoms
-            for (atomID in molManager.getAtoms(molID)) {
-                //For each atom get offset positionm
-                val offset = brdige.molLink.atomLinks[atomID]!!.pos
+        //Rendering atoms time!
+        for (molecule in molManager.molecules()) {
+            val rootPos = molManager.getMoleculePosition(molecule)
+            //Step 1 - Get all the atoms in the molecule
+            for (atom in molManager.atoms(molecule)) {
 
-                val actualPosition = worldPos?.plus(offset)
+                val offsetPos = molManager.getAtomOffsetPosition(atom)
+                val atomPos = rootPos + offsetPos
 
-                if (actualPosition != null) {
-                    font.text("C",
-                        Vector3f(1.0f, 1.0f, 1.0f), batcher, program, actualPosition.x, actualPosition.y, 0.1f
-                    )
+
+                //Also check if the cursor is close enough to select it
+                val locX = DoubleArray(1)
+                val locY = DoubleArray(1)
+                GLFW.glfwGetCursorPos(services.glfwEngineWindow(), locX, locY)
+
+                val cursorPos = Vector4f(locX[0].toFloat(), locY[0].toFloat(), 0.0f, 1.0f)
+                val cursorWorld = camera.screenToWorld(cursorPos)
+                val atomPos4 = Vector4f(atomPos, 0.0f, 1.0f)
+
+                val diff = atomPos4.sub(cursorWorld, Vector4f())
+                if (diff.length() <= SELECTION_RADIUS) {
+                    batcher.begin(GL11.GL_TRIANGLES)
+                    batcher.addBatch(Shaper2D.rectangle(atomPos.x, atomPos.y, SELECTION_MARKER_SIZE.toFloat(), SELECTION_MARKER_SIZE.toFloat()))
+                    batcher.end()
                 }
+
+                font.text(molManager.getAtomSymbol(atom), Vector3f(1.0f, 1.0f, 1.0f), batcher, program, atomPos.x, atomPos.y, 0.1f)
+
+
             }
         }
 
@@ -151,14 +174,21 @@ class ChemVis : IApplication, IEngineInput {
         val worldSpace = camera.screenToWorld(clickPos)
 
         //Assuming clicked with the carbon skeleton tool create a new methane
-        val molecule = molManager.createEmptyMolecule()
-        molPos[molecule] = worldSpace
-        molManager.addAtom(molecule, Atom("C"))
+
+        val methane = molManager.createMolecule()
+        val carbon = molManager.addAtom(methane, tools[selectedTool.get()])
+        molManager.setMoleculePosition(methane, Vector2f(worldSpace.x, worldSpace.y))
+        molManager.setAtomOffsetPosition(carbon, Vector2f())
     }
 
     override fun cleanup() {
         this.program.close()
         this.batcher.close()
         this.textureManager.close()
+    }
+
+    companion object {
+        val SELECTION_RADIUS = 55
+        val SELECTION_MARKER_SIZE = 20;
     }
 }
