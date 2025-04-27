@@ -34,6 +34,7 @@ class ChemVis : IApplication, IEngineInput {
 
     private val tools = arrayOf("C", "O", "H")
     private val selectedTool: ImInt = ImInt(0)
+    private var selectedAtom: Pair<UUID, UUID>? = null
 
 
     override fun init(cvServices: ICVServices) {
@@ -88,15 +89,13 @@ class ChemVis : IApplication, IEngineInput {
         ImGui.combo("Tool Selection", selectedTool, tools)
         ImGui.end()
 
-        //Rendering atoms time!
+
+        //Check what atom is selected
         for (molecule in molManager.molecules()) {
             val rootPos = molManager.getMoleculePosition(molecule)
-            //Step 1 - Get all the atoms in the molecule
             for (atom in molManager.atoms(molecule)) {
-
                 val offsetPos = molManager.getAtomOffsetPosition(atom)
                 val atomPos = rootPos + offsetPos
-
 
                 //Also check if the cursor is close enough to select it
                 val locX = DoubleArray(1)
@@ -109,10 +108,38 @@ class ChemVis : IApplication, IEngineInput {
 
                 val diff = atomPos4.sub(cursorWorld, Vector4f())
                 if (diff.length() <= SELECTION_RADIUS) {
-                    batcher.begin(GL11.GL_TRIANGLES)
-                    batcher.addBatch(Shaper2D.rectangle(atomPos.x, atomPos.y, SELECTION_MARKER_SIZE.toFloat(), SELECTION_MARKER_SIZE.toFloat()))
-                    batcher.end()
+                    selectedAtom = Pair(molecule, atom)
+                    break
+                } else {
+                    selectedAtom = null
                 }
+            }
+
+            if (selectedAtom != null) {
+                break
+            }
+        }
+
+
+
+        //Render selection
+        if (selectedAtom != null) {
+            val molPos = molManager.getMoleculePosition(selectedAtom?.first)
+            val atomOffset = molManager.getAtomOffsetPosition(selectedAtom?.second)
+            val pos = molPos + atomOffset
+            batcher.begin(GL11.GL_TRIANGLES)
+            batcher.addBatch(Shaper2D.rectangle(pos.x, pos.y, SELECTION_MARKER_SIZE.toFloat(), SELECTION_MARKER_SIZE.toFloat()))
+            batcher.end()
+        }
+
+        //Rendering atoms time!
+        for (molecule in molManager.molecules()) {
+            val rootPos = molManager.getMoleculePosition(molecule)
+            //Step 1 - Get all the atoms in the molecule
+            for (atom in molManager.atoms(molecule)) {
+
+                val offsetPos = molManager.getAtomOffsetPosition(atom)
+                val atomPos = rootPos + offsetPos
 
                 font.text(molManager.getAtomSymbol(atom), Vector3f(1.0f, 1.0f, 1.0f), batcher, program, atomPos.x, atomPos.y, 0.1f)
 
@@ -175,10 +202,17 @@ class ChemVis : IApplication, IEngineInput {
 
         //Assuming clicked with the carbon skeleton tool create a new methane
 
-        val methane = molManager.createMolecule()
-        val carbon = molManager.addAtom(methane, tools[selectedTool.get()])
-        molManager.setMoleculePosition(methane, Vector2f(worldSpace.x, worldSpace.y))
-        molManager.setAtomOffsetPosition(carbon, Vector2f())
+        if (selectedAtom == null) {
+            val methane = molManager.createMolecule()
+            val carbon = molManager.addAtom(methane, tools[selectedTool.get()])
+            molManager.setMoleculePosition(methane, Vector2f(worldSpace.x, worldSpace.y))
+            molManager.setAtomOffsetPosition(carbon, Vector2f())
+        } else {
+            //Add a bond to the atom
+
+
+        }
+
     }
 
     override fun cleanup() {

@@ -15,8 +15,8 @@ import java.util.*;
 
 public class CDKManager implements IMoleculeManager{
 
-    private final String PROPERTY_MOL_POSITION = "molpos";
-    private final String PROPERTY_ATOM_POSITION = "atompos";
+    private static final String PROPERTY_MOL_POSITION = "molpos";
+    private static final String PROPERTY_ATOM_POSITION = "atompos";
 
     private final Map<UUID, MolInfo> molecules;
     private final Map<UUID, IAtom> atoms;
