@@ -1,6 +1,10 @@
 package uk.co.jcox.chemvis.cvengine
 
+import org.apache.commons.lang3.mutable.Mutable
+import org.joml.Math
 import org.joml.Vector2f
+import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
+import kotlin.math.PI
 
 object Shaper2D {
 
@@ -35,6 +39,26 @@ object Shaper2D {
             0, 1, 3,
             1, 2, 3
         )
+
+        return Mesh(vertices, indices)
+    }
+
+    fun circle(centreX: Float, centreY: Float, radius: Float, sample: Int = 360) : Mesh {
+        val vertices: MutableList<Float> = mutableListOf(centreX, centreY, -1.0f, centreX, centreY)
+        val indices: MutableList<Int> = mutableListOf(0)
+
+        for (i in 0..sample) {
+            val currentAngleRadians = Math.toRadians(i.toFloat())
+            val vertX = centreX + radius * Math.cos(currentAngleRadians)
+            val vertY = centreY + radius * Math.sin(currentAngleRadians)
+            val vertZ = -1.0f
+            vertices.add(vertX)
+            vertices.add(vertY)
+            vertices.add(vertZ)
+            vertices.add(vertX)
+            vertices.add(vertY)
+            indices.add(i + 1)
+        }
 
         return Mesh(vertices, indices)
     }

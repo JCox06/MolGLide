@@ -7,7 +7,9 @@ class Batch2D (
 
     //Vertex
     //[3 float pos] [2 float texture] = 5 floats
-    private val vertexCapacity: Int = 200
+    //todo there is an error if during one #addToBatch call it overloads the whole buffer everthing breaks
+    //so for the meantime the capacity has been increased
+    private val vertexCapacity: Int = 500
 ) : AutoCloseable {
 
     private val batchSizeBytes = vertexCapacity * VERTEX_SIZE_BYTES
@@ -67,7 +69,8 @@ class Batch2D (
 
         //Step 2 - Map batch indices to offsetindices
         val mappedIndices = batchIndices.map {
-            it + (max(0, this.vertexCount()))
+            val res = it + (max(0, this.vertexCount()))
+            res
         }
 
         //Step 1 - Push everything from this vertex to list into the master list
@@ -93,7 +96,6 @@ class Batch2D (
 
         val elementBuff = this.indices.toIntArray()
         GL15.glBufferSubData(GL15.GL_ELEMENT_ARRAY_BUFFER, 0, elementBuff)
-
 
 
         GL15.glDrawElements(mode, this.indices.size, GL11.GL_UNSIGNED_INT, 0)

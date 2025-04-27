@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application
 
 import com.fasterxml.jackson.databind.ser.impl.StringArraySerializer
+import com.sun.tools.javac.comp.Check
 import imgui.ImGui
 import imgui.type.ImInt
 import org.joml.Matrix4f
@@ -90,7 +91,7 @@ class ChemVis : IApplication, IEngineInput {
         ImGui.end()
 
 
-        //Check what atom is selected
+//        Check what atom is selected
         for (molecule in molManager.molecules()) {
             val rootPos = molManager.getMoleculePosition(molecule)
             for (atom in molManager.atoms(molecule)) {
@@ -127,8 +128,9 @@ class ChemVis : IApplication, IEngineInput {
             val molPos = molManager.getMoleculePosition(selectedAtom?.first)
             val atomOffset = molManager.getAtomOffsetPosition(selectedAtom?.second)
             val pos = molPos + atomOffset
-            batcher.begin(GL11.GL_TRIANGLES)
-            batcher.addBatch(Shaper2D.rectangle(pos.x, pos.y, SELECTION_MARKER_SIZE.toFloat(), SELECTION_MARKER_SIZE.toFloat()))
+            batcher.begin(GL11.GL_TRIANGLE_FAN)
+            val mesh = Shaper2D.circle(pos.x, pos.y, 10.0f, 360)
+            batcher.addBatch(mesh)
             batcher.end()
         }
 
@@ -155,7 +157,7 @@ class ChemVis : IApplication, IEngineInput {
             return;
         }
 
-        this.camera.camWidth -= yScroll.toFloat()
+        this.camera.camWidth -= yScroll.toFloat() * 2
     }
 
 
@@ -177,7 +179,7 @@ class ChemVis : IApplication, IEngineInput {
         lastMouseX = xpos.toFloat()
         lastMouseY = ypos.toFloat()
 
-        val scale = 0.1f
+        val scale = 0.5f
 
         camera.cameraPosition.add(Vector3f(-deltaX * scale, deltaY * scale, 0.0f))
     }
