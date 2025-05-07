@@ -41,7 +41,9 @@ public class CVEngine implements ICVServices, AutoCloseable{
     private ImGuiImplGl3 openGlImGui;
     private ImGuiImplGlfw glfwImGui;
 
-    private IEngineInput inputHandler;
+    private InputManager inputManager;
+
+    private IApplicationState currentState;
 
 
     public CVEngine(String name) {
@@ -77,7 +79,8 @@ public class CVEngine implements ICVServices, AutoCloseable{
         this.lwjglErrorCallback = GLUtil.setupDebugMessageCallback();
         GL11.glClearColor(0.02f, 0.02f, 0.02f, 1.0f);
 
-        setupInputCallbacks();
+        this.inputManager = new GLFWInputManager(windowHandle);
+
         setupImGui();
     }
 
@@ -102,27 +105,8 @@ public class CVEngine implements ICVServices, AutoCloseable{
         openGlImGui.init();
     }
 
-    private void setupInputCallbacks() {
-        GLFW.glfwSetKeyCallback(this.windowHandle, (win, key, scancode, action, mods) -> {
-           this.inputHandler.keyClickEvent(key, action, mods);
-        });
-
-        GLFW.glfwSetMouseButtonCallback(this.windowHandle, (win, button, action, mods) -> {
-            this.inputHandler.mouseClickEvent(button, action, mods);
-        });
-
-        GLFW.glfwSetCursorPosCallback(this.windowHandle, (win, xpos, ypos) -> {
-            this.inputHandler.mouseMoveEvent(xpos, ypos);
-        });
-
-        GLFW.glfwSetScrollCallback(this.windowHandle, (win, xScroll, yScroll) -> {
-           this.inputHandler.mouseScrollEvent(xScroll, yScroll);
-        });
-    }
-
     public void run(IApplication application) {
         init();
-        this.inputHandler = new IEngineInput() {};
         application.init(this);
 
         while (! GLFW.glfwWindowShouldClose(this.windowHandle)) {
@@ -131,7 +115,14 @@ public class CVEngine implements ICVServices, AutoCloseable{
             openGlImGui.newFrame();
             ImGui.newFrame();
 
+            //Always run the main application first
             application.loop();
+
+            //Then check if the current state needs running
+            if (currentState != null) {
+                currentState.update();
+                currentState.render();
+            }
 
 
             ImGui.render();
@@ -173,9 +164,15 @@ public class CVEngine implements ICVServices, AutoCloseable{
     }
 
     @Override
-    public long glfwEngineWindow() {
-        return this.windowHandle;
+    public void setCurrentApplicationState(IApplicationState state) {
+        state.init();
+        if (this.currentState != null) {
+            this.currentState.cleanup();
+        }
+        this.currentState = state;
     }
+
+
 
     @Override
     public int loadTextureResource(File file) {
@@ -351,13 +348,14 @@ public class CVEngine implements ICVServices, AutoCloseable{
         throw new RuntimeException("Error when opening file");
     }
 
-    public void setActiveInputHandler(IEngineInput engineInput) {
-        this.inputHandler = engineInput;
-    }
-
 
     public void shutdown() {
         GLFW.glfwSetWindowShouldClose(this.windowHandle, true);
+    }
+
+    @Override
+    public InputManager getInputManager() {
+        return inputManager;
     }
 
     @Override
@@ -367,6 +365,8 @@ public class CVEngine implements ICVServices, AutoCloseable{
         }
 
         openGlImGui.shutdown();
+        //todo this causes null pointer exception and I don't know why
+        //According to the documentation I have done everything correctly ?
 //        glfwImGui.shutdown();
         ImGui.destroyContext();
 

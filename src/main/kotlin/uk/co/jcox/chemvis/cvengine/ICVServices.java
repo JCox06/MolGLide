@@ -6,7 +6,6 @@ import java.io.File;
 
 public interface ICVServices {
 
-    void setActiveInputHandler(IEngineInput engineInput);
 
     Vector2i windowMetrics();
 
@@ -16,5 +15,7 @@ public interface ICVServices {
 
     String loadShaderSourceResource(File file);
 
-    long glfwEngineWindow();
+    void setCurrentApplicationState(IApplicationState state);
+
+    InputManager getInputManager();
 }

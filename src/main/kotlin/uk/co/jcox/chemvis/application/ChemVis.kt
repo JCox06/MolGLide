@@ -1,24 +1,13 @@
 package uk.co.jcox.chemvis.application
 
-import com.fasterxml.jackson.databind.ser.impl.StringArraySerializer
-import com.sun.tools.javac.comp.Check
-import imgui.ImGui
-import imgui.type.ImInt
 import org.joml.Matrix4f
-import org.joml.Vector2f
 import org.joml.Vector3f
-import org.joml.Vector4f
-import org.joml.plus
-import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL11
-import org.openscience.cdk.Atom
-import uk.co.jcox.chemvis.application.editor.CDKManager
-import uk.co.jcox.chemvis.application.editor.IMoleculeManager
+import uk.co.jcox.chemvis.application.states.EditorState
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
-import java.util.UUID
 
-class ChemVis : IApplication, IEngineInput {
+class ChemVis : IApplication, IInputSubscriber {
 
     private lateinit var camera: Camera2D
     private lateinit var program: ShaderProgram
@@ -31,18 +20,10 @@ class ChemVis : IApplication, IEngineInput {
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
 
-    private val molManager: IMoleculeManager = CDKManager()
-
-    private val tools = arrayOf("C", "O", "H")
-    private val selectedTool: ImInt = ImInt(0)
-    private var selectedAtom: Pair<UUID, UUID>? = null
-
-
     override fun init(cvServices: ICVServices) {
 
         this.services = cvServices
 
-        services.setActiveInputHandler(this)
 
         val wm = services.windowMetrics()
 
@@ -52,7 +33,6 @@ class ChemVis : IApplication, IEngineInput {
         program.init()
         program.validateProgram()
         batcher = Batch2D()
-
 
         program.bind()
 
@@ -65,6 +45,9 @@ class ChemVis : IApplication, IEngineInput {
 
 
         GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
+
+        services.inputManager.subscribe(this)
+        services.setCurrentApplicationState(EditorState(batcher, font, program))
 
     }
 
@@ -82,140 +65,32 @@ class ChemVis : IApplication, IEngineInput {
 
         this.program.bind()
 
-        font.text("Font rendering Working :)", Vector3f(1.0f, 1.0f, 1.0f), batcher, program, 300.0f, 300.0f, 0.1f)
-
-
-        //Tool setup
-        ImGui.begin("Editor Settings")
-        ImGui.combo("Tool Selection", selectedTool, tools)
-        ImGui.end()
-
-
-//        Check what atom is selected
-        for (molecule in molManager.molecules()) {
-            val rootPos = molManager.getMoleculePosition(molecule)
-            for (atom in molManager.atoms(molecule)) {
-                val offsetPos = molManager.getAtomOffsetPosition(atom)
-                val atomPos = rootPos + offsetPos
-
-                //Also check if the cursor is close enough to select it
-                val locX = DoubleArray(1)
-                val locY = DoubleArray(1)
-                GLFW.glfwGetCursorPos(services.glfwEngineWindow(), locX, locY)
-
-                val cursorPos = Vector4f(locX[0].toFloat(), locY[0].toFloat(), 0.0f, 1.0f)
-                val cursorWorld = camera.screenToWorld(cursorPos)
-                val atomPos4 = Vector4f(atomPos, 0.0f, 1.0f)
-
-                val diff = atomPos4.sub(cursorWorld, Vector4f())
-                if (diff.length() <= SELECTION_RADIUS) {
-                    selectedAtom = Pair(molecule, atom)
-                    break
-                } else {
-                    selectedAtom = null
-                }
-            }
-
-            if (selectedAtom != null) {
-                break
-            }
-        }
-
-
-
-        //Render selection
-        if (selectedAtom != null) {
-            val molPos = molManager.getMoleculePosition(selectedAtom?.first)
-            val atomOffset = molManager.getAtomOffsetPosition(selectedAtom?.second)
-            val pos = molPos + atomOffset
-            batcher.begin(GL11.GL_TRIANGLE_FAN)
-            val mesh = Shaper2D.circle(pos.x, pos.y, 10.0f, 360)
-            batcher.addBatch(mesh)
-            batcher.end()
-        }
-
-        //Rendering atoms time!
-        for (molecule in molManager.molecules()) {
-            val rootPos = molManager.getMoleculePosition(molecule)
-            //Step 1 - Get all the atoms in the molecule
-            for (atom in molManager.atoms(molecule)) {
-
-                val offsetPos = molManager.getAtomOffsetPosition(atom)
-                val atomPos = rootPos + offsetPos
-
-                font.text(molManager.getAtomSymbol(atom), Vector3f(1.0f, 1.0f, 1.0f), batcher, program, atomPos.x, atomPos.y, 0.1f)
-
-
-            }
-        }
-
     }
 
-    override fun mouseScrollEvent(xScroll: Double, yScroll: Double) {
-        //If CTRL is pressed down, and you scroll, zoom in:
-        if (GLFW.glfwGetKey(services.glfwEngineWindow(), GLFW.GLFW_KEY_LEFT_CONTROL) != GLFW.GLFW_PRESS) {
-            return;
+    override fun mouseScrollEvent(inputManager: InputManager, xScroll: Double, yScroll: Double) {
+        if (inputManager.keyClick(RawInput.LCTRL)) {
+            this.camera.camWidth -= yScroll.toFloat() * 2;
         }
-
-        this.camera.camWidth -= yScroll.toFloat() * 2
     }
 
+    override fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
 
-    override fun mouseMoveEvent(xpos: Double, ypos: Double) {
 
+        if (inputManager.mouseClick(RawInput.MOUSE_3)) {
+            val deltaX: Float = xPos.toFloat() - lastMouseX
+            val deltaY: Float = yPos.toFloat() - lastMouseY
+            lastMouseX = xPos.toFloat()
+            lastMouseY = yPos.toFloat()
 
-        if (GLFW.glfwGetMouseButton(services.glfwEngineWindow(), GLFW.GLFW_MOUSE_BUTTON_3) == GLFW.GLFW_RELEASE) {
-            lastMouseX = xpos.toFloat()
-            lastMouseY = ypos.toFloat()
+            val scale = 0.5f
+
+            camera.cameraPosition.add(Vector3f(-deltaX * scale, deltaY * scale, 0.0f))
         }
 
-        //If middle mouse button is pressed and you move the mouse
-        if (GLFW.glfwGetMouseButton(services.glfwEngineWindow(), GLFW.GLFW_MOUSE_BUTTON_3) != GLFW.GLFW_PRESS) {
-            return;
-        }
-
-        val deltaX: Float = xpos.toFloat() - lastMouseX
-        val deltaY: Float = ypos.toFloat() - lastMouseY
-        lastMouseX = xpos.toFloat()
-        lastMouseY = ypos.toFloat()
-
-        val scale = 0.5f
-
-        camera.cameraPosition.add(Vector3f(-deltaX * scale, deltaY * scale, 0.0f))
+        lastMouseX = xPos.toFloat()
+        lastMouseY = yPos.toFloat()
     }
 
-
-    override fun mouseClickEvent(button: Int, action: Int, mods: Int) {
-        if (button != GLFW.GLFW_MOUSE_BUTTON_1) {
-            return;
-        }
-
-        if (action != GLFW.GLFW_PRESS) {
-            return;
-        }
-
-        //Get location of the screen clicked
-        val cursorX = DoubleArray(1)
-        val cursorY = DoubleArray(1)
-        GLFW.glfwGetCursorPos(services.glfwEngineWindow(), cursorX, cursorY)
-
-        val clickPos = Vector4f(cursorX[0].toFloat(), cursorY[0].toFloat(), 0.0f, 1.0f)
-        val worldSpace = camera.screenToWorld(clickPos)
-
-        //Assuming clicked with the carbon skeleton tool create a new methane
-
-        if (selectedAtom == null) {
-            val methane = molManager.createMolecule()
-            val carbon = molManager.addAtom(methane, tools[selectedTool.get()])
-            molManager.setMoleculePosition(methane, Vector2f(worldSpace.x, worldSpace.y))
-            molManager.setAtomOffsetPosition(carbon, Vector2f())
-        } else {
-            //Add a bond to the atom
-
-
-        }
-
-    }
 
     override fun cleanup() {
         this.program.close()
@@ -223,8 +98,4 @@ class ChemVis : IApplication, IEngineInput {
         this.textureManager.close()
     }
 
-    companion object {
-        val SELECTION_RADIUS = 55
-        val SELECTION_MARKER_SIZE = 20;
-    }
 }

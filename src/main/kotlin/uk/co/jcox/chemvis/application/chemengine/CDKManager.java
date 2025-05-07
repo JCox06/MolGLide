@@ -1,22 +1,15 @@
-package uk.co.jcox.chemvis.application.editor;
+package uk.co.jcox.chemvis.application.chemengine;
 
-import jdk.dynalink.linker.LinkerServices;
-import org.joml.Vector2f;
 import org.openscience.cdk.Atom;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
-import uk.ac.ebi.beam.Element;
-import uk.co.jcox.chemvis.cvengine.IApplication;
 
 import java.util.*;
 
 public class CDKManager implements IMoleculeManager{
-
-    private static final String PROPERTY_MOL_POSITION = "molpos";
-    private static final String PROPERTY_ATOM_POSITION = "atompos";
 
     private final Map<UUID, MolInfo> molecules;
     private final Map<UUID, IAtom> atoms;
@@ -63,27 +56,6 @@ public class CDKManager implements IMoleculeManager{
         return bondID;
     }
 
-    @Override
-    public void setMoleculePosition(UUID moleculeID, Vector2f position) {
-        IAtomContainer container = molecules.get(moleculeID).cdk;
-        container.setProperty(PROPERTY_MOL_POSITION, position);
-    }
-
-    @Override
-    public void setAtomOffsetPosition(UUID atomID, Vector2f position) {
-        IAtom atom = atoms.get(atomID);
-        atom.setProperty(PROPERTY_ATOM_POSITION, position);
-    }
-
-    @Override
-    public Vector2f getMoleculePosition(UUID moleculeID) {
-        return molecules.get(moleculeID).cdk.getProperty(PROPERTY_MOL_POSITION);
-    }
-
-    @Override
-    public Vector2f getAtomOffsetPosition(UUID atomID) {
-        return atoms.get(atomID).getProperty(PROPERTY_ATOM_POSITION);
-    }
 
     @Override
     public String getAtomSymbol(UUID atom) {
