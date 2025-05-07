@@ -89,7 +89,7 @@ enum class RawInput(val glfwKey: Int) {
     MOUSE_2(GLFW.GLFW_MOUSE_BUTTON_2),
     MOUSE_3(GLFW.GLFW_MOUSE_BUTTON_3),
 
-    NULL(0),
+    NULL(-1),
 
     ;
 
@@ -98,7 +98,8 @@ enum class RawInput(val glfwKey: Int) {
         private val glfwCache = entries.associateBy { it.glfwKey }
 
         fun fromGLFW(id: Int) : RawInput {
-            return glfwCache[id] ?: NULL
+            val key = glfwCache[id]
+            return key ?: NULL
         }
     }
 }

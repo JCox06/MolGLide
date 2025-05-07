@@ -20,6 +20,8 @@ class ChemVis : IApplication, IInputSubscriber {
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
 
+    private val fontSize = 140
+
     override fun init(cvServices: ICVServices) {
 
         this.services = cvServices
@@ -40,14 +42,17 @@ class ChemVis : IApplication, IInputSubscriber {
         this.textureManager.manageTexture("logo", services.loadTextureResource(File("data/textures/chemvis_logo.png")))
         this.textureManager.manageTexture("logo1", services.loadTextureResource(File("data/textures/texture1.png")));
 
-        font = services.loadFontResource(File("data/fonts/sourceserif.ttf"), 140,
-            "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789. ():", true, textureManager)
+        font = setupFont(fontSize)
 
+        font.scale = 0.1f
+        font.colour = Vector3f(1.0f, 1.0f, 1.0f)
 
         GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
 
+        val editorState = EditorState(batcher, font, program, camera)
+        services.setCurrentApplicationState(editorState)
+        services.inputManager.subscribe(editorState)
         services.inputManager.subscribe(this)
-        services.setCurrentApplicationState(EditorState(batcher, font, program))
 
     }
 
@@ -59,9 +64,11 @@ class ChemVis : IApplication, IInputSubscriber {
         GL11.glViewport(0, 0, wm.x, wm.y)
         camera.update(wm.x, wm.y)
 
+
         //Drawing time
         program.uniform("uPerspective", camera.combined())
         program.uniform("uModel", Matrix4f())
+
 
         this.program.bind()
 
@@ -91,6 +98,11 @@ class ChemVis : IApplication, IInputSubscriber {
         lastMouseY = yPos.toFloat()
     }
 
+
+    private fun setupFont(size: Int): BitmapFont {
+        return services.loadFontResource(File("data/fonts/ubuntu.ttf"), size,
+            "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789. ():", true, textureManager)
+    }
 
     override fun cleanup() {
         this.program.close()

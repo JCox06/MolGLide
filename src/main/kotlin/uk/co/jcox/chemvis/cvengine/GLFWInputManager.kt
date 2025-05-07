@@ -19,7 +19,7 @@ class GLFWInputManager (
 
         GLFW.glfwSetMouseButtonCallback(this.windowHandle) {win, button, action, mods ->
             subscribers.forEach { subscriber ->
-                if (button == GLFW.GLFW_PRESS) {
+                if (action == GLFW.GLFW_PRESS) {
                     subscriber.clickEvent(this, RawInput.fromGLFW(button))
                 }
             }

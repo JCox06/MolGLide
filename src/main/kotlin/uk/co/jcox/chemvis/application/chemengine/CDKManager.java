@@ -9,7 +9,9 @@ import org.openscience.cdk.interfaces.IBond;
 
 import java.util.*;
 
-public class CDKManager implements IMoleculeManager{
+public class CDKManager implements IMoleculeManager {
+
+    public static final String PARENT_MOLECULE = "parent";
 
     private final Map<UUID, MolInfo> molecules;
     private final Map<UUID, IAtom> atoms;
@@ -38,6 +40,7 @@ public class CDKManager implements IMoleculeManager{
         UUID uuid = UUID.randomUUID();
         molInfo.relAtoms.add(uuid);
         atoms.put(uuid, atom);
+        atom.setProperty(PARENT_MOLECULE, molecule);
         return uuid;
     }
 
@@ -56,6 +59,11 @@ public class CDKManager implements IMoleculeManager{
         return bondID;
     }
 
+    @Override
+    public UUID relatedMolecule(UUID atomID) {
+        IAtom atom = atoms.get(atomID);
+        return atom.getProperty(PARENT_MOLECULE);
+    }
 
     @Override
     public String getAtomSymbol(UUID atom) {
@@ -68,8 +76,13 @@ public class CDKManager implements IMoleculeManager{
     }
 
     @Override
-    public Iterator<UUID> atoms(UUID molecule) {
+    public Iterator<UUID> relatedAtoms(UUID molecule) {
         return this.molecules.get(molecule).relAtoms.iterator();
+    }
+
+    @Override
+    public Iterator<UUID> allAtoms() {
+        return this.atoms.keySet().iterator();
     }
 
     private static class MolInfo {

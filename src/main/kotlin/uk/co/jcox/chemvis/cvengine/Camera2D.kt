@@ -9,7 +9,7 @@ class Camera2D (
     private var screenHeight: Int,
 )  {
     private var projection: Matrix4f = Matrix4f()
-    val cameraPosition: Vector3f = Vector3f(0.0f, 0.0f, 1.0f)
+    val cameraPosition: Vector3f = Vector3f(0.0f, 0.0f, 0.0f)
     val cameraDirection: Vector3f = Vector3f(0.0f, 0.0f, -1.0f)
     private var lookAt: Matrix4f = Matrix4f()
     //The amount visible on the screen by default is set to 500 units width
@@ -35,12 +35,20 @@ class Camera2D (
 
         //Get projection Matrix
         this.projection = Matrix4f().ortho(0.0f, camWidth, 0.0f, camHeight, 0.1f, 100.0f)
-        this.lookAt = Matrix4f().lookAt(cameraPosition, cameraPosition + cameraDirection.normalize(), Vector3f(0.0f, 1.0f, 0.0f))
+        this.lookAt = Matrix4f().lookAt(cameraPosition, (cameraPosition + cameraDirection), Vector3f(0.0f, 1.0f, 0.0f))
     }
 
 
     fun combined(): Matrix4f {
         return projection * lookAt
+    }
+
+    fun view() : Matrix4f {
+        return lookAt
+    }
+
+    fun projection() : Matrix4f {
+        return projection
     }
 
 
@@ -66,7 +74,7 @@ class Camera2D (
 
 
     private fun viewSpacetoWorldSpace(viewSpace: Vector4fc) : Vector4f {
-        val viewSpaceInverse = lookAt.invert()
+        val viewSpaceInverse = lookAt.invert(Matrix4f())
         val worldSpace = viewSpace.mul(viewSpaceInverse, Vector4f())
         return worldSpace
     }

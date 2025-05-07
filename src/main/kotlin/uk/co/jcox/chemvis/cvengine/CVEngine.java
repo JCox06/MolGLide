@@ -66,7 +66,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3);
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);
 
-        this.windowHandle = GLFW.glfwCreateWindow(800, 600, "CV Engine: " + name + " render", 0, 0);
+        this.windowHandle = GLFW.glfwCreateWindow(800, 600, "CV Engine: " + name, 0, 0);
 
         if (this.windowHandle == 0) {
             throw new RuntimeException("Filed to create a window and setup OpenGL");
@@ -111,6 +111,11 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
         while (! GLFW.glfwWindowShouldClose(this.windowHandle)) {
 
+
+            if (inputManager.keyClick(RawInput.KEY_Q) && inputManager.keyClick(RawInput.LCTRL)) {
+                shutdown();
+            }
+
             glfwImGui.newFrame();
             openGlImGui.newFrame();
             ImGui.newFrame();
@@ -120,7 +125,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
             //Then check if the current state needs running
             if (currentState != null) {
-                currentState.update();
+                currentState.update(inputManager);
                 currentState.render();
             }
 

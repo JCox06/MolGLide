@@ -13,14 +13,14 @@ class BitmapFont (
 
     ) {
 
+    var colour: Vector3f = Vector3f(1.0f, 1.0f, 1.0f)
+    var scale: Float = 1.0f
+    var blend: Boolean = true
 
 
-    fun text(label: String, batcher: Batch2D, program: ShaderProgram, xpos: Float, ypos: Float) {
-        text(label, Vector3f(1.0f, 1.0f, 1.0f), batcher, program, xpos, ypos, 1.0f)
-    }
 
     //WARNING: Batcher must be in a rest state before this method is called!
-    fun text(label: String, colour: Vector3f, batcher: Batch2D, program: ShaderProgram, xpos: Float, ypos: Float, scale: Float) {
+    fun text(label: String, batcher: Batch2D, program: ShaderProgram, xpos: Float, ypos: Float) {
 
         val scaledFont = fontSize * scale
 
@@ -28,8 +28,11 @@ class BitmapFont (
         program.uniform("mainTexture", 0)
         program.uniform("fontColour", colour)
         textureManager.useTexture(textureID, GL15.GL_TEXTURE0)
-//        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+        if (blend) {
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        }
 
         batcher.begin(GL11.GL_TRIANGLES)
 
@@ -66,7 +69,9 @@ class BitmapFont (
         GL11.glDisable(GL11.GL_BLEND);
     }
 
-
+    fun glyphSize() : Float {
+        return this.fontSize * this.scale
+    }
 
     data class GlyphData (
         val glyphWidth: Float,

@@ -12,9 +12,13 @@ public interface IMoleculeManager {
 
     UUID formBond(UUID moleculeID, UUID atom1, UUID atom2, int bondOrder);
 
+    UUID relatedMolecule(UUID atomID);
+
     String getAtomSymbol(UUID atom);
 
     Iterator<UUID> molecules();
 
-    Iterator<UUID> atoms(UUID molecule);
+    Iterator<UUID> relatedAtoms(UUID molecule);
+
+    Iterator<UUID> allAtoms();
 }
