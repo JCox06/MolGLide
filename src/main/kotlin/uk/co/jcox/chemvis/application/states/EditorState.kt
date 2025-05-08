@@ -5,6 +5,7 @@ import org.apache.jena.vocabulary.AS.radius
 import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.joml.Vector3fc
 import org.joml.Vector4f
 import org.joml.minus
 import org.joml.plus
@@ -26,6 +27,7 @@ import uk.co.jcox.chemvis.cvengine.RawInput
 import uk.co.jcox.chemvis.cvengine.ShaderProgram
 import uk.co.jcox.chemvis.cvengine.Shaper2D
 import java.util.UUID
+import kotlin.math.floor
 
 class EditorState(
     val batcher: Batch2D,
@@ -69,7 +71,9 @@ class EditorState(
             val position = closestPointToCircleCircumfrance(Vector2f(posMol.x, posMol.y), mouseWorldPos, CONNECTION_LENGTH)
             batcher.begin(GL11.GL_TRIANGLES)
 
-            batcher.addBatch(Shaper2D.rectangle(position.x, position.y, 5.0f, 5.0f))
+            val newPos = snapToGrid(Vector3f(position.x, position.y, 0.0f))
+
+            batcher.addBatch(Shaper2D.rectangle(newPos.x, newPos.y, 5.0f, 5.0f))
 
             batcher.end()
         }
@@ -140,7 +144,7 @@ class EditorState(
             //Now the molecule itself is created, but it needs a physical representation, otherwise it will not render
             //The "ChemLevel" object manages the positions of atoms, bonds, molecules ect. So we need to get the position of our molecule in the world
             //Add the atom to the level
-            level.addAtom(atomInMolecule, Vector3f(worldSpaceCoordinate.x, worldSpaceCoordinate.y, worldSpaceCoordinate.z))
+            level.addAtom(atomInMolecule, snapToGrid(Vector3f(worldSpaceCoordinate.x, worldSpaceCoordinate.y, worldSpaceCoordinate.z)))
             return;
         }
 
@@ -179,9 +183,17 @@ class EditorState(
     }
 
     companion object {
-        private const val SELECTION_MARKER_RADIUS: Float = 40.0f
-        private const val CONNECTION_LENGTH: Float = 35.0f
+        private const val SELECTION_MARKER_RADIUS: Float = 30.0f
+        private const val CONNECTION_LENGTH: Float = 50.0f
         private const val SELECTION_RADIUS: Float = 10.0f
-        private const val ANGLE_STEP: Int = 45 //Minimum angle for a skeletal formula
+    }
+
+    private fun snapToGrid(vec: Vector3fc) : Vector3f {
+        val newVec: Vector3f = Vector3f()
+        newVec.x = floor((vec.x() / CONNECTION_LENGTH) + 0.5f) * CONNECTION_LENGTH
+        newVec.y = floor((vec.y() / CONNECTION_LENGTH) + 0.5f) * CONNECTION_LENGTH
+        newVec.z = vec.z()
+
+        return newVec
     }
 }
