@@ -52,6 +52,11 @@ class Camera2D (
     }
 
 
+    fun screenToWorld(screenPos: Vector2fc) : Vector2f {
+        val world = screenToWorld(Vector4f(screenPos, 0.0f, 1.0f))
+        return Vector2f(world.x, world.y)
+    }
+
     fun screenToWorld(screenPos: Vector4fc) : Vector4f {
         val viewSpace = screenToView(screenPos)
         val worldSpace = viewSpacetoWorldSpace(viewSpace)
