@@ -75,7 +75,7 @@ class EditorState(
         val worldClick: Vector2f = camera.screenToWorld(windowClick)
 
         if (key == RawInput.MOUSE_1) {
-            newMolecule(snapToGrid(worldClick))
+            newMolecule(snapToGrid(worldClick, CONNECTION_LENGTH_X, CONNECTION_LENGTH_Y))
         }
 
     }
@@ -112,7 +112,7 @@ class EditorState(
 
     private fun createBondingLivePreview(mouseWorldPos: Vector2f) {
         val selectedAtom = level.getPosition(selectedAtom!!)
-        val positionForNew = closestPointToCircleCircumference(selectedAtom, mouseWorldPos, CONNECTION_LENGTH)
+        val positionForNew = closestPointToCircleCircumference(selectedAtom, mouseWorldPos, CONNECTION_LENGTH_Y)
         bondFormationPreviewPosition = positionForNew
     }
 
@@ -125,14 +125,15 @@ class EditorState(
 
     companion object {
         private const val SELECTION_MARKER_RADIUS: Float = 30.0f
-        private const val CONNECTION_LENGTH: Float = 50.0f
+        private const val CONNECTION_LENGTH_X: Float = 25.0f
+        private const val CONNECTION_LENGTH_Y: Float = 50.0f
         private const val SELECTION_RADIUS: Float = 10.0f
     }
 
-    private fun snapToGrid(vec: Vector2fc) : Vector2f {
+    private fun snapToGrid(vec: Vector2fc, snapFactorX: Float, snapFactorY: Float) : Vector2f {
         val newVec: Vector2f = Vector2f()
-        newVec.x = floor((vec.x() / CONNECTION_LENGTH) + 0.5f) * CONNECTION_LENGTH
-        newVec.y = floor((vec.y() / CONNECTION_LENGTH) + 0.5f) * CONNECTION_LENGTH
+        newVec.x = floor((vec.x() / snapFactorX) + 0.5f) * snapFactorX
+        newVec.y = floor((vec.y() / snapFactorY) + 0.5f) * snapFactorY
         return newVec
     }
 }
