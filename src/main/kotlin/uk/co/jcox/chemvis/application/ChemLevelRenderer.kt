@@ -12,7 +12,7 @@ import uk.co.jcox.chemvis.cvengine.Shaper2D
 class ChemLevelRenderer {
 
     fun renderBondFormationPreview(atomA: Vector2f, atomB: Vector2f, batcher: Batch2D) {
-        batcher.begin(GL11.GL_LINES)
+        batcher.begin(Batch2D.Mode.LINE)
         batcher.addBatch(listOf(atomA.x, atomA.y, 0.0f, atomB.x, atomB.y, 0.0f), listOf(0, 1))
         batcher.end()
     }
@@ -20,7 +20,7 @@ class ChemLevelRenderer {
     fun renderSelectedAtom(selectedPosition: Vector2f, size: Float, program: ShaderProgram, batcher: Batch2D) {
         program.uniform("textureMode", 0)
         program.uniform("fontColour", Vector3f(0.1f, 0.1f, 0.1f))
-        batcher.begin(GL11.GL_TRIANGLE_FAN)
+        batcher.begin(Batch2D.Mode.FAN)
         batcher.addBatch(Shaper2D.circle(selectedPosition.x, selectedPosition.y, size))
         batcher.end()
         program.uniform("textureMode", 1)

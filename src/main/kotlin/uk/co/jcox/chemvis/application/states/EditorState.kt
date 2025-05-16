@@ -51,8 +51,6 @@ class EditorState(
 
     override fun render() {
 
-        println(bondFormationPreviewPosition)
-
         if (selectedAtom != null) {
             renderer.renderSelectedAtom(level.getPosition(selectedAtom!!), SELECTION_RADIUS, program, batcher)
 
@@ -74,8 +72,8 @@ class EditorState(
         val windowClick = inputManager.mousePos()
         val worldClick: Vector2f = camera.screenToWorld(windowClick)
 
-        if (key == RawInput.MOUSE_1) {
-            newMolecule(snapToGrid(worldClick, CONNECTION_LENGTH_X, CONNECTION_LENGTH_Y))
+        if (key == RawInput.MOUSE_1 && selectedAtom == null) {
+            newMolecule(worldClick)
         }
 
     }
@@ -125,15 +123,8 @@ class EditorState(
 
     companion object {
         private const val SELECTION_MARKER_RADIUS: Float = 30.0f
-        private const val CONNECTION_LENGTH_X: Float = 25.0f
         private const val CONNECTION_LENGTH_Y: Float = 50.0f
         private const val SELECTION_RADIUS: Float = 10.0f
     }
 
-    private fun snapToGrid(vec: Vector2fc, snapFactorX: Float, snapFactorY: Float) : Vector2f {
-        val newVec: Vector2f = Vector2f()
-        newVec.x = floor((vec.x() / snapFactorX) + 0.5f) * snapFactorX
-        newVec.y = floor((vec.y() / snapFactorY) + 0.5f) * snapFactorY
-        return newVec
-    }
 }

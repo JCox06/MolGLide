@@ -4,18 +4,18 @@ import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.states.EditorState
+import uk.co.jcox.chemvis.application.states.TestState
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
 
 class ChemVis : IApplication, IInputSubscriber {
 
     private lateinit var camera: Camera2D
-    private lateinit var program: ShaderProgram
-    private lateinit var batcher: Batch2D
-    private lateinit var textureManager: TextureManager
     private lateinit var font: BitmapFont
 
     private lateinit var services: ICVServices
+
+    private lateinit var program: ShaderProgram;
 
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
@@ -31,17 +31,6 @@ class ChemVis : IApplication, IInputSubscriber {
 
         camera = Camera2D(wm.x, wm.y)
 
-        program = ShaderProgram(services.loadShaderSourceResource(File("data/shaders/default2D.vert")), services.loadShaderSourceResource(File("data/shaders/default2D.frag")))
-        program.init()
-        program.validateProgram()
-        batcher = Batch2D()
-
-        program.bind()
-
-        textureManager = TextureManager()
-        this.textureManager.manageTexture("logo", services.loadTextureResource(File("data/textures/chemvis_logo.png")))
-        this.textureManager.manageTexture("logo1", services.loadTextureResource(File("data/textures/texture1.png")));
-
         font = setupFont(fontSize)
 
         font.scale = 0.1f
@@ -49,10 +38,14 @@ class ChemVis : IApplication, IInputSubscriber {
 
         GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
 
-        val editorState = EditorState(batcher, font, program, camera)
-        services.setCurrentApplicationState(editorState)
-        services.inputManager.subscribe(editorState)
-        services.inputManager.subscribe(this)
+        program = services.programs().useProgram(ShaderProgramManager.SIMPLE_TEXTURE)
+
+        val editorState = EditorState(services.renderer(), font, program, camera)
+//        services.setCurrentApplicationState(editorState)
+        services.setCurrentApplicationState(TestState())
+        services.inputs().subscribe(editorState)
+        services.inputs().subscribe(this)
+
 
     }
 
@@ -100,14 +93,12 @@ class ChemVis : IApplication, IInputSubscriber {
 
 
     private fun setupFont(size: Int): BitmapFont {
-        return services.loadFontResource(File("data/fonts/ubuntu.ttf"), size,
-            "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789. ():", true, textureManager)
+        return services.loadFontResource(File("data/chemvis/fonts/ubuntu.ttf"), size,
+            "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789. ():", true)
     }
 
     override fun cleanup() {
-        this.program.close()
-        this.batcher.close()
-        this.textureManager.close()
+
     }
 
 }

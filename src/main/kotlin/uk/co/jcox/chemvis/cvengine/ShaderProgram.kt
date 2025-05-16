@@ -8,76 +8,14 @@ import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
 
 class ShaderProgram (
-    val vertSrc: String, val fragSrc: String
+    private val program: Int
 ) : AutoCloseable {
-
-
-    private var program: Int = 0
-
-    //Compile and create program
-    fun init() {
-        val vertexShader = GL30.glCreateShader(GL30.GL_VERTEX_SHADER)
-        GL30.glShaderSource(vertexShader, vertSrc)
-        GL30.glCompileShader(vertexShader)
-
-        if (! checkShaderCompilation(vertexShader)) {
-            println(getShaderInfoLog(vertexShader))
-        }
-
-        val fragmentShader = GL30.glCreateShader(GL30.GL_FRAGMENT_SHADER)
-        GL30.glShaderSource(fragmentShader, fragSrc)
-        GL30.glCompileShader(fragmentShader)
-
-        if (! checkShaderCompilation(fragmentShader)) {
-            println(getShaderInfoLog(fragmentShader))
-        }
-
-
-        this.program = GL30.glCreateProgram()
-
-        GL30.glAttachShader(this.program, vertexShader)
-        GL30.glAttachShader(this.program, fragmentShader)
-        GL30.glLinkProgram(this.program)
-
-        if (! checkProgramLink()) {
-            println(getProgramInfoLog())
-        }
-
-        validateProgram()
-
-        GL30.glDeleteShader(vertexShader)
-        GL30.glDeleteShader(fragmentShader)
-
-    }
-
-    private fun checkShaderCompilation(shadType: Int) : Boolean {
-        return GL30.glGetShaderi(shadType, GL30.GL_COMPILE_STATUS) == 1
-    }
-
-    private fun getShaderInfoLog(shadType: Int) : String {
-        return GL30.glGetShaderInfoLog(shadType)
-    }
-
-    private fun checkProgramLink() : Boolean {
-        return GL30.glGetProgrami(this.program, GL30.GL_LINK_STATUS) == 1
-    }
-
-    fun validateProgram() {
-        GL30.glValidateProgram(this.program)
-        if (GL30.glGetProgrami(this.program, GL30.GL_VALIDATE_STATUS) == 0) {
-            println("Error")
-        }
-    }
 
 
     fun bind() {
         GL30.glUseProgram(this.program)
     }
 
-
-    fun getProgramInfoLog(): String {
-        return GL30.glGetProgramInfoLog(this.program)
-    }
 
     fun uniform(name: String, value: Float) {
         GL30.glUniform1f(getUniformLocation(name), value)

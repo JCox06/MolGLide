@@ -45,6 +45,11 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
     private IApplicationState currentState;
 
+    //Acts as the main renderer
+    private Batch2D batcher;
+    private TextureManager textureManager;
+    private ShaderProgramManager shaderProgramManager;
+    
 
     public CVEngine(String name) {
         this.name = name;
@@ -79,9 +84,35 @@ public class CVEngine implements ICVServices, AutoCloseable{
         this.lwjglErrorCallback = GLUtil.setupDebugMessageCallback();
         GL11.glClearColor(0.02f, 0.02f, 0.02f, 1.0f);
 
-        this.inputManager = new GLFWInputManager(windowHandle);
+        initialiseCoreServices();
+
+        loadIntegratedShaders(ShaderProgramManager.Companion.getSIMPLE_TEXTURE(), new File("./data/integrated/shaders/simpleTexture.vert"), new File("./data/integrated/shaders/simpleTexture.frag"));
 
         setupImGui();
+    }
+
+
+    private void initialiseCoreServices() {
+        this.inputManager = new GLFWInputManager(windowHandle);
+        this.batcher = new Batch2D();
+        this.textureManager = new TextureManager();
+        this.shaderProgramManager = new ShaderProgramManager();
+    }
+
+
+    private void loadIntegratedShaders(String programID, File vertexSrc, File fragSrc) {
+        if (!vertexSrc.isFile() || !fragSrc.isFile()) {
+            throwFile();
+        }
+
+        try {
+            String vertexShader = Files.readString(vertexSrc.toPath());
+            String fragmentShader = Files.readString(fragSrc.toPath());
+
+            this.shaderProgramManager.loadShader(programID, vertexShader, fragmentShader);
+        } catch (IOException e) {
+            throwFile();
+        }
     }
 
     private void setupImGui() {
@@ -92,8 +123,8 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
         ImGuiIO io = ImGui.getIO();
         ImFont font = io.getFonts().addFontDefault();
-        ImFont experience = io.getFonts().addFontFromFileTTF("data/fonts/ubuntu.ttf", 32);
-        io.setFontDefault(experience);
+//        ImFont experience = io.getFonts().addFontFromFileTTF("data/fonts/ubuntu.ttf", 32);
+//        io.setFontDefault(experience);
         io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable);
         io.setConfigViewportsNoDecoration(false);
@@ -159,16 +190,6 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
 
     @Override
-    public String loadShaderSourceResource(File file) {
-        try {
-            return Files.readString(file.toPath());
-        } catch (IOException e) {
-           throwFile();
-        }
-       return "";
-    }
-
-    @Override
     public void setCurrentApplicationState(IApplicationState state) {
         state.init();
         if (this.currentState != null) {
@@ -229,7 +250,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
 
     @Override
-    public BitmapFont loadFontResource(File file, int size, String glyphs, boolean debugImage, TextureManager textureManager) {
+    public BitmapFont loadFontResource(File file, int size, String glyphs, boolean debugImage) {
         if (! file.isFile()) {
             throwFile();
         }
@@ -331,7 +352,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
     }
 
     private void saveBitmapFont(BufferedImage bufferedImage) {
-        File outputFile = new File("data/temp/font-generated.png");
+        File outputFile = new File("data/integrated/temp/font-generated.png");
         try {
             ImageIO.write(bufferedImage, "png", outputFile);
         } catch (IOException e) {
@@ -359,12 +380,33 @@ public class CVEngine implements ICVServices, AutoCloseable{
     }
 
     @Override
-    public InputManager getInputManager() {
+    public InputManager inputs() {
         return inputManager;
     }
 
     @Override
+    public Batch2D renderer() {
+        return this.batcher;
+    }
+
+    @Override
+    public TextureManager textures() {
+        return this.textureManager;
+    }
+
+    @Override
+    public ShaderProgramManager programs() {
+        return this.shaderProgramManager;
+    }
+
+
+    @Override
     public void close() {
+
+        batcher.close();
+        textureManager.close();
+        shaderProgramManager.close();
+
         if (this.lwjglErrorCallback != null) {
             this.lwjglErrorCallback.close();
         }

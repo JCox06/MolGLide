@@ -34,7 +34,7 @@ class BitmapFont (
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         }
 
-        batcher.begin(GL11.GL_TRIANGLES)
+        batcher.begin(Batch2D.Mode.TRIANGLES)
 
         var renderX = xpos
         var renderY = ypos

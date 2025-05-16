@@ -40,9 +40,9 @@ class Batch2D (
     }
 
     private var ready = false
-    private var mode = 0
+    private var mode = Mode.TRIANGLES
 
-    fun begin(mode: Int) {
+    fun begin(mode: Mode) {
         if (this.ready) {
             throw RuntimeException("Begin called twice - Batcher was already ready")
         }
@@ -98,7 +98,7 @@ class Batch2D (
         GL15.glBufferSubData(GL15.GL_ELEMENT_ARRAY_BUFFER, 0, elementBuff)
 
 
-        GL15.glDrawElements(mode, this.indices.size, GL11.GL_UNSIGNED_INT, 0)
+        GL15.glDrawElements(mode.openGlID, this.indices.size, GL11.GL_UNSIGNED_INT, 0)
 
 
         //Clear cpu buffers
@@ -120,6 +120,12 @@ class Batch2D (
         GL15.glDeleteBuffers(this.glVertexBuffer)
         GL15.glDeleteBuffers(this.glIndexBuffer)
         GL30.glDeleteVertexArrays(this.glVertexArray)
+    }
+
+    enum class Mode (val openGlID: Int) {
+        TRIANGLES(GL11.GL_TRIANGLES),
+        FAN(GL11.GL_TRIANGLE_FAN),
+        LINE(GL11.GL_LINES),
     }
 
     companion object {
