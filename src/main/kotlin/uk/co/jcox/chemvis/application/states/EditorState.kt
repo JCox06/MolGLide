@@ -6,7 +6,6 @@ import org.joml.minus
 import org.joml.plus
 
 import uk.co.jcox.chemvis.application.ChemLevel
-import uk.co.jcox.chemvis.application.ChemLevelRenderer
 import uk.co.jcox.chemvis.application.chemengine.CDKManager
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.cvengine.Batch2D
@@ -15,21 +14,20 @@ import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IApplicationState
 import uk.co.jcox.chemvis.cvengine.IInputSubscriber
 import uk.co.jcox.chemvis.cvengine.InputManager
+import uk.co.jcox.chemvis.cvengine.LevelRenderer
 import uk.co.jcox.chemvis.cvengine.RawInput
 import uk.co.jcox.chemvis.cvengine.ShaderProgram
 import java.util.UUID
+import java.util.logging.Level
 import kotlin.math.floor
 
 class EditorState(
-    val batcher: Batch2D,
-    val font: BitmapFont,
-    val program: ShaderProgram,
+    val batcher: LevelRenderer,
     val camera: Camera2D,
 ) : IApplicationState, IInputSubscriber {
 
     private val molManager: IMoleculeManager = CDKManager()
     private val level: ChemLevel = ChemLevel()
-    private val renderer: ChemLevelRenderer = ChemLevelRenderer()
     private var selectedAtom: UUID? = null
     private var bondFormationPreviewPosition: Vector2f? = null
 
@@ -51,15 +49,6 @@ class EditorState(
 
     override fun render() {
 
-        if (selectedAtom != null) {
-            renderer.renderSelectedAtom(level.getPosition(selectedAtom!!), SELECTION_RADIUS, program, batcher)
-
-            if (bondFormationPreviewPosition != null) {
-                renderer.renderBondFormationPreview(level.getPosition(selectedAtom!!), bondFormationPreviewPosition!!, batcher)
-            }
-        }
-
-        renderer.renderLevel(level, molManager, batcher, font, program)
     }
 
     override fun cleanup() {

@@ -47,9 +47,12 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
     //Acts as the main renderer
     private Batch2D batcher;
-    private TextureManager textureManager;
-    private ShaderProgramManager shaderProgramManager;
-    
+
+    private IResourceManager resourceManager;
+
+    private LevelRenderer levelRenderer;
+
+    public static final String SHADER_SIMPLE_FONT = "integrated/simple_font";
 
     public CVEngine(String name) {
         this.name = name;
@@ -85,8 +88,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
         GL11.glClearColor(0.02f, 0.02f, 0.02f, 1.0f);
 
         initialiseCoreServices();
-
-        loadIntegratedShaders(ShaderProgramManager.Companion.getSIMPLE_TEXTURE(), new File("./data/integrated/shaders/simpleTexture.vert"), new File("./data/integrated/shaders/simpleTexture.frag"));
+        initialiseIntegratedResources();
 
         setupImGui();
     }
@@ -95,25 +97,15 @@ public class CVEngine implements ICVServices, AutoCloseable{
     private void initialiseCoreServices() {
         this.inputManager = new GLFWInputManager(windowHandle);
         this.batcher = new Batch2D();
-        this.textureManager = new TextureManager();
-        this.shaderProgramManager = new ShaderProgramManager();
+        this.resourceManager = new ResourceManager();
+        this.levelRenderer = new LevelRenderer(batcher, resourceManager);
     }
 
 
-    private void loadIntegratedShaders(String programID, File vertexSrc, File fragSrc) {
-        if (!vertexSrc.isFile() || !fragSrc.isFile()) {
-            throwFile();
-        }
-
-        try {
-            String vertexShader = Files.readString(vertexSrc.toPath());
-            String fragmentShader = Files.readString(fragSrc.toPath());
-
-            this.shaderProgramManager.loadShader(programID, vertexShader, fragmentShader);
-        } catch (IOException e) {
-            throwFile();
-        }
+    private void initialiseIntegratedResources() {
+        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_FONT, new File("data/integrated/shaders/simpleTexture.vert"), new File("data/integrated/shaders/simpleTexture.frag"));
     }
+
 
     private void setupImGui() {
         ImGui.createContext();
@@ -198,178 +190,6 @@ public class CVEngine implements ICVServices, AutoCloseable{
         this.currentState = state;
     }
 
-
-
-    @Override
-    public int loadTextureResource(File file) {
-        if (! file.isFile()) {
-            throwFile();
-        }
-
-        String stringLoc = file.getAbsolutePath().toString();
-
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            IntBuffer width = stack.mallocInt(1);
-            IntBuffer height = stack.mallocInt(1);
-            IntBuffer nrChannels = stack.mallocInt(1);
-
-            STBImage.stbi_set_flip_vertically_on_load(true);
-            ByteBuffer dataBuff = STBImage.stbi_load(stringLoc, width, height, nrChannels, 4);
-
-            if (dataBuff == null) {
-                throw new RuntimeException();
-            }
-
-            return loadOpenGlTexture(dataBuff, width.get(), height.get(), true);
-
-        }
-    }
-
-    private int loadOpenGlTexture(ByteBuffer dataBuffer, int width, int height, boolean stbLoaded) {
-        return loadOpenGlTexture(dataBuffer, width, height, stbLoaded, GL11.GL_LINEAR_MIPMAP_LINEAR, GL11.GL_LINEAR);
-    }
-
-    private int loadOpenGlTexture(ByteBuffer dataBuffer, int width, int height, boolean stbLoaded, int minFilter, int magFilter) {
-        int glTexture = GL11.glGenTextures();
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, glTexture);
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, dataBuffer);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, minFilter);
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, magFilter);
-        GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D);
-
-        if (stbLoaded) {
-            STBImage.stbi_image_free(dataBuffer);
-        }
-        //If the texture was loaded elsewhere (Direct ByteBuffer Allocation from JVM)
-        //Then the JVM will automatically free the native heap memory once the GC runs
-        //Do not free random direct bytebuffers as it causes heap corruption
-
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-        return glTexture;
-    }
-
-
-    @Override
-    public BitmapFont loadFontResource(File file, int size, String glyphs, boolean debugImage) {
-        if (! file.isFile()) {
-            throwFile();
-        }
-
-        //Get the font metrics so we can get glyph size, etc
-        Font font = new Font(file.getPath(), Font.PLAIN, size);
-        FontMetrics fontMetrics = getFontMetrics(font);
-
-        //Each char has a different width, but same height
-        //To avoid a runtime error, assume they are all the largest size
-        int maxCharWidth = 0; //need to calculate
-        int charHeight = (fontMetrics.getHeight()); //They have the same height
-
-        for (char c: glyphs.toCharArray()) {
-            maxCharWidth = Math.max(maxCharWidth, fontMetrics.charWidth(c));
-        }
-
-
-        //Now create texture dimensions
-        int textureUnit = (int) Math.sqrt(glyphs.length()) + 1;
-        int proposedWidth = textureUnit * maxCharWidth;
-
-        int charHeightPadding = charHeight + size;
-
-        int proposedHeight = textureUnit * charHeight;
-        int squareTextureSize = Math.max(proposedHeight, proposedWidth);
-
-        //Create the actual image
-        final Map<Character, BitmapFont.GlyphData> fontAtlas = new HashMap<>();
-        BufferedImage atlasImage = new BufferedImage(squareTextureSize, squareTextureSize, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = atlasImage.createGraphics();
-        g2d.setFont(font);
-        g2d.setColor(Color.WHITE);
-
-        int glyphXPlacement = 0;
-        int glyphYPlacement = charHeight;
-
-        for (char c: glyphs.toCharArray()) {
-
-            if (glyphXPlacement + maxCharWidth >= squareTextureSize) {
-                glyphXPlacement = 0;
-                glyphYPlacement += charHeight;
-            }
-
-            g2d.drawString(String.valueOf(c), glyphXPlacement, glyphYPlacement);
-
-            BitmapFont.GlyphData glyphData = new BitmapFont.GlyphData(
-                    (float) fontMetrics.charWidth(c),
-                    (float) charHeight,
-                    (float) glyphXPlacement / squareTextureSize,
-                    (float) (glyphYPlacement + (0.30f * size)) / squareTextureSize,
-                    (float) fontMetrics.charWidth(c) / squareTextureSize,
-                    (float) charHeight / squareTextureSize
-            );
-
-
-            fontAtlas.put(c, glyphData);
-
-            glyphXPlacement += maxCharWidth;
-        }
-
-        //Now save image if debug is enabled
-        if (debugImage) {
-            saveBitmapFont(atlasImage);
-        }
-
-        //Now load this as an image into OpenGL
-        ByteBuffer textureData = convertImageData(atlasImage);
-        int glTextureObject = loadOpenGlTexture(textureData, squareTextureSize, squareTextureSize, false, GL11.GL_LINEAR, GL11.GL_LINEAR);
-
-        String textureID = file.getPath();
-        textureManager.manageTexture(textureID, glTextureObject);
-
-        BitmapFont bitmapFont = new BitmapFont(size, textureManager, textureID, fontAtlas);
-
-        g2d.dispose();
-
-        return bitmapFont;
-    }
-
-
-    private ByteBuffer convertImageData(BufferedImage image) {
-        int[] pixelDataInt = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
-        ByteBuffer buffer = ByteBuffer.allocateDirect(image.getWidth() * image.getHeight() * 4);
-
-        for (int y = image.getHeight() - 1; y >= 0; y--) {
-            for (int x = 0; x < image.getWidth(); x++) {
-                int pixel = pixelDataInt[image.getWidth() * y + x];
-                buffer.put((byte) ((pixel >> 16) & 0xFF));
-                buffer.put((byte) ((pixel >> 8) & 0xFF));
-                buffer.put((byte) (pixel & 0xFF));
-                buffer.put((byte) ((pixel >> 24) & 0xFF));
-            }
-        }
-
-        buffer.flip();
-
-        return buffer;
-    }
-
-    private void saveBitmapFont(BufferedImage bufferedImage) {
-        File outputFile = new File("data/integrated/temp/font-generated.png");
-        try {
-            ImageIO.write(bufferedImage, "png", outputFile);
-        } catch (IOException e) {
-            throw new RuntimeException();
-        }
-    }
-
-    private FontMetrics getFontMetrics(Font font) {
-        BufferedImage tempImage = new BufferedImage(1, 1, BufferedImage.TYPE_4BYTE_ABGR);
-        Graphics g2d = tempImage.createGraphics();
-        g2d.setFont(font);
-        g2d.setColor(Color.WHITE);
-        FontMetrics metrics = g2d.getFontMetrics();
-        g2d.dispose();
-        return metrics;
-    }
-
     private void throwFile() {
         throw new RuntimeException("Error when opening file");
     }
@@ -390,22 +210,20 @@ public class CVEngine implements ICVServices, AutoCloseable{
     }
 
     @Override
-    public TextureManager textures() {
-        return this.textureManager;
+    public LevelRenderer levelRenderer() {
+        return levelRenderer;
     }
 
     @Override
-    public ShaderProgramManager programs() {
-        return this.shaderProgramManager;
+    public IResourceManager resourceManager() {
+        return this.resourceManager;
     }
-
 
     @Override
     public void close() {
 
         batcher.close();
-        textureManager.close();
-        shaderProgramManager.close();
+        resourceManager.destroy();
 
         if (this.lwjglErrorCallback != null) {
             this.lwjglErrorCallback.close();
@@ -424,4 +242,5 @@ public class CVEngine implements ICVServices, AutoCloseable{
         GLFW.glfwTerminate();
 
     }
+
 }

@@ -17,7 +17,7 @@ class TextComponent (
     val colourX: Float,
     val colourY: Float,
     val colourZ: Float,
-    val size: Float,
+    val scale: Float,
 ) : IComponent
 
 
@@ -44,6 +44,11 @@ class EntityLevel (
     fun <T: IComponent> getComponent(componentClass: KClass<T>) : T {
         return components[componentClass] as T
     }
+
+    fun <T: IComponent> hasComponent(componentClass: KClass<T>) : Boolean {
+        return components.contains(componentClass)
+    }
+
     fun addEntity () : EntityLevel {
         val newID = idGen.newID()
         val entity = EntityLevel(idGen, newID, this)
@@ -53,5 +58,9 @@ class EntityLevel (
 
     fun getChild(id: Int) : EntityLevel? {
         return children[id]
+    }
+
+    fun getChildren() : List<EntityLevel> {
+        return children.values.toList()
     }
 }

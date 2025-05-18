@@ -11,11 +11,9 @@ import java.io.File
 class ChemVis : IApplication, IInputSubscriber {
 
     private lateinit var camera: Camera2D
-    private lateinit var font: BitmapFont
+
 
     private lateinit var services: ICVServices
-
-    private lateinit var program: ShaderProgram;
 
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
@@ -27,22 +25,19 @@ class ChemVis : IApplication, IInputSubscriber {
         this.services = cvServices
 
 
+        //Test loading font
+        services.resourceManager().loadFontFromDisc(FONT, File("data/chemvis/fonts/ubuntu.ttf"), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", fontSize)
+
         val wm = services.windowMetrics()
 
         camera = Camera2D(wm.x, wm.y)
 
-        font = setupFont(fontSize)
-
-        font.scale = 0.1f
-        font.colour = Vector3f(1.0f, 1.0f, 1.0f)
-
         GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
 
-        program = services.programs().useProgram(ShaderProgramManager.SIMPLE_TEXTURE)
 
-        val editorState = EditorState(services.renderer(), font, program, camera)
+        val editorState = EditorState(services.levelRenderer(), camera)
 //        services.setCurrentApplicationState(editorState)
-        services.setCurrentApplicationState(TestState())
+        services.setCurrentApplicationState(TestState(services.levelRenderer(), camera))
         services.inputs().subscribe(editorState)
         services.inputs().subscribe(this)
 
@@ -57,13 +52,6 @@ class ChemVis : IApplication, IInputSubscriber {
         GL11.glViewport(0, 0, wm.x, wm.y)
         camera.update(wm.x, wm.y)
 
-
-        //Drawing time
-        program.uniform("uPerspective", camera.combined())
-        program.uniform("uModel", Matrix4f())
-
-
-        this.program.bind()
 
     }
 
@@ -92,13 +80,13 @@ class ChemVis : IApplication, IInputSubscriber {
     }
 
 
-    private fun setupFont(size: Int): BitmapFont {
-        return services.loadFontResource(File("data/chemvis/fonts/ubuntu.ttf"), size,
-            "@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789. ():", true)
-    }
 
     override fun cleanup() {
 
     }
 
+
+    companion object {
+        const val FONT: String = "APP_FONT"
+    }
 }

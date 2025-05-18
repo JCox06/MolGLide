@@ -9,17 +9,13 @@ public interface ICVServices {
 
     Vector2i windowMetrics();
 
-    BitmapFont loadFontResource(File file, int size, String glyphs, boolean debugImage);
-
-    int loadTextureResource(File file);
-
     void setCurrentApplicationState(IApplicationState state);
 
     InputManager inputs();
 
     Batch2D renderer();
 
-    TextureManager textures();
+    LevelRenderer levelRenderer();
 
-    ShaderProgramManager programs();
+    IResourceManager resourceManager();
 }
