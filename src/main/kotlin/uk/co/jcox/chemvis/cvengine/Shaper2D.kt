@@ -3,18 +3,29 @@ package uk.co.jcox.chemvis.cvengine
 import org.apache.commons.lang3.mutable.Mutable
 import org.joml.Math
 import org.joml.Vector2f
+import org.joml.Vector3f
+import org.joml.Vector4f
 import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
 import kotlin.math.PI
 
 object Shaper2D {
 
+    private const val W_COMP: Float = 1.0f
+
     //World space obviously
     fun rectangle(startX: Float, startY: Float, endX: Float, endY: Float) : Mesh {
-        val vertices = listOf(
-            startX + endX, startY + endY, -1.0f, 1.0f, 1.0f,
-            startX + endX, startY, -1.0f, 1.0f, 0.0f,
-            startX, startY, -1.0f, 0.0f, 0.0f,
-            startX, startY + endY, -1.0f, 0.0f, 1.0f,
+        val positions = listOf(
+            Vector4f(startX + endX, startY + endY, -1.0f, W_COMP),
+            Vector4f(startX + endX, startY, -1.0f, W_COMP),
+            Vector4f(startX, startY, -1.0f, W_COMP),
+            Vector4f(startX, startY + endY, -1.0f, W_COMP)
+        )
+
+        val textCoord = listOf(
+            Vector2f(1.0f, 1.0f),
+            Vector2f(1.0f, 0.0f),
+            Vector2f(0.0f, 0.0f),
+            Vector2f(0.0f, 1.0f),
         )
 
         val indices = listOf(
@@ -22,17 +33,25 @@ object Shaper2D {
             1, 2, 3
         )
 
-        return Mesh(vertices, indices)
+        return Mesh(positions, textCoord, indices)
     }
 
 
     fun rectangle(startX: Float, startY: Float, endX: Float, endY: Float,
                   texTR: Vector2f, texBR: Vector2f, texBL: Vector2f, texTL: Vector2f) : Mesh {
-        val vertices = listOf(
-            startX + endX, startY + endY, -1.0f, texTR.x, texTR.y,
-            startX + endX, startY, -1.0f, texBR.x, texBR.y,
-            startX, startY, -1.0f, texBL.x, texBL.y,
-            startX, startY + endY, -1.0f, texTL.x, texTL.y
+
+        val positions = listOf(
+            Vector4f(startX + endX, startY + endY, -1.0f, W_COMP),
+            Vector4f(startX + endX, startY, -1.0f, W_COMP),
+            Vector4f(startX, startY, -1.0f, W_COMP),
+            Vector4f(startX, startY + endY, -1.0f, W_COMP)
+        )
+
+        val textCoord = listOf(
+            Vector2f(texTR.x, texTR.y),
+            Vector2f(texBR.x, texBR.y),
+            Vector2f(texBL.x, texBL.y),
+            Vector2f(texTL.x, texTL.y),
         )
 
         val indices = listOf(
@@ -40,11 +59,14 @@ object Shaper2D {
             1, 2, 3
         )
 
-        return Mesh(vertices, indices)
+        return Mesh(positions, textCoord, indices)
     }
 
     fun circle(centreX: Float, centreY: Float, radius: Float, sample: Int = 360) : Mesh {
-        val vertices: MutableList<Float> = mutableListOf(centreX, centreY, -1.0f, centreX, centreY)
+
+        val positions: MutableList<Vector4f> = mutableListOf(Vector4f(centreX, centreY, -1.0f, W_COMP))
+        val texCoords: MutableList<Vector2f> = mutableListOf(Vector2f(centreX, centreY))
+
         val indices: MutableList<Int> = mutableListOf(0)
 
         for (i in 0..sample) {
@@ -52,14 +74,11 @@ object Shaper2D {
             val vertX = centreX + radius * Math.cos(currentAngleRadians)
             val vertY = centreY + radius * Math.sin(currentAngleRadians)
             val vertZ = -1.0f
-            vertices.add(vertX)
-            vertices.add(vertY)
-            vertices.add(vertZ)
-            vertices.add(vertX)
-            vertices.add(vertY)
+            positions.add(Vector4f(vertX, vertY, vertZ, W_COMP))
+            texCoords.add(Vector2f(vertX, vertY))
             indices.add(i + 1)
         }
 
-        return Mesh(vertices, indices)
+        return Mesh(positions, texCoords, indices)
     }
 }

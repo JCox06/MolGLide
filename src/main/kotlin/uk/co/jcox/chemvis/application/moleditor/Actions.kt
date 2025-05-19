@@ -1,10 +1,9 @@
 package uk.co.jcox.chemvis.application.moleditor
 
-import org.checkerframework.checker.units.qual.mol
-import org.joml.Vector3f
 import uk.co.jcox.chemvis.application.ChemVis
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
@@ -19,12 +18,15 @@ abstract class EditorAction {
         val atom = moleculeEntity.addEntity()
 
         atom.addComponent(MolIDComponent(molManagerAtomID))
-        atom.addComponent(TransformComponent(posX, posY, 0.0f))
+        atom.addComponent(TransformComponent(posX, posY, 0.0f, 1.0f))
         atom.addComponent(TextComponent(element, ChemVis.FONT, 1.0f, 1.0f, 1.0f, ChemVis.GLOBAL_SCALE))
 
         //2) Add the selection marker for this atom
         //When the mouse is in a close enough range, the selection marker for this atom is shown
-        
+        val selectionMarkerEntity = atom.addEntity()
+        selectionMarkerEntity.addComponent(TransformComponent(OrganicEditorState.SELECTION_RADIUS / 2, OrganicEditorState.SELECTION_RADIUS / 2, -10.0f, OrganicEditorState.SELECTION_RADIUS))
+        selectionMarkerEntity.addComponent(ObjComponent(ChemVis.SELECTION_MARKER_MESH))
+        selectionMarkerEntity.getComponent(TransformComponent::class).visible = false
     }
 }
 
@@ -48,7 +50,7 @@ class AtomCreationAction (
         //2) Update spatial representation on the Level
         val moleculeNode = level.addEntity()
         moleculeNode.addComponent(MolIDComponent(newMolecule))
-        moleculeNode.addComponent(TransformComponent(xPos, yPos, 0.0f))
+        moleculeNode.addComponent(TransformComponent(xPos, yPos, 0.0f, 1.0f))
 
         createAtomLevelView(moleculeNode, firstAtom, element, 0.0f, 0.0f)
     }

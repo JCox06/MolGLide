@@ -80,11 +80,6 @@ class Batch2D (
     }
 
 
-    fun addBatch(mesh: Mesh) {
-        this.addBatch(mesh.vertices, mesh.indices)
-    }
-
-
     fun end() : Mode {
         if (!this.ready) {
             throw RuntimeException("End called twice - Batcher has already finished")

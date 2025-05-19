@@ -72,6 +72,15 @@ class ResourceManager : IResourceManager{
         meshes.remove(id)
     }
 
+    override fun getMesh(id: String): Mesh {
+        val mesh = meshes[id]
+        if (mesh == null) {
+            throw NullPointerException("No such model exists ${id}")
+        }
+
+        return mesh
+    }
+
 
     //Texture Management
 

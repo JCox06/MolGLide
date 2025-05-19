@@ -13,6 +13,8 @@ interface IResourceManager {
 
     fun destroyMesh(id: String)
 
+    fun getMesh(id: String) : Mesh
+
     fun loadTextureFromDisc(id: String, texture: File)
 
     fun destroyTexture(id: String)

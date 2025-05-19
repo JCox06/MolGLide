@@ -60,4 +60,9 @@ class OrganicEditorState (
     override fun mouseScrollEvent(inputManager: InputManager, xScroll: Double, yScroll: Double) {
         super.mouseScrollEvent(inputManager, xScroll, yScroll)
     }
+
+    companion object {
+        val SELECTION_RADIUS = 10.0f
+        val SELECTION_MARKER_RADIUS = 30.0f
+    }
 }

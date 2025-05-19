@@ -9,15 +9,22 @@ class TransformComponent (
     var x: Float,
     var y: Float,
     var z: Float,
+    var scale: Float  = 1.0f,
+    var visible: Boolean = true
 ) : IComponent
 
 class TextComponent (
-    val text: String,
-    val bitmapFont: String,
-    val colourX: Float,
-    val colourY: Float,
-    val colourZ: Float,
-    val scale: Float,
+    var text: String,
+    var bitmapFont: String,
+    var colourX: Float,
+    var colourY: Float,
+    var colourZ: Float,
+    var scale: Float,
+) : IComponent
+
+class ObjComponent (
+    var modelGeomID: String,
+    //Room to include other things later!
 ) : IComponent
 
 

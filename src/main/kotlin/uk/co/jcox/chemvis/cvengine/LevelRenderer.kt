@@ -6,6 +6,7 @@ import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
@@ -18,9 +19,19 @@ class LevelRenderer (
 
     fun renderLevel(level: EntityLevel, camera2D: Camera2D) {
         val texts: MutableList<EntityLevel> = mutableListOf()
-        traverseAndCollect(level, texts)
+        val objects: MutableList<EntityLevel> = mutableListOf()
+        traverseAndCollect(level, texts, objects)
 
-        //Render the text
+
+
+        batcher.begin(Batch2D.Mode.FAN)
+        //Render other objects
+        objects.forEach { objectEntity ->
+            renderObject(objectEntity)
+        }
+        batcher.end()
+
+        //Render the text (do this last as text is transparent and this is main thing)
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
@@ -35,7 +46,35 @@ class LevelRenderer (
         }
         batcher.end()
         GL11.glDisable(GL11.GL_BLEND)
+
     }
+
+
+    private fun renderObject(objectEntity: EntityLevel) {
+        if (! objectEntity.hasComponent(ObjComponent::class) || !objectEntity.hasComponent(TransformComponent::class)) {
+            return
+        }
+
+        val objectComponent = objectEntity.getComponent(ObjComponent::class)
+        val transformComponent = objectEntity.getComponent(TransformComponent::class)
+
+
+        if (! transformComponent.visible) {
+            return
+        }
+
+        val mesh = resourceManager.getMesh(objectComponent.modelGeomID)
+
+        val absPos = getAbsPosition(objectEntity)
+
+        val transform = Matrix4f()
+            .translate(absPos.x, absPos.y, absPos.z)
+            .scale(transformComponent.scale)
+
+        val newMesh = mesh.apply(transform)
+        batcher.addBatch(newMesh.pack(), newMesh.indices)
+    }
+
 
     private fun renderText(textEntity: EntityLevel, program: ShaderProgram) {
         if (!textEntity.hasComponent(TextComponent::class) || !textEntity.hasComponent(TransformComponent::class)) {
@@ -93,17 +132,22 @@ class LevelRenderer (
                 Vector2f(0.0f + glyphData.textureUnitX, glyphData.textureUnitAddY - glyphData.textureUnitY)
             )
 
-            batcher.addBatch(mesh)
+            batcher.addBatch(mesh.pack(), mesh.indices)
             renderX += glyphData.glyphWidth * textComponent.scale
         }
     }
 
-    private fun traverseAndCollect(entity: EntityLevel, texts: MutableList<EntityLevel>) {
+    private fun traverseAndCollect(entity: EntityLevel, texts: MutableList<EntityLevel>, objects: MutableList<EntityLevel>) {
         if (entity.hasComponent(TextComponent::class)) {
             texts.add(entity)
         }
+
+        if (entity.hasComponent(ObjComponent::class)) {
+            objects.add(entity)
+        }
+
         entity.getChildren().forEach { child ->
-            traverseAndCollect(child, texts)
+            traverseAndCollect(child, texts, objects)
         }
     }
 

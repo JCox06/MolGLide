@@ -81,6 +81,9 @@ public class CVEngine implements ICVServices, AutoCloseable{
         initialiseCoreServices();
         initialiseIntegratedResources();
 
+
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+
         setupImGui();
     }
 

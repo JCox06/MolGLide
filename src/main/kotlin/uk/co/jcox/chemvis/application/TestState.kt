@@ -18,16 +18,16 @@ class TestState (
 
     override fun init() {
         levelRoot = EntityLevel()
-        levelRoot.addComponent(TransformComponent(0.0f, 0.0f, 0.0f))
+        levelRoot.addComponent(TransformComponent(0.0f, 0.0f, 0.0f, 1.0f))
 
         //Add some text at the centre of the screen
         val myTextEntity = levelRoot.addEntity()
-        myTextEntity.addComponent(TextComponent("TEST - STATE", ChemVis.FONT, 1.0f, 1.0f, 1.0f, 0.1f))
-        myTextEntity.addComponent(TransformComponent(10.0f, 10.0f, 0.0f))
+        myTextEntity.addComponent(TextComponent("TEST - STATE", ChemVis.FONT, 1.0f, 1.0f, 1.0f, ChemVis.GLOBAL_SCALE))
+        myTextEntity.addComponent(TransformComponent(10.0f, 10.0f, 0.0f, 1.0f))
 
         val grandChild = myTextEntity.addEntity()
-        grandChild.addComponent(TransformComponent(100.0f, 50.0f, 0.0f))
-        grandChild.addComponent(TextComponent("I am the grandchild!", ChemVis.FONT, 1.0f, 0.5f, 0.5f, 0.1f))
+        grandChild.addComponent(TransformComponent(100.0f, 50.0f, 0.0f, ChemVis.GLOBAL_SCALE))
+        grandChild.addComponent(TextComponent("I am the grandchild!", ChemVis.FONT, 1.0f, 0.5f, 0.5f, ChemVis.GLOBAL_SCALE))
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
