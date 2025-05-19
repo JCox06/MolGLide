@@ -6,9 +6,9 @@ import kotlin.reflect.KClass
 interface IComponent
 
 class TransformComponent (
-    val x: Float,
-    val y: Float,
-    val z: Float,
+    var x: Float,
+    var y: Float,
+    var z: Float,
 ) : IComponent
 
 class TextComponent (

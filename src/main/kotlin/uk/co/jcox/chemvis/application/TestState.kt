@@ -1,7 +1,6 @@
-package uk.co.jcox.chemvis.application.states
+package uk.co.jcox.chemvis.application
 
-import org.apache.jena.vocabulary.OWLTest.level
-import uk.co.jcox.chemvis.application.ChemVis
+import org.joml.Math
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IApplicationState
 import uk.co.jcox.chemvis.cvengine.InputManager
@@ -23,11 +22,18 @@ class TestState (
 
         //Add some text at the centre of the screen
         val myTextEntity = levelRoot.addEntity()
-        myTextEntity.addComponent(TextComponent("HELLOFGSDFFSDFHJKSDFHJKSDHJKF", ChemVis.FONT, 1.0f, 1.0f, 1.0f, 0.1f))
+        myTextEntity.addComponent(TextComponent("TEST - STATE", ChemVis.FONT, 1.0f, 1.0f, 1.0f, 0.1f))
         myTextEntity.addComponent(TransformComponent(10.0f, 10.0f, 0.0f))
+
+        val grandChild = myTextEntity.addEntity()
+        grandChild.addComponent(TransformComponent(100.0f, 50.0f, 0.0f))
+        grandChild.addComponent(TextComponent("I am the grandchild!", ChemVis.FONT, 1.0f, 0.5f, 0.5f, 0.1f))
     }
 
-    override fun update(inputManager: InputManager?) {
+    override fun update(inputManager: InputManager, timeElapsed: Float) {
+        val transform = levelRoot.getComponent(TransformComponent::class)
+        transform.x =  100 * Math.sin(timeElapsed)
+        transform.y =  20 * Math.cos(timeElapsed)
     }
 
     override fun render() {

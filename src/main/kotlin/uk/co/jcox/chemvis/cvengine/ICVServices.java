@@ -2,8 +2,6 @@ package uk.co.jcox.chemvis.cvengine;
 
 import org.joml.Vector2i;
 
-import java.io.File;
-
 public interface ICVServices {
 
 
@@ -18,4 +16,6 @@ public interface ICVServices {
     LevelRenderer levelRenderer();
 
     IResourceManager resourceManager();
+
+    void toggleDebugPanel();
 }

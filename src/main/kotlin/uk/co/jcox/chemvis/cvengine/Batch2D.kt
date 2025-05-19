@@ -85,7 +85,7 @@ class Batch2D (
     }
 
 
-    fun end() {
+    fun end() : Mode {
         if (!this.ready) {
             throw RuntimeException("End called twice - Batcher has already finished")
         }
@@ -107,6 +107,8 @@ class Batch2D (
 
 
         this.ready = false
+
+        return mode
     }
 
 

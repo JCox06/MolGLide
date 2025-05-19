@@ -9,6 +9,9 @@ interface IResourceManager {
     fun useProgram(programID: String): ShaderProgram
     fun destroyProgram(programID: String)
 
+    fun manageMesh(id: String, mesh: Mesh)
+
+    fun destroyMesh(id: String)
 
     fun loadTextureFromDisc(id: String, texture: File)
 

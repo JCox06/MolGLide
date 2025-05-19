@@ -23,6 +23,7 @@ class ResourceManager : IResourceManager{
     private val shaderPrograms: MutableMap<String, ShaderProgram> = mutableMapOf()
     private val textures: MutableMap<String, Int> = mutableMapOf()
     private val fonts: MutableMap<String, BitmapFont> = mutableMapOf()
+    private val meshes: MutableMap<String, Mesh> = mutableMapOf()
 
     init {
         STBImage.stbi_set_flip_vertically_on_load(true)
@@ -61,6 +62,14 @@ class ResourceManager : IResourceManager{
             program.close()
             shaderPrograms.remove(programID)
         }
+    }
+
+    override fun manageMesh(id: String, mesh: Mesh) {
+        meshes[id] = mesh
+    }
+
+    override fun destroyMesh(id: String) {
+        meshes.remove(id)
     }
 
 
@@ -102,6 +111,7 @@ class ResourceManager : IResourceManager{
         shaderPrograms.keys.forEach { destroyProgram(it) }
         textures.keys.forEach {destroyTexture(it)}
         fonts.keys.forEach {destroyFont(it)}
+        meshes.keys.forEach { destroyMesh(it) } //Not really required (no external resources associated)
     }
 
 

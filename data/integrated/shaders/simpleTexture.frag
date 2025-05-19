@@ -4,18 +4,9 @@ out vec4 colour;
 in vec2 lTexCoord;
 
 //I believe that the number the spec gaurantees is 8
-uniform sampler2D mainTexture;
-uniform vec3 fontColour = vec3(1.0f, 1.0f, 1.0f);
-uniform bool textureMode = true;
+uniform sampler2D uTexture0;
+uniform vec3 uLight = vec3(1.0f, 1.0f, 1.0f);
 
 void main() {
-    //Cool Colour
-
-    //todo - Get font colour working!
-    if (textureMode) {
-        colour = (texture(mainTexture, lTexCoord)) * (vec4(fontColour, 1.0f));
-    } else {
-        colour = vec4(fontColour, 1.0f);
-    }
-
+    colour = (texture(uTexture0, lTexCoord)) * (vec4(uLight, 1.0f));
 }

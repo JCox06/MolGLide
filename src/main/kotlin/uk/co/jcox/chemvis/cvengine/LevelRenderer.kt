@@ -2,6 +2,7 @@ package uk.co.jcox.chemvis.cvengine
 
 import org.joml.Matrix4f
 import org.joml.Vector2f
+import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
@@ -13,6 +14,8 @@ class LevelRenderer (
     private val resourceManager: IResourceManager
 ) {
 
+    private val lastFontColour: Vector3f = Vector3f(1.0f, 1.0f, 1.0f)
+
     fun renderLevel(level: EntityLevel, camera2D: Camera2D) {
         val texts: MutableList<EntityLevel> = mutableListOf()
         traverseAndCollect(level, texts)
@@ -22,7 +25,7 @@ class LevelRenderer (
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
 
-        val program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_FONT)
+        val program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
         program.uniform("uPerspective", camera2D.combined())
         program.uniform("uModel", Matrix4f())
 
@@ -30,7 +33,6 @@ class LevelRenderer (
         texts.forEach { textEntity ->
             renderText(textEntity, program)
         }
-
         batcher.end()
         GL11.glDisable(GL11.GL_BLEND)
     }
@@ -45,11 +47,28 @@ class LevelRenderer (
 
         val bitMapFontData = resourceManager.getFont(textComponent.bitmapFont)
 
-        resourceManager.useTexture(textComponent.bitmapFont, GL30.GL_TEXTURE0)
-        program.uniform("mainTexture", 0)
 
-        var renderX = transformComponent.x
-        var renderY = transformComponent.y
+        //Check if the colour currently being rendered is the same as last time
+        if (textComponent.colourX != lastFontColour.x || textComponent.colourY != lastFontColour.y || textComponent.colourZ != lastFontColour.z) {
+            //Then flush the buffer now
+            val modeToRestore = batcher.end()
+            //Restart the buffer
+            lastFontColour.x = textComponent.colourX
+            lastFontColour.y = textComponent.colourY
+            lastFontColour.z = textComponent.colourZ
+            program.uniform("uLight", lastFontColour)
+            batcher.begin(modeToRestore)
+        }
+
+
+        resourceManager.useTexture(textComponent.bitmapFont, GL30.GL_TEXTURE0)
+        program.uniform("uTexture0", 0)
+
+
+        val totalPosition = getAbsPosition(textEntity)
+
+        var renderX = totalPosition.x
+        var renderY = totalPosition.y
         //(Only support 2D text currently. Text is stuck in the XY plane)
 
         for (c in textComponent.text) {
@@ -85,6 +104,26 @@ class LevelRenderer (
         }
         entity.getChildren().forEach { child ->
             traverseAndCollect(child, texts)
+        }
+    }
+
+    private fun getAbsPosition(entityLevel: EntityLevel): Vector3f {
+
+        val absPosition = Vector3f(0.0f, 0.0f, 0.0f)
+        var currentParent = entityLevel
+
+        while (true) {
+            if (currentParent.hasComponent(TransformComponent::class)) {
+                val transformComp = currentParent.getComponent(TransformComponent::class)
+                absPosition.x += transformComp.x
+                absPosition.y += transformComp.y
+                absPosition.z += transformComp.z
+            }
+            if (currentParent.parent != null) {
+                currentParent = currentParent.parent
+            } else {
+                return absPosition
+            }
         }
     }
 }

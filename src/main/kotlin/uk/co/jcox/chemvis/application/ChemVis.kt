@@ -1,10 +1,8 @@
 package uk.co.jcox.chemvis.application
 
-import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
-import uk.co.jcox.chemvis.application.states.EditorState
-import uk.co.jcox.chemvis.application.states.TestState
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
 
@@ -23,30 +21,23 @@ class ChemVis : IApplication, IInputSubscriber {
     override fun init(cvServices: ICVServices) {
 
         this.services = cvServices
-
-
-        //Test loading font
-        services.resourceManager().loadFontFromDisc(FONT, File("data/chemvis/fonts/ubuntu.ttf"), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", fontSize)
-
+        services.resourceManager().loadFontFromDisc(FONT, File("data/chemvis/fonts/ubuntu.ttf"), CVEngine.STD_CHARACTER_SET, fontSize)
         val wm = services.windowMetrics()
-
         camera = Camera2D(wm.x, wm.y)
+
 
         GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
 
+//        val state = TestState(services.levelRenderer(), camera)
+        val state = OrganicEditorState(services.levelRenderer(), camera)
 
-        val editorState = EditorState(services.levelRenderer(), camera)
-//        services.setCurrentApplicationState(editorState)
-        services.setCurrentApplicationState(TestState(services.levelRenderer(), camera))
-        services.inputs().subscribe(editorState)
+        services.setCurrentApplicationState(state)
+        services.inputs().subscribe(state)
         services.inputs().subscribe(this)
-
-
     }
 
     override fun loop() {
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT)
-
 
         val wm = services.windowMetrics()
         GL11.glViewport(0, 0, wm.x, wm.y)
@@ -63,7 +54,6 @@ class ChemVis : IApplication, IInputSubscriber {
 
     override fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
 
-
         if (inputManager.mouseClick(RawInput.MOUSE_3)) {
             val deltaX: Float = xPos.toFloat() - lastMouseX
             val deltaY: Float = yPos.toFloat() - lastMouseY
@@ -79,14 +69,24 @@ class ChemVis : IApplication, IInputSubscriber {
         lastMouseY = yPos.toFloat()
     }
 
+    override fun clickEvent(inputManager: InputManager, key: RawInput) {
+        if (key == RawInput.KEY_P) {
+            services.toggleDebugPanel()
+        }
+    }
 
+    private fun loadCoreAssets() {
+        val selectionMarkerMesh = Shaper2D.circle(0.0f, 0.0f, 1.0f)
+        services.resourceManager().manageMesh(SELECTION_MARKER, selectionMarkerMesh)
+    }
 
     override fun cleanup() {
 
     }
 
-
     companion object {
         const val FONT: String = "APP_FONT"
+        const val GLOBAL_SCALE: Float = 0.1f
+        const val SELECTION_MARKER: String = "SELECTION_MARKER"
     }
 }
