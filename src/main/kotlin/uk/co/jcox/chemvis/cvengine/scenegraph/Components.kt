@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.cvengine.scenegraph
 
+import org.joml.Vector3f
 import kotlin.reflect.KClass
 
 
