@@ -1,10 +1,9 @@
 package uk.co.jcox.chemvis.application.moleditor
 
-import org.apache.jena.sparql.function.library.leviathan.root
+import org.apache.jena.vocabulary.TestManifest.action
 import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector3f
 import org.joml.minus
-import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
 import uk.co.jcox.chemvis.application.chemengine.CDKManager
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.cvengine.Camera2D
@@ -15,6 +14,7 @@ import uk.co.jcox.chemvis.cvengine.LevelRenderer
 import uk.co.jcox.chemvis.cvengine.RawInput
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
+import kotlin.enums.enumEntries
 
 class OrganicEditorState (
     private val levelRenderer: LevelRenderer,
@@ -37,7 +37,9 @@ class OrganicEditorState (
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
+        if (selection != null) {
 
+        }
     }
 
     override fun render() {
@@ -51,18 +53,34 @@ class OrganicEditorState (
 
     override fun clickEvent(inputManager: InputManager, key: RawInput) {
         //Currently assume carbon tool selected:
+
         if (key == RawInput.MOUSE_1) {
             val worldPos = camera2D.screenToWorld(inputManager.mousePos())
-            val action = AtomCreationAction(worldPos.x, worldPos.y, "C")
-            action.execute(molManager, rootNode)
+
+
+            if (selection != null) {
+
+                val action = AtomInsertionAction(worldPos.x, worldPos.y, "C", selection!!.parent!!)
+                action.execute(molManager, rootNode)
+
+            } else {
+                val action = AtomCreationAction(worldPos.x, worldPos.y, "C")
+                action.execute(molManager, rootNode)
+            }
+
         }
 
     }
 
     override fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
+
+        if (inputManager.mouseClick(RawInput.MOUSE_1)) {
+            return;
+        }
+
         //Check if the current mouse position has an element
         val mouseWorldPos = camera2D.screenToWorld(inputManager.mousePos())
-        selection = getClosesSelection(rootNode, Vector3f(mouseWorldPos, 0.0f), SELECTION_MARKER_RADIUS)
+        updateSelection(rootNode, Vector3f(mouseWorldPos, 0.0f), SELECTION_MARKER_RADIUS)
     }
 
 
@@ -71,44 +89,42 @@ class OrganicEditorState (
     }
 
 
-    private fun getClosesSelection(level: EntityLevel, mouseWorld: Vector3f, radius: Float) : EntityLevel? {
+    private fun updateSelection(level: EntityLevel, mouseWorld: Vector3f, radius: Float) {
 
-        val positions: MutableMap<Vector3f, EntityLevel> = mutableMapOf()
+        val toProcess: MutableList<EntityLevel> = mutableListOf()
 
-        fun getChildrenPositions(child: EntityLevel) {
-
-            if (child.hasComponent(TransformComponent::class)) {
-                val trans = child.getComponent(TransformComponent::class)
-                positions[Vector3f(trans.x, trans.y, trans.z)] = child
-            }
-
-            child.getChildren().forEach { child2 ->
-                getChildrenPositions(child2)
+        level.traverseFunc { child ->
+            if (child.hasComponent(MolIDComponent::class) && child.hasComponent(MolSelectionComponent::class)) {
+                toProcess.add(child)
             }
         }
 
-        getChildrenPositions(level)
-
-
-        positions.keys.forEach { position ->
-            val diff = position - mouseWorld
-            if (diff.length() >= radius) {
-                val selec = positions[position]
-                if (selec != null) {
-                    println("Hello!")
-                    selec.getComponent(TransformComponent::class).visible = true
-                    return selec
-                } else if (selection != null) {
-//                    selection!!.getComponent(TransformComponent::class).visible = false
-                }
+        for (entityLevel in toProcess) {
+            if (entityLevel.hasComponent(MolSelectionComponent::class)) {
+                entityLevel.getComponent(MolSelectionComponent::class).selectionEntity.getComponent(TransformComponent::class).visible = false
             }
         }
 
-        return null
+        for (childEntity in toProcess) {
+            val atomWorldPos = childEntity.getAbsolutePosition()
+            val difference = atomWorldPos - mouseWorld
+
+            if (difference.length() <= radius) {
+                selection = childEntity
+                selection!!.getComponent(MolSelectionComponent::class).selectionEntity.getComponent(
+                    TransformComponent::class).visible = true
+                return
+            }
+        }
+
+        selection = null
     }
+
 
     companion object {
         val SELECTION_RADIUS = 10.0f
-        val SELECTION_MARKER_RADIUS = 30.0f
+        val SELECTION_MARKER_RADIUS = 25.0f
+        val CONNECTION_DIST = 30.0f
     }
+
 }

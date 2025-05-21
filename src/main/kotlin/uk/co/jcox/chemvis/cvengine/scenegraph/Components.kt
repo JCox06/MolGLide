@@ -1,6 +1,8 @@
 package uk.co.jcox.chemvis.cvengine.scenegraph
 
 import org.joml.Vector3f
+import java.util.UUID
+import javax.vecmath.Vector2f
 import kotlin.reflect.KClass
 
 
@@ -29,21 +31,12 @@ class ObjComponent (
 ) : IComponent
 
 
-class IdGen {
-    var currentID: Int = 0
-
-    fun newID(): Int {
-        return ++currentID
-    }
-}
-
 class EntityLevel (
-    private val idGen: IdGen = IdGen(),
-    val id: Int = idGen.currentID,
     val parent: EntityLevel? = null
 ) {
+    val id: UUID = UUID.randomUUID()
     private val components: MutableMap<KClass<out IComponent>, IComponent> = mutableMapOf()
-    private val children: MutableMap<Int, EntityLevel> = mutableMapOf()
+    private val children: MutableList<EntityLevel> = mutableListOf()
 
     fun addComponent(component: IComponent) {
         components[component::class] = component
@@ -58,17 +51,40 @@ class EntityLevel (
     }
 
     fun addEntity () : EntityLevel {
-        val newID = idGen.newID()
-        val entity = EntityLevel(idGen, newID, this)
-        children[newID] = entity
+        val entity = EntityLevel( this)
+        children.add(entity)
         return entity
     }
 
-    fun getChild(id: Int) : EntityLevel? {
-        return children[id]
+    fun getChildren() : List<EntityLevel> {
+        return children
     }
 
-    fun getChildren() : List<EntityLevel> {
-        return children.values.toList()
+    fun traverseFunc(func: (EntityLevel) -> Unit) {
+        func(this)
+        children.forEach {
+            it.traverseFunc(func)
+        }
+    }
+
+    fun getAbsolutePosition() : Vector3f {
+
+        var holder = this
+        val pos: Vector3f = Vector3f()
+
+        while (true) {
+            if (holder.hasComponent(TransformComponent::class)) {
+                val transformComp = holder.getComponent(TransformComponent::class)
+                pos.x += transformComp.x
+                pos.y += transformComp.y
+                pos.z += transformComp.z
+            }
+
+            if (holder.parent != null) {
+                holder = holder.parent
+            } else {
+                return pos
+            }
+        }
     }
 }

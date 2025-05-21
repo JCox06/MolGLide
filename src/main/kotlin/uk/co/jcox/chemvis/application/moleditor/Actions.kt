@@ -1,5 +1,9 @@
 package uk.co.jcox.chemvis.application.moleditor
 
+import org.checkerframework.checker.units.qual.mol
+import org.joml.Vector3f
+import org.joml.minus
+import org.joml.plus
 import uk.co.jcox.chemvis.application.ChemVis
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
@@ -27,6 +31,8 @@ abstract class EditorAction {
         selectionMarkerEntity.addComponent(TransformComponent(OrganicEditorState.SELECTION_RADIUS / 2, OrganicEditorState.SELECTION_RADIUS / 2, -10.0f, OrganicEditorState.SELECTION_RADIUS))
         selectionMarkerEntity.addComponent(ObjComponent(ChemVis.SELECTION_MARKER_MESH))
         selectionMarkerEntity.getComponent(TransformComponent::class).visible = false
+
+        atom.addComponent(MolSelectionComponent(selectionMarkerEntity))
     }
 }
 
@@ -53,5 +59,28 @@ class AtomCreationAction (
         moleculeNode.addComponent(TransformComponent(xPos, yPos, 0.0f, 1.0f))
 
         createAtomLevelView(moleculeNode, firstAtom, element, 0.0f, 0.0f)
+    }
+}
+
+
+//Fired when the user wants to add an atom to an existing molecule
+class AtomInsertionAction (
+    private val xPos: Float,
+    private val yPos: Float,
+    private val element: String,
+    private val moleculeEntity: EntityLevel,
+) : EditorAction() {
+
+
+    override fun execute(molManager: IMoleculeManager, level: EntityLevel) {
+        val moleculePos = moleculeEntity.getAbsolutePosition()
+        val localAtomPos = Vector3f(xPos, yPos, 0.0f) - moleculePos
+
+        //1) Add the atom to the molecule using the molManager
+        val molecule = moleculeEntity.getComponent(MolIDComponent::class)
+        val newAtomID = molManager.addAtom(molecule.molID, element)
+
+        //2) Update spatial representation
+        createAtomLevelView(moleculeEntity, newAtomID, element, localAtomPos.x, localAtomPos.y)
     }
 }

@@ -60,7 +60,6 @@ class Batch2D (
 
 
         if (vertexCount() + (batchVertices.size / VERTEX_SIZE) >= vertexCapacity) {
-            println("Batcher has reached maxed capacity, drawing now -> then restarting")
             val modeRestore = mode
             end()
             begin(modeRestore)
