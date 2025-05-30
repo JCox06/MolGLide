@@ -14,6 +14,9 @@ class GLFWInputManager (
                 if (action == GLFW.GLFW_PRESS) {
                     subscriber.clickEvent(this, RawInput.fromGLFW(key))
                 }
+                if (action == GLFW.GLFW_RELEASE) {
+                    subscriber.clickReleaseEvent(this, RawInput.fromGLFW(key))
+                }
             }
         }
 
@@ -21,6 +24,9 @@ class GLFWInputManager (
             subscribers.forEach { subscriber ->
                 if (action == GLFW.GLFW_PRESS) {
                     subscriber.clickEvent(this, RawInput.fromGLFW(button))
+                }
+                if (action == GLFW.GLFW_RELEASE) {
+                    subscriber.clickReleaseEvent(this, RawInput.fromGLFW(button))
                 }
             }
         }

@@ -38,6 +38,10 @@ interface IInputSubscriber {
 
     }
 
+    fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
+
+    }
+
     fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
 
     }

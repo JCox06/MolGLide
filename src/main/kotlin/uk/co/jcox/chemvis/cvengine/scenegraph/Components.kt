@@ -1,12 +1,16 @@
 package uk.co.jcox.chemvis.cvengine.scenegraph
 
+import com.github.jsonldjava.utils.Obj
 import org.joml.Vector3f
 import java.util.UUID
 import javax.vecmath.Vector2f
+import kotlin.enums.enumEntries
 import kotlin.reflect.KClass
 
 
-interface IComponent
+interface IComponent {
+    fun clone() : IComponent
+}
 
 class TransformComponent (
     var x: Float,
@@ -14,7 +18,11 @@ class TransformComponent (
     var z: Float,
     var scale: Float  = 1.0f,
     var visible: Boolean = true
-) : IComponent
+) : IComponent {
+    override fun clone(): IComponent {
+        return TransformComponent(x, y, z, scale, visible)
+    }
+}
 
 class TextComponent (
     var text: String,
@@ -23,18 +31,26 @@ class TextComponent (
     var colourY: Float,
     var colourZ: Float,
     var scale: Float,
-) : IComponent
+) : IComponent {
+    override fun clone(): IComponent {
+        return TextComponent(text, bitmapFont, colourX, colourY, colourZ, scale)
+    }
+}
 
 class ObjComponent (
     var modelGeomID: String,
     //Room to include other things later!
-) : IComponent
+) : IComponent {
+    override fun clone(): IComponent {
+        return ObjComponent(modelGeomID)
+    }
+}
 
 
 class EntityLevel (
-    val parent: EntityLevel? = null
-) {
+    val parent: EntityLevel? = null,
     val id: UUID = UUID.randomUUID()
+) {
     private val components: MutableMap<KClass<out IComponent>, IComponent> = mutableMapOf()
     private val children: MutableList<EntityLevel> = mutableListOf()
 
@@ -50,10 +66,18 @@ class EntityLevel (
         return components.contains(componentClass)
     }
 
+    fun getComponents() : Iterator<IComponent> {
+        return components.values.iterator()
+    }
+
     fun addEntity () : EntityLevel {
         val entity = EntityLevel( this)
         children.add(entity)
         return entity
+    }
+
+    fun removeEntity(entity: EntityLevel) {
+        children.remove(entity)
     }
 
     fun getChildren() : List<EntityLevel> {
@@ -86,5 +110,40 @@ class EntityLevel (
                 return pos
             }
         }
+    }
+
+    fun clone(copyParent: EntityLevel?) : EntityLevel {
+
+        val currentCopy = EntityLevel(copyParent, this.id)
+        getComponents().forEach { comp ->
+            currentCopy.addComponent(comp.clone())
+        }
+
+        children.forEach { child ->
+            val childClone = child.clone(currentCopy)
+            currentCopy.children.add(childClone)
+        }
+
+        return currentCopy
+    }
+
+    override fun toString(): String {
+        return "${components.size} components with ${children.size} children"
+    }
+
+
+    fun findByID(id: UUID) : EntityLevel? {
+        if (this.id == id) {
+            return this
+        }
+
+        for (child in children) {
+            val found = child.findByID(id)
+
+            if (found != null) {
+                return found
+            }
+        }
+        return null
     }
 }

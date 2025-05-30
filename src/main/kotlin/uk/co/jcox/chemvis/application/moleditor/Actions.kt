@@ -32,7 +32,7 @@ abstract class EditorAction {
         selectionMarkerEntity.addComponent(ObjComponent(ChemVis.SELECTION_MARKER_MESH))
         selectionMarkerEntity.getComponent(TransformComponent::class).visible = false
 
-        atom.addComponent(MolSelectionComponent(selectionMarkerEntity))
+        atom.addComponent(MolSelectionComponent(selectionMarkerEntity.id))
     }
 }
 
@@ -73,6 +73,8 @@ class AtomInsertionAction (
 
 
     override fun execute(molManager: IMoleculeManager, level: EntityLevel) {
+
+
         val moleculePos = moleculeEntity.getAbsolutePosition()
         val localAtomPos = Vector3f(xPos, yPos, 0.0f) - moleculePos
 
@@ -82,5 +84,7 @@ class AtomInsertionAction (
 
         //2) Update spatial representation
         createAtomLevelView(moleculeEntity, newAtomID, element, localAtomPos.x, localAtomPos.y)
+
+
     }
 }
