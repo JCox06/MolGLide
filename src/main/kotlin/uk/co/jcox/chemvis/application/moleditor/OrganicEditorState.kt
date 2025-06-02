@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application.moleditor
 
+import imgui.ImGui
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
@@ -31,13 +32,18 @@ class OrganicEditorState (
 
     var selection: UUID? = null
 
+    var draggedEntity: UUID? = null
+
+    var debugUI = false
 
     override fun init() {
         workState.push(ChemLevelPair(EntityLevel(), CDKManager()))
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
-
+        if (debugUI) {
+            drawDebugUI()
+        }
     }
 
     override fun render() {
@@ -60,6 +66,10 @@ class OrganicEditorState (
                 if (workState.size > 1) {
                     workState.pop()
                 }
+            }
+
+            if (key == RawInput.KEY_L) {
+                debugUI = !debugUI
             }
         }
 
@@ -87,6 +97,8 @@ class OrganicEditorState (
                 val action = AtomInsertionAction(circlePos.x, circlePos.y, "C", selectedEntity!!.parent!!)
                 prepareTransitionState(action)
 
+                draggedEntity = action.insertedAtom
+
             } else {
                 val action = AtomCreationAction(worldPos.x, worldPos.y, "C")
                 prepareTransitionState(action)
@@ -98,11 +110,32 @@ class OrganicEditorState (
 
 
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
-
-
+        if (key == RawInput.MOUSE_1) {
+            draggedEntity = null
+        }
     }
 
     override fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
+
+        if (draggedEntity != null && selection != null) {
+
+
+            val entity = workState.peek().level.findByID(draggedEntity!!)
+            val parent = entity!!.parent
+            val parentAbs = parent!!.getAbsolutePosition()
+            val selectedEntity = workState.peek().level.findByID(selection!!)
+
+            //Get position of the molecule
+            val transformMolecule = selectedEntity!!.getAbsolutePosition()
+
+            val mouseWorld = camera2D.screenToWorld(inputManager.mousePos())
+
+            val draggedPosition = closestPointToCircleCircumference(Vector2f(transformMolecule.x, transformMolecule.y), mouseWorld, CONNECTION_DIST)
+
+            val entityTransform = entity!!.getComponent(TransformComponent::class)
+            entityTransform.x = draggedPosition.x - parentAbs.x
+            entityTransform.y = draggedPosition.y - parentAbs.y
+        }
 
         if (inputManager.mouseClick(RawInput.MOUSE_1)) {
             return;
@@ -111,6 +144,7 @@ class OrganicEditorState (
         //Check if the current mouse position has an element
         val mouseWorldPos = camera2D.screenToWorld(inputManager.mousePos())
         updateSelection(workState.peek().level, Vector3f(mouseWorldPos, 0.0f), SELECTION_MARKER_RADIUS)
+
     }
 
 
@@ -168,6 +202,23 @@ class OrganicEditorState (
         val centreRandomPoint = (randomPoint - circleCentre)
         val position = circleCentre + (centreRandomPoint.div(magCentreRandomPoint)).mul(radius)
         return position
+    }
+
+
+    private fun drawDebugUI() {
+        ImGui.begin("Debug UI")
+
+        ImGui.textWrapped("Dragged Entity ${draggedEntity}")
+
+        ImGui.textWrapped("Selected Entity ${selection}")
+
+        ImGui.textWrapped("WorkState Level: ${workState.size}")
+
+        if (ImGui.button("Undo")) {
+            workState.pop()
+        }
+
+        ImGui.end()
     }
 
 

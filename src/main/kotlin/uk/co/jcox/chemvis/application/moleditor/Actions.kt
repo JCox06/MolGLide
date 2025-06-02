@@ -17,7 +17,7 @@ abstract class EditorAction {
     abstract fun execute(molManager: IMoleculeManager, level: EntityLevel)
 
     //Add an atom to an existing molecule (Only does atom, no bonds, etc.)
-    protected fun createAtomLevelView(moleculeEntity: EntityLevel, molManagerAtomID: UUID, element: String, posX: Float, posY: Float) {
+    protected fun createAtomLevelView(moleculeEntity: EntityLevel, molManagerAtomID: UUID, element: String, posX: Float, posY: Float) : UUID {
         //1) Create a new Entity for this atom using a local moleculeEntity as the root
         val atom = moleculeEntity.addEntity()
 
@@ -33,6 +33,8 @@ abstract class EditorAction {
         selectionMarkerEntity.getComponent(TransformComponent::class).visible = false
 
         atom.addComponent(MolSelectionComponent(selectionMarkerEntity.id))
+
+        return atom.id
     }
 }
 
@@ -71,6 +73,7 @@ class AtomInsertionAction (
     private val moleculeEntity: EntityLevel,
 ) : EditorAction() {
 
+    lateinit var insertedAtom: UUID
 
     override fun execute(molManager: IMoleculeManager, level: EntityLevel) {
 
@@ -83,8 +86,6 @@ class AtomInsertionAction (
         val newAtomID = molManager.addAtom(molecule.molID, element)
 
         //2) Update spatial representation
-        createAtomLevelView(moleculeEntity, newAtomID, element, localAtomPos.x, localAtomPos.y)
-
-
+        insertedAtom = createAtomLevelView(moleculeEntity, newAtomID, element, localAtomPos.x, localAtomPos.y)
     }
 }

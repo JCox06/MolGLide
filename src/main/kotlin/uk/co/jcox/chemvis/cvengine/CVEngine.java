@@ -141,6 +141,13 @@ public class CVEngine implements ICVServices, AutoCloseable{
             application.loop();
 
             //Then check if the current state needs running
+
+            if (ImGui.getIO().getWantCaptureMouse()) {
+                inputManager.blockInput(true);
+            } else {
+                inputManager.blockInput(false);
+            }
+
             if (currentState != null) {
                 currentState.update(inputManager, (float) GLFW.glfwGetTime());
                 currentState.render();
