@@ -12,5 +12,7 @@ public interface IMoleculeManager {
 
     UUID formBond(UUID moleculeID, UUID atom1, UUID atom2, int bondOrder);
 
+    String getMolecularFormula(UUID moleculeID);
+
     IMoleculeManager clone();
 }

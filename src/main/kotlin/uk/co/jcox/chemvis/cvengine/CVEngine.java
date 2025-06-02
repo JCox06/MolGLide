@@ -13,6 +13,7 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GLUtil;
 import org.lwjgl.system.Callback;
+import org.tinylog.Logger;
 
 import java.io.File;
 
@@ -51,8 +52,10 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
     private void init() {
 
+        Logger.info("Starting CV3D Engine...");
+
         GLFW.glfwSetErrorCallback((code, desc) -> {
-            System.out.println("[GLFW ERROR] " + code + GLFWErrorCallback.getDescription(desc));
+            Logger.error("[GLFW ERROR] " + code + GLFWErrorCallback.getDescription(desc));
         });
 
         if (! GLFW.glfwInit()) {
@@ -85,19 +88,25 @@ public class CVEngine implements ICVServices, AutoCloseable{
         GL11.glEnable(GL11.GL_DEPTH_TEST);
 
         setupImGui();
+
+        Logger.info("GLFW and OpenGL have successfully started");
     }
 
 
     private void initialiseCoreServices() {
+        Logger.info("Initialising CV3D core services...");
         this.inputManager = new GLFWInputManager(windowHandle);
         this.batcher = new Batch2D();
         this.resourceManager = new ResourceManager();
         this.levelRenderer = new LevelRenderer(batcher, resourceManager);
+        Logger.info("Success! InputManager, Batcher, ResourceManager, and LevelRenderer have all started");
     }
 
 
     private void initialiseIntegratedResources() {
+        Logger.info("Loading integrated resources...");
         this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_TEXTURE, new File("data/integrated/shaders/simpleTexture.vert"), new File("data/integrated/shaders/simpleTexture.frag"));
+        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_COLOUR, new File("data/integrated/shaders/simpleColour.vert"), new File(("data/integrated/shaders/simpleColour.frag")));
     }
 
 
@@ -123,8 +132,12 @@ public class CVEngine implements ICVServices, AutoCloseable{
     }
 
     public void run(IApplication application) {
+        Logger.info("Ready, initialising application: {}", name);
         init();
         application.init(this);
+
+
+        Logger.info("Engine startup successful! Entering main render loop");
 
         while (! GLFW.glfwWindowShouldClose(this.windowHandle)) {
 
@@ -195,10 +208,6 @@ public class CVEngine implements ICVServices, AutoCloseable{
         this.currentState = state;
     }
 
-    private void throwFile() {
-        throw new RuntimeException("Error when opening file");
-    }
-
 
     public void shutdown() {
         GLFW.glfwSetWindowShouldClose(this.windowHandle, true);
@@ -232,6 +241,8 @@ public class CVEngine implements ICVServices, AutoCloseable{
     @Override
     public void close() {
 
+        Logger.info("====SHUTTING-DOWN====");
+
         batcher.close();
         resourceManager.destroy();
 
@@ -251,6 +262,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
         GLFW.glfwDestroyWindow(this.windowHandle);
         GLFW.glfwTerminate();
 
+        Logger.info("Shut down successfully");
     }
 
 }

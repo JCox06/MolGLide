@@ -81,4 +81,15 @@ object Shaper2D {
 
         return Mesh(positions, texCoords, indices)
     }
+
+
+    fun line(startX: Float, startY: Float, startZ: Float, endX: Float, endY: Float, endZ: Float) : Mesh {
+        val vec1 = Vector4f(startX, startY, startZ, W_COMP)
+        val vec2 = Vector4f(endX, endY, endZ, W_COMP)
+        val indices: MutableList<Int> = mutableListOf(0, 1)
+
+        val texCoords: MutableList<Vector2f> = mutableListOf(Vector2f(0.0f, 0.0f), Vector2f(0.0f, 0.0f))
+
+        return Mesh(listOf(vec1, vec2), texCoords, indices)
+    }
 }

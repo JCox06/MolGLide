@@ -7,6 +7,7 @@ import org.joml.plus
 import uk.co.jcox.chemvis.application.ChemVis
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
@@ -17,7 +18,7 @@ abstract class EditorAction {
     abstract fun execute(molManager: IMoleculeManager, level: EntityLevel)
 
     //Add an atom to an existing molecule (Only does atom, no bonds, etc.)
-    protected fun createAtomLevelView(moleculeEntity: EntityLevel, molManagerAtomID: UUID, element: String, posX: Float, posY: Float) : UUID {
+    protected fun createAtomLevelView(moleculeEntity: EntityLevel, molManagerAtomID: UUID, element: String, posX: Float, posY: Float) : EntityLevel {
         //1) Create a new Entity for this atom using a local moleculeEntity as the root
         val atom = moleculeEntity.addEntity()
 
@@ -34,7 +35,22 @@ abstract class EditorAction {
 
         atom.addComponent(MolSelectionComponent(selectionMarkerEntity.id))
 
-        return atom.id
+        return atom
+    }
+
+
+    //Add a bond to an existing molecule with existing atoms (AtomA, AtomB)
+    protected fun createSingleBondLevelView(moleculeEntity: EntityLevel, atomA: EntityLevel, atomB: EntityLevel, bondMolManID: UUID) {
+        //1) Create a new bond for this atom using a local moleculeEntity as root
+        val l_bond = moleculeEntity.addEntity()
+        l_bond.addComponent(MolIDComponent(bondMolManID))
+
+        val transformAtomA = atomB.getComponent(TransformComponent::class)
+        l_bond.addComponent(transformAtomA)
+
+        val transformAtomB = atomA.getAbsolutePosition()
+
+        l_bond.addComponent(LineDrawerComponent(Vector3f(transformAtomB.x, transformAtomB.y, transformAtomB.z - 1.0f)))
     }
 }
 
@@ -55,6 +71,8 @@ class AtomCreationAction (
         val newMolecule = molManager.createMolecule()
         val firstAtom = molManager.addAtom(newMolecule, element)
 
+        println(firstAtom)
+
         //2) Update spatial representation on the Level
         val moleculeNode = level.addEntity()
         moleculeNode.addComponent(MolIDComponent(newMolecule))
@@ -71,6 +89,7 @@ class AtomInsertionAction (
     private val yPos: Float,
     private val element: String,
     private val moleculeEntity: EntityLevel,
+    private val preExistingSelection: EntityLevel,
 ) : EditorAction() {
 
     lateinit var insertedAtom: UUID
@@ -85,7 +104,14 @@ class AtomInsertionAction (
         val molecule = moleculeEntity.getComponent(MolIDComponent::class)
         val newAtomID = molManager.addAtom(molecule.molID, element)
 
+        //2) Add a bond in-between the selected atoms and this newly created atom
+        val m_preExisting = preExistingSelection.getComponent(MolIDComponent::class)
+        println(m_preExisting.molID)
+        val m_bondID = molManager.formBond(molecule.molID, m_preExisting.molID, newAtomID, 1)
+
         //2) Update spatial representation
-        insertedAtom = createAtomLevelView(moleculeEntity, newAtomID, element, localAtomPos.x, localAtomPos.y)
+        val insertedAtomEntity =  createAtomLevelView(moleculeEntity, newAtomID, element, localAtomPos.x, localAtomPos.y)
+        insertedAtom = insertedAtomEntity.id
+        createSingleBondLevelView(moleculeEntity, preExistingSelection, insertedAtomEntity, m_bondID)
     }
 }

@@ -6,6 +6,7 @@ import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
@@ -20,9 +21,12 @@ class LevelRenderer (
     fun renderLevel(level: EntityLevel, camera2D: Camera2D) {
         val texts: MutableList<EntityLevel> = mutableListOf()
         val objects: MutableList<EntityLevel> = mutableListOf()
-        traverseAndCollect(level, texts, objects)
+        val lines: MutableList<EntityLevel> = mutableListOf()
+        traverseAndCollect(level, texts, objects, lines)
 
-
+        var program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
+        program.uniform("uPerspective", camera2D.combined())
+        program.uniform("uModel", Matrix4f())
 
         batcher.begin(Batch2D.Mode.FAN)
         //Render other objects
@@ -31,12 +35,26 @@ class LevelRenderer (
         }
         batcher.end()
 
+
+        program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_COLOUR)
+        program.uniform("uPerspective", camera2D.combined())
+        program.uniform("uModel", Matrix4f())
+
+        batcher.begin(Batch2D.Mode.LINE)
+        //Render lines (aka bonds)
+        lines.forEach { lineEntity ->
+            renderLine(lineEntity)
+        }
+
+        batcher.end()
+
+
         //Render the text (do this last as text is transparent and this is main thing)
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
 
-        val program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
+        program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
         program.uniform("uPerspective", camera2D.combined())
         program.uniform("uModel", Matrix4f())
 
@@ -48,6 +66,27 @@ class LevelRenderer (
         GL11.glDisable(GL11.GL_BLEND)
 
     }
+
+
+    private fun renderLine(lineEntity: EntityLevel) {
+        if (!lineEntity.hasComponent(LineDrawerComponent::class) || !lineEntity.hasComponent(TransformComponent::class)) {
+            return
+        }
+
+        val lineComponent = lineEntity.getComponent(LineDrawerComponent::class)
+        val transformComp = lineEntity.getComponent(TransformComponent::class)
+
+        if (! transformComp.visible) {
+            return;
+        }
+
+        val absPos = lineEntity.getAbsolutePosition()
+
+        val mesh = Shaper2D.line(absPos.x, absPos.y, absPos.z, lineComponent.lineTo.x, lineComponent.lineTo.y, lineComponent.lineTo.z)
+
+        batcher.addBatch(mesh.pack(), mesh.indices)
+    }
+
 
 
     private fun renderObject(objectEntity: EntityLevel) {
@@ -137,7 +176,7 @@ class LevelRenderer (
         }
     }
 
-    private fun traverseAndCollect(entity: EntityLevel, texts: MutableList<EntityLevel>, objects: MutableList<EntityLevel>) {
+    private fun traverseAndCollect(entity: EntityLevel, texts: MutableList<EntityLevel>, objects: MutableList<EntityLevel>, lines: MutableList<EntityLevel>) {
         if (entity.hasComponent(TextComponent::class)) {
             texts.add(entity)
         }
@@ -146,8 +185,12 @@ class LevelRenderer (
             objects.add(entity)
         }
 
+        if (entity.hasComponent(LineDrawerComponent::class)) {
+            lines.add(entity)
+        }
+
         entity.getChildren().forEach { child ->
-            traverseAndCollect(child, texts, objects)
+            traverseAndCollect(child, texts, objects, lines)
         }
     }
 

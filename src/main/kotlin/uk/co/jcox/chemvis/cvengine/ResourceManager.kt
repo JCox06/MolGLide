@@ -1,10 +1,11 @@
 package uk.co.jcox.chemvis.cvengine
-
+import org.apache.commons.logging.Log
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL30
 import org.lwjgl.stb.STBImage
 import org.lwjgl.system.MemoryStack
+import org.tinylog.Logger
 import uk.co.jcox.chemvis.cvengine.BitmapFont.GlyphData
 import java.awt.Color
 import java.awt.Font
@@ -32,6 +33,7 @@ class ResourceManager : IResourceManager{
     //Shader Management
 
     override fun loadShadersFromDisc(id: String, vertSrc: File, fragSrc: File) {
+        Logger.info {"Loading shader program $id"}
         checkFile(vertSrc)
         checkFile(fragSrc)
 
@@ -57,6 +59,7 @@ class ResourceManager : IResourceManager{
     }
 
     override fun destroyProgram(programID: String) {
+        Logger.info { "Destroying program $programID" }
         val program = shaderPrograms[programID]
         if (program != null) {
             program.close()
@@ -65,10 +68,12 @@ class ResourceManager : IResourceManager{
     }
 
     override fun manageMesh(id: String, mesh: Mesh) {
+        Logger.info { "Managing external mesh $id" }
         meshes[id] = mesh
     }
 
     override fun destroyMesh(id: String) {
+        Logger.info { "Destroying mesh $id" }
         meshes.remove(id)
     }
 
@@ -85,6 +90,8 @@ class ResourceManager : IResourceManager{
     //Texture Management
 
     override fun loadTextureFromDisc(id: String, texture: File) {
+        Logger.info { "Loading texture $id" }
+
         checkFile(texture)
 
         MemoryStack.stackPush().use { memoryStack ->
@@ -104,6 +111,7 @@ class ResourceManager : IResourceManager{
     }
 
     override fun destroyTexture(id: String) {
+        Logger.info { "Destroying texture $id" }
         val textureToDelete = textures[id]
         if (textureToDelete != null) {
             GL11.glDeleteTextures(textureToDelete)
@@ -112,19 +120,37 @@ class ResourceManager : IResourceManager{
     }
 
     override fun destroyFont(id: String) {
+        Logger.info { "Destroying font $id" }
         destroyTexture(id)
         fonts.remove(id)
     }
 
     override fun destroy() {
-        shaderPrograms.keys.forEach { destroyProgram(it) }
-        textures.keys.forEach {destroyTexture(it)}
-        fonts.keys.forEach {destroyFont(it)}
-        meshes.keys.forEach { destroyMesh(it) } //Not really required (no external resources associated)
+        Logger.info { "Shutting down all resources and ResourceManager" }
+
+        val keysToRemove = mutableListOf<String>()
+
+        shaderPrograms.keys.forEach { keysToRemove.add(it) }
+        keysToRemove.forEach { destroyProgram(it) }
+        keysToRemove.clear()
+
+        textures.keys.forEach {keysToRemove.add(it)}
+        keysToRemove.forEach { destroyTexture(it) }
+        keysToRemove.clear()
+
+        fonts.keys.forEach {keysToRemove.add(it)}
+        keysToRemove.forEach { destroyFont(it) }
+        keysToRemove.clear()
+
+
+        meshes.keys.forEach { keysToRemove.add(it) } //Not really required (no external resources associated)
+        keysToRemove.forEach { destroyMesh(it) }
+        keysToRemove.clear()
     }
 
 
     override fun loadFontFromDisc(id: String, font: File, glyphs: String, size: Int) {
+        Logger.info { "Loading font $id" }
         checkFile(font)
 
 
@@ -301,6 +327,7 @@ class ResourceManager : IResourceManager{
 
     private fun saveBitmapFont(bufferedImage: BufferedImage) {
         val outputFile = File("data/integrated/temp/font-generated.png")
+        Logger.debug { "Saving generated font bitmap to $outputFile" }
         try {
             ImageIO.write(bufferedImage, "png", outputFile)
         } catch (e: IOException) {

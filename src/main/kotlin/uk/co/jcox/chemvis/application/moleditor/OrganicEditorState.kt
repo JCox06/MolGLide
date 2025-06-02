@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application.moleditor
 
 import imgui.ImGui
+import org.apache.jena.vocabulary.TestManifest.action
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
@@ -36,18 +37,25 @@ class OrganicEditorState (
 
     var debugUI = false
 
+    var moleculeUIID: UUID? = null
+
     override fun init() {
         workState.push(ChemLevelPair(EntityLevel(), CDKManager()))
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
-        if (debugUI) {
-            drawDebugUI()
-        }
     }
 
     override fun render() {
         levelRenderer.renderLevel(workState.peek().level, camera2D)
+
+        if (debugUI) {
+            drawDebugUI()
+        }
+
+        if (moleculeUIID != null) {
+            drawMoleculeLookup()
+        }
     }
 
     override fun cleanup() {
@@ -57,6 +65,15 @@ class OrganicEditorState (
 
     override fun clickEvent(inputManager: InputManager, key: RawInput) {
         //If the user clicks LCTRL, then we can do some actions
+
+
+        if (key == RawInput.MOUSE_2 && selection != null) {
+            val selecEntity = workState.peek().level.findByID(selection!!)
+            val molEntity = selecEntity!!.parent
+            moleculeUIID = molEntity!!.getComponent(MolIDComponent::class).molID
+
+        }
+
         if (inputManager.keyClick(RawInput.LCTRL)) {
             if (key == RawInput.KEY_F) {
                 workState.add(workState.peek().clone())
@@ -94,7 +111,7 @@ class OrganicEditorState (
 
                 val circlePos = closestPointToCircleCircumference(Vector2f(transformAtom.x, transformAtom.y), worldPos, CONNECTION_DIST)
 
-                val action = AtomInsertionAction(circlePos.x, circlePos.y, "C", selectedEntity!!.parent!!)
+                val action = AtomInsertionAction(circlePos.x, circlePos.y, "C", selectedEntity!!.parent!!, selectedEntity!!)
                 prepareTransitionState(action)
 
                 draggedEntity = action.insertedAtom
@@ -221,6 +238,19 @@ class OrganicEditorState (
         ImGui.end()
     }
 
+    private fun drawMoleculeLookup() {
+        ImGui.begin("Molecule Lookup")
+
+        ImGui.text("Molecule Manager ID ${this.moleculeUIID}")
+
+        ImGui.text("Formula: ${workState.peek().molManager.getMolecularFormula(this.moleculeUIID)}")
+
+        if (ImGui.button("Close Window")) {
+            this.moleculeUIID = null
+        }
+
+        ImGui.end()
+    }
 
     companion object {
         val SELECTION_RADIUS = 10.0f

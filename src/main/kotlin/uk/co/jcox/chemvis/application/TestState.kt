@@ -1,11 +1,13 @@
 package uk.co.jcox.chemvis.application
 
 import org.joml.Math
+import org.joml.Vector3f
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IApplicationState
 import uk.co.jcox.chemvis.cvengine.InputManager
 import uk.co.jcox.chemvis.cvengine.LevelRenderer
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
@@ -28,6 +30,8 @@ class TestState (
         val grandChild = myTextEntity.addEntity()
         grandChild.addComponent(TransformComponent(100.0f, 50.0f, 0.0f, ChemVis.GLOBAL_SCALE))
         grandChild.addComponent(TextComponent("I am the grandchild!", ChemVis.FONT, 1.0f, 0.5f, 0.5f, ChemVis.GLOBAL_SCALE))
+
+        levelRoot.addComponent(LineDrawerComponent(Vector3f(-100.0f, 0.0f, 0.0f)))
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {

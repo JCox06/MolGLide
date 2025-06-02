@@ -8,6 +8,8 @@ import org.openscience.cdk.CDK;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IMolecularFormula;
+import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
 import java.util.HashMap;
 import java.util.List;
@@ -51,25 +53,37 @@ public class CDKManager implements IMoleculeManager{
                 UUID idCopy = id;
                 IAtomContainer molCopy = mol.clone();
 
-                Map<UUID, IAtom> atomsCopy = new HashMap<>();
-                atoms.forEach((atomId, atom) -> {
-                    try {
-                        atomsCopy.put(atomId, atom.clone());
-                    } catch (
-                            CloneNotSupportedException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                // Map original atoms to their UUIDs
+                Map<IAtom, UUID> atomToUUID = new HashMap<>();
+                for (Map.Entry<UUID, IAtom> entry : atoms.entrySet()) {
+                    atomToUUID.put(entry.getValue(), entry.getKey());
+                }
 
-                final Map<UUID, IBond> bondsCopy = new HashMap<>();
-                bonds.forEach((bondID, bond) -> {
-                    try {
-                        bondsCopy.put(bondID, bond.clone());
-                    } catch (
-                            CloneNotSupportedException e) {
-                        throw new RuntimeException(e);
+                Map<UUID, IAtom> atomsCopy = new HashMap<>();
+                for (int i = 0; i < mol.getAtomCount(); i++) {
+                    IAtom origAtom = mol.getAtom(i);
+                    IAtom clonedAtom = molCopy.getAtom(i);
+                    UUID uuid = atomToUUID.get(origAtom);
+                    if (uuid != null) {
+                        atomsCopy.put(uuid, clonedAtom);
                     }
-                });
+                }
+
+                // Map original bonds to their UUIDs
+                Map<IBond, UUID> bondToUUID = new HashMap<>();
+                for (Map.Entry<UUID, IBond> entry : bonds.entrySet()) {
+                    bondToUUID.put(entry.getValue(), entry.getKey());
+                }
+
+                Map<UUID, IBond> bondsCopy = new HashMap<>();
+                for (int i = 0; i < mol.getBondCount(); i++) {
+                    IBond origBond = mol.getBond(i);
+                    IBond clonedBond = molCopy.getBond(i);
+                    UUID uuid = bondToUUID.get(origBond);
+                    if (uuid != null) {
+                        bondsCopy.put(uuid, clonedBond);
+                    }
+                }
 
                 return new MoleculeHolder(idCopy, molCopy, atomsCopy, bondsCopy);
 
@@ -121,6 +135,14 @@ public class CDKManager implements IMoleculeManager{
         molHolder.bonds.put(bondID, newBond);
 
         return bondID;
+    }
+
+    @Override
+    public String getMolecularFormula(UUID moleculeID) {
+        MoleculeHolder moleculeHolder = getMolHolder(moleculeID);
+
+        IMolecularFormula formula = MolecularFormulaManipulator.getMolecularFormula(moleculeHolder.mol);
+        return MolecularFormulaManipulator.getString(formula);
     }
 
     @Override

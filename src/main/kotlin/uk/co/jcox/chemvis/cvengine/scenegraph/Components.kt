@@ -46,6 +46,14 @@ class ObjComponent (
     }
 }
 
+class LineDrawerComponent (
+    val lineTo: Vector3f
+) : IComponent {
+    override fun clone(): IComponent {
+        return LineDrawerComponent(Vector3f(lineTo))
+    }
+}
+
 
 class EntityLevel (
     val parent: EntityLevel? = null,
