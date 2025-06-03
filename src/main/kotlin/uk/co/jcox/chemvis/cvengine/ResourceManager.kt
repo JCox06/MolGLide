@@ -3,9 +3,11 @@ import org.apache.commons.logging.Log
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL30
+import org.lwjgl.opengl.GL33
 import org.lwjgl.stb.STBImage
 import org.lwjgl.system.MemoryStack
 import org.tinylog.Logger
+import sun.swing.SwingUtilities2.getFontMetrics
 import uk.co.jcox.chemvis.cvengine.BitmapFont.GlyphData
 import java.awt.Color
 import java.awt.Font
@@ -32,7 +34,7 @@ class ResourceManager : IResourceManager{
 
     //Shader Management
 
-    override fun loadShadersFromDisc(id: String, vertSrc: File, fragSrc: File) {
+    override fun loadShadersFromDisc(id: String, vertSrc: File, fragSrc: File, geomSrc: File?) {
         Logger.info {"Loading shader program $id"}
         checkFile(vertSrc)
         checkFile(fragSrc)
@@ -41,10 +43,17 @@ class ResourceManager : IResourceManager{
             val vertShader = Files.readString(vertSrc.toPath())
             val fragShader = Files.readString(fragSrc.toPath())
 
-            val shaderProgram = loadShadersToOpenGL(vertShader, fragShader)
-            shaderPrograms[id] = ShaderProgram(shaderProgram)
+            if (geomSrc == null) {
+                val shaderProgram = loadShadersToOpenGL(vertShader, fragShader, "")
+                shaderPrograms[id] = ShaderProgram(shaderProgram)
+            } else {
+                val geomShader = Files.readString(geomSrc.toPath())
+                val shaderProgram = loadShadersToOpenGL(vertShader, fragShader, geomShader)
+                shaderPrograms[id] = ShaderProgram(shaderProgram)
+            }
+
         } catch (e: IOException) {
-            println("Error when loading shader from disc: ${e.message}")
+            Logger.error ("Error when reading shader data from file {}", e)
         }
     }
 
@@ -230,13 +239,13 @@ class ResourceManager : IResourceManager{
     }
 
 
-    private fun loadShadersToOpenGL(vertSrc: String, fragSrc: String) : Int {
+    private fun loadShadersToOpenGL(vertSrc: String, fragSrc: String, geomSrc: String) : Int {
         val vertexShader = GL30.glCreateShader(GL30.GL_VERTEX_SHADER)
         GL30.glShaderSource(vertexShader, vertSrc)
         GL30.glCompileShader(vertexShader)
 
         if (! checkShaderCompilation(vertexShader)) {
-            println(getShaderInfoLog(vertexShader))
+            Logger.error{getShaderInfoLog(vertexShader)}
         }
 
         val fragmentShader = GL30.glCreateShader(GL30.GL_FRAGMENT_SHADER)
@@ -244,22 +253,37 @@ class ResourceManager : IResourceManager{
         GL30.glCompileShader(fragmentShader)
 
         if (! checkShaderCompilation(fragmentShader)) {
-            println(getShaderInfoLog(fragmentShader))
+            Logger.error{getShaderInfoLog(fragmentShader)}
         }
-
-
         val shaderProgram = GL30.glCreateProgram()
 
         GL30.glAttachShader(shaderProgram, vertexShader)
         GL30.glAttachShader(shaderProgram, fragmentShader)
+
+        val geomShader = GL30.glCreateShader(GL33.GL_GEOMETRY_SHADER)
+
+        if (! geomSrc.isEmpty()) {
+            GL33.glShaderSource(geomShader, geomSrc)
+            GL33.glCompileShader(geomShader)
+
+            if (! checkShaderCompilation(geomShader)) {
+                Logger.error { getShaderInfoLog(geomShader) }
+            }
+
+            GL30.glAttachShader(shaderProgram, geomShader)
+
+        }
+
+
         GL30.glLinkProgram(shaderProgram)
 
         if (! checkProgramLink(shaderProgram)) {
-            println(getProgramInfoLog(shaderProgram))
+            Logger.error{(getProgramInfoLog(shaderProgram))}
         }
 
         validateProgram(shaderProgram)
 
+        GL30.glDeleteShader(geomShader)
         GL30.glDeleteShader(vertexShader)
         GL30.glDeleteShader(fragmentShader)
 
@@ -286,7 +310,7 @@ class ResourceManager : IResourceManager{
     private fun validateProgram(programID: Int) {
         GL30.glValidateProgram(programID)
         if (GL30.glGetProgrami(programID, GL30.GL_VALIDATE_STATUS) == 0) {
-            println("Error")
+            Logger.warn{ "Shader program validation failed: ${getProgramInfoLog(programID)}" }
         }
     }
 
@@ -347,6 +371,7 @@ class ResourceManager : IResourceManager{
 
     private fun checkFile(file: File) {
         if (!file.isFile) {
+            Logger.error { "A shader program specified a shader file that did not exist" }
             throw RuntimeException("Can't find: ${file.absoluteFile}")
         }
     }

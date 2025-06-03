@@ -5,7 +5,7 @@ import java.io.File
 
 interface IResourceManager {
 
-    fun loadShadersFromDisc(id: String, vertSrc: File, fragSrc: File)
+    fun loadShadersFromDisc(id: String, vertSrc: File, fragSrc: File, geomSrc: File? = null)
     fun useProgram(programID: String): ShaderProgram
     fun destroyProgram(programID: String)
 

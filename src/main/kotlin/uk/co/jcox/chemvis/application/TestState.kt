@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application
 
 import org.joml.Math
+import org.joml.Vector2f
 import org.joml.Vector3f
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IApplicationState
@@ -40,8 +41,8 @@ class TestState (
         transform.y =  20 * Math.cos(timeElapsed)
     }
 
-    override fun render() {
-        levelRenderer.renderLevel(levelRoot, camera2D)
+    override fun render(viewport: Vector2f) {
+        levelRenderer.renderLevel(levelRoot, camera2D, viewport)
     }
 
     override fun cleanup() {

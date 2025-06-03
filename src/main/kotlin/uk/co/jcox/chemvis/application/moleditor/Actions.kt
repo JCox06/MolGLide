@@ -50,7 +50,7 @@ abstract class EditorAction {
 
         val transformAtomB = atomA.getAbsolutePosition()
 
-        l_bond.addComponent(LineDrawerComponent(Vector3f(transformAtomB.x, transformAtomB.y, transformAtomB.z - 1.0f)))
+        l_bond.addComponent(LineDrawerComponent(Vector3f(transformAtomB.x, transformAtomB.y, transformAtomB.z - 1.0f), 1.5f))
     }
 }
 

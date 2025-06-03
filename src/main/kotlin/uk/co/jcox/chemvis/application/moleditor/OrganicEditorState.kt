@@ -46,8 +46,8 @@ class OrganicEditorState (
     override fun update(inputManager: InputManager, timeElapsed: Float) {
     }
 
-    override fun render() {
-        levelRenderer.renderLevel(workState.peek().level, camera2D)
+    override fun render(viewport: Vector2f) {
+        levelRenderer.renderLevel(workState.peek().level, camera2D, viewport)
 
         if (debugUI) {
             drawDebugUI()

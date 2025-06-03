@@ -6,6 +6,7 @@ import imgui.ImGuiIO;
 import imgui.flag.ImGuiConfigFlags;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
+import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -42,9 +43,11 @@ public class CVEngine implements ICVServices, AutoCloseable{
     boolean debugPanel = false;
 
     public static final String SHADER_SIMPLE_TEXTURE = "integrated/simple_font";
-    public static final String SHADER_SIMPLE_COLOUR = "integrated/simple_colour";
+    public static final String SHADER_SIMPLE_COLOUR = "integrated/simple_line";
 
     public static final String STD_CHARACTER_SET = "@!?- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12345678";
+
+    private final Vector2f viewport = new Vector2f();
 
     public CVEngine(String name) {
                 this.name = name;
@@ -105,8 +108,8 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
     private void initialiseIntegratedResources() {
         Logger.info("Loading integrated resources...");
-        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_TEXTURE, new File("data/integrated/shaders/simpleTexture.vert"), new File("data/integrated/shaders/simpleTexture.frag"));
-        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_COLOUR, new File("data/integrated/shaders/simpleColour.vert"), new File(("data/integrated/shaders/simpleColour.frag")));
+        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_TEXTURE, new File("data/integrated/shaders/simpleTexture.vert"), new File("data/integrated/shaders/simpleTexture.frag"), null);
+        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_COLOUR, new File("data/integrated/shaders/simpleLine.vert"), new File(("data/integrated/shaders/simpleLine.frag")), new File("data/integrated/shaders/simpleLine.geom"));
     }
 
 
@@ -163,7 +166,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
             if (currentState != null) {
                 currentState.update(inputManager, (float) GLFW.glfwGetTime());
-                currentState.render();
+                currentState.render(viewport);
             }
 
             if (debugPanel) {
@@ -236,6 +239,13 @@ public class CVEngine implements ICVServices, AutoCloseable{
     @Override
     public void toggleDebugPanel() {
         this.debugPanel = !debugPanel;
+    }
+
+    @Override
+    public void setViewport(int a, int b, int c, int d) {
+        viewport.x = c;
+        viewport.y = d;
+        GL11.glViewport(a, b, c, d);
     }
 
     @Override

@@ -18,4 +18,6 @@ public interface ICVServices {
     IResourceManager resourceManager();
 
     void toggleDebugPanel();
+
+    void setViewport(int a, int b, int c, int d);
 }

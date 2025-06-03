@@ -47,7 +47,8 @@ class ObjComponent (
 }
 
 class LineDrawerComponent (
-    val lineTo: Vector3f
+    val lineTo: Vector3f,
+    val width: Float = 1.0f
 ) : IComponent {
     override fun clone(): IComponent {
         return LineDrawerComponent(Vector3f(lineTo))

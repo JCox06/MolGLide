@@ -43,7 +43,7 @@ class ChemVis : IApplication, IInputSubscriber {
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
 
         val wm = services.windowMetrics()
-        GL11.glViewport(0, 0, wm.x, wm.y)
+        services.setViewport(0, 0, wm.x, wm.y)
         camera.update(wm.x, wm.y)
 
 

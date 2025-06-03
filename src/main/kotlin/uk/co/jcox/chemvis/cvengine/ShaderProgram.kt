@@ -6,6 +6,7 @@ import org.joml.Vector3f
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
+import org.tinylog.Logger
 
 class ShaderProgram (
     private val program: Int
@@ -47,7 +48,8 @@ class ShaderProgram (
     private fun getUniformLocation(name: String): Int {
         val location = GL30.glGetUniformLocation(this.program, name)
         if (location == -1) {
-            throw RuntimeException("Error - No uniform location found with ${name} at loc ${location}")
+//            throw RuntimeException("Error - No uniform location found with ${name} at loc ${location}")
+            Logger.error { "No uniform location found with $name" }
         }
         bind()
         return location

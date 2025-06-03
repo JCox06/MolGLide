@@ -18,7 +18,9 @@ class LevelRenderer (
 
     private val lastFontColour: Vector3f = Vector3f(1.0f, 1.0f, 1.0f)
 
-    fun renderLevel(level: EntityLevel, camera2D: Camera2D) {
+    private var lastLineThickness = 1.0f;
+
+    fun renderLevel(level: EntityLevel, camera2D: Camera2D, viewport: Vector2f) {
         val texts: MutableList<EntityLevel> = mutableListOf()
         val objects: MutableList<EntityLevel> = mutableListOf()
         val lines: MutableList<EntityLevel> = mutableListOf()
@@ -38,12 +40,13 @@ class LevelRenderer (
 
         program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_COLOUR)
         program.uniform("uPerspective", camera2D.combined())
+        program.uniform("u_viewport", viewport)
         program.uniform("uModel", Matrix4f())
 
         batcher.begin(Batch2D.Mode.LINE)
         //Render lines (aka bonds)
         lines.forEach { lineEntity ->
-            renderLine(lineEntity)
+            renderLine(lineEntity, program)
         }
 
         batcher.end()
@@ -68,13 +71,24 @@ class LevelRenderer (
     }
 
 
-    private fun renderLine(lineEntity: EntityLevel) {
+    private fun renderLine(lineEntity: EntityLevel, program: ShaderProgram) {
         if (!lineEntity.hasComponent(LineDrawerComponent::class) || !lineEntity.hasComponent(TransformComponent::class)) {
             return
         }
 
         val lineComponent = lineEntity.getComponent(LineDrawerComponent::class)
         val transformComp = lineEntity.getComponent(TransformComponent::class)
+
+
+        if (lineComponent.width != lastLineThickness) {
+            val modeToRestore = batcher.end()
+            
+            lastLineThickness = lineComponent.width
+            program.uniform("u_lineThickness", lastLineThickness)
+
+            batcher.begin(modeToRestore)
+
+        }
 
         if (! transformComp.visible) {
             return;
