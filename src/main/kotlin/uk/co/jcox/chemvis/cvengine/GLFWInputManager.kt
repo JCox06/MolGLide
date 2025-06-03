@@ -7,20 +7,28 @@ class GLFWInputManager (
     val windowHandle: Long
 ) : InputManager() {
 
+    private var inputBlock = false
+
 
     init {
         GLFW.glfwSetKeyCallback(this.windowHandle) { win, key, scancode, action, mods ->
             subscribers.forEach { subscriber ->
-                if (action == GLFW.GLFW_PRESS) {
+                if (action == GLFW.GLFW_PRESS && !inputBlock) {
                     subscriber.clickEvent(this, RawInput.fromGLFW(key))
+                }
+                if (action == GLFW.GLFW_RELEASE && !inputBlock) {
+                    subscriber.clickReleaseEvent(this, RawInput.fromGLFW(key))
                 }
             }
         }
 
         GLFW.glfwSetMouseButtonCallback(this.windowHandle) {win, button, action, mods ->
             subscribers.forEach { subscriber ->
-                if (action == GLFW.GLFW_PRESS) {
+                if (action == GLFW.GLFW_PRESS && !inputBlock) {
                     subscriber.clickEvent(this, RawInput.fromGLFW(button))
+                }
+                if (action == GLFW.GLFW_RELEASE && !inputBlock) {
+                    subscriber.clickReleaseEvent(this, RawInput.fromGLFW(button))
                 }
             }
         }
@@ -66,6 +74,10 @@ class GLFWInputManager (
         GLFW.glfwGetCursorPos(this.windowHandle, mouseX, mouseY)
 
         return Vector2f(mouseX[0].toFloat(), mouseY[0].toFloat())
+    }
+
+    override fun blockInput(block: Boolean) {
+        this.inputBlock = block
     }
 
 }

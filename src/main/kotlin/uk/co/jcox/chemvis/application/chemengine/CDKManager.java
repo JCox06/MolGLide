@@ -1,99 +1,168 @@
 package uk.co.jcox.chemvis.application.chemengine;
 
+import org.checkerframework.checker.units.qual.A;
 import org.openscience.cdk.Atom;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.Bond;
+import org.openscience.cdk.CDK;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
+import org.openscience.cdk.interfaces.IMolecularFormula;
+import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-public class CDKManager implements IMoleculeManager {
+public class CDKManager implements IMoleculeManager{
 
-    public static final String PARENT_MOLECULE = "parent";
-
-    private final Map<UUID, MolInfo> molecules;
-    private final Map<UUID, IAtom> atoms;
-    private final Map<UUID, IBond> bonds;
+    private final Map<UUID, MoleculeHolder> molecules;
 
     public CDKManager() {
         this.molecules = new HashMap<>();
-        this.atoms = new HashMap<>();
-        this.bonds = new HashMap<>();
+    }
+
+    public CDKManager(Map<UUID, MoleculeHolder> molecules) {
+        this.molecules = molecules;
+    }
+
+    private static class MoleculeHolder {
+        final UUID id;
+        final IAtomContainer mol;
+        final Map<UUID, IAtom> atoms;
+        final Map<UUID, IBond> bonds;
+
+        public MoleculeHolder(UUID id, IAtomContainer mol, Map<UUID, IAtom> atoms, Map<UUID, IBond> bonds) {
+            this.id = id;
+            this.mol = mol;
+            this.atoms = atoms;
+            this.bonds = bonds;
+        }
+
+        public MoleculeHolder() {
+            this.id = UUID.randomUUID();
+            this.mol = new AtomContainer();
+            this.atoms = new HashMap<>();
+            this.bonds = new HashMap<>();
+        }
+
+        public MoleculeHolder clone() {
+            try {
+                UUID idCopy = id;
+                IAtomContainer molCopy = mol.clone();
+
+                // Map original atoms to their UUIDs
+                Map<IAtom, UUID> atomToUUID = new HashMap<>();
+                for (Map.Entry<UUID, IAtom> entry : atoms.entrySet()) {
+                    atomToUUID.put(entry.getValue(), entry.getKey());
+                }
+
+                Map<UUID, IAtom> atomsCopy = new HashMap<>();
+                for (int i = 0; i < mol.getAtomCount(); i++) {
+                    IAtom origAtom = mol.getAtom(i);
+                    IAtom clonedAtom = molCopy.getAtom(i);
+                    UUID uuid = atomToUUID.get(origAtom);
+                    if (uuid != null) {
+                        atomsCopy.put(uuid, clonedAtom);
+                    }
+                }
+
+                // Map original bonds to their UUIDs
+                Map<IBond, UUID> bondToUUID = new HashMap<>();
+                for (Map.Entry<UUID, IBond> entry : bonds.entrySet()) {
+                    bondToUUID.put(entry.getValue(), entry.getKey());
+                }
+
+                Map<UUID, IBond> bondsCopy = new HashMap<>();
+                for (int i = 0; i < mol.getBondCount(); i++) {
+                    IBond origBond = mol.getBond(i);
+                    IBond clonedBond = molCopy.getBond(i);
+                    UUID uuid = bondToUUID.get(origBond);
+                    if (uuid != null) {
+                        bondsCopy.put(uuid, clonedBond);
+                    }
+                }
+
+                return new MoleculeHolder(idCopy, molCopy, atomsCopy, bondsCopy);
+
+            } catch (
+                    CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
     }
 
     @Override
     public UUID createMolecule() {
-        UUID molID = UUID.randomUUID();
-        this.molecules.put(molID, new MolInfo());
-        return molID;
+        final MoleculeHolder newMolecule = new MoleculeHolder();
+        this.molecules.put(newMolecule.id, newMolecule);
+        return newMolecule.id;
     }
 
     @Override
     public UUID addAtom(UUID molecule, String element) {
-        IAtom atom = new Atom(element);
+        MoleculeHolder molHolder = getMolHolder(molecule);
 
-        //Add the atom to the molecule
-        MolInfo molInfo = molecules.get(molecule);
-        molInfo.cdk.addAtom(atom);
-        UUID uuid = UUID.randomUUID();
-        molInfo.relAtoms.add(uuid);
-        atoms.put(uuid, atom);
-        atom.setProperty(PARENT_MOLECULE, molecule);
-        return uuid;
+        Atom cdkAtom = new Atom(element);
+        UUID atomID = UUID.randomUUID();
+
+        molHolder.mol.addAtom(cdkAtom);
+        molHolder.atoms.put(atomID, cdkAtom);
+
+        return atomID;
     }
 
     @Override
     public UUID formBond(UUID moleculeID, UUID atom1, UUID atom2, int bondOrder) {
-        IAtom cAtom1 = atoms.get(atom1);
-        IAtom cAtom2 = atoms.get(atom2);
-        IBond bond = new Bond(cAtom1, cAtom2, IBond.Order.SINGLE);
+        MoleculeHolder molHolder = getMolHolder(moleculeID);
+
+        IAtom cdkAtom1 = molHolder.atoms.get(atom1);
+        IAtom cdkAtom2 = molHolder.atoms.get(atom2);
+
+        if (cdkAtom1 == null || cdkAtom2 == null) {
+            throw new NullPointerException("Atoms are null");
+        }
+
+
+        Bond newBond = new Bond(cdkAtom1, cdkAtom2, IBond.Order.SINGLE);
         UUID bondID = UUID.randomUUID();
-        bonds.put(bondID, bond);
 
-        IAtomContainer container = molecules.get(moleculeID).cdk;
-        container.addBond(bond);
+        molHolder.mol.addBond(newBond);
 
-        molecules.get(moleculeID).relBonds.add(bondID);
+        molHolder.bonds.put(bondID, newBond);
+
         return bondID;
     }
 
     @Override
-    public UUID relatedMolecule(UUID atomID) {
-        IAtom atom = atoms.get(atomID);
-        return atom.getProperty(PARENT_MOLECULE);
+    public String getMolecularFormula(UUID moleculeID) {
+        MoleculeHolder moleculeHolder = getMolHolder(moleculeID);
+
+        IMolecularFormula formula = MolecularFormulaManipulator.getMolecularFormula(moleculeHolder.mol);
+        return MolecularFormulaManipulator.getString(formula);
     }
 
     @Override
-    public String getAtomSymbol(UUID atom) {
-        return atoms.get(atom).getSymbol();
+    public IMoleculeManager clone() {
+        Map<UUID, MoleculeHolder> copyMolecules = new HashMap<>();
+        molecules.forEach((molID, mol) -> {
+            copyMolecules.put(molID, mol.clone());
+        });
+
+        return new CDKManager(copyMolecules);
     }
 
-    @Override
-    public Iterator<UUID> molecules() {
-        return molecules.keySet().iterator();
-    }
+    private MoleculeHolder getMolHolder(UUID molID) {
+        MoleculeHolder holder = molecules.get(molID);
 
-    @Override
-    public Iterator<UUID> relatedAtoms(UUID molecule) {
-        return this.molecules.get(molecule).relAtoms.iterator();
-    }
-
-    @Override
-    public Iterator<UUID> allAtoms() {
-        return this.atoms.keySet().iterator();
-    }
-
-    private static class MolInfo {
-        public final IAtomContainer cdk;
-        public final List<UUID> relAtoms;
-        public final List<UUID> relBonds;
-
-        public MolInfo() {
-            this.cdk = new AtomContainer();
-            this.relAtoms = new ArrayList<>();
-            this.relBonds = new ArrayList<>();
+        if (holder == null) {
+            throw new NullPointerException("Molecule not found");
         }
+
+        return holder;
     }
+
 }

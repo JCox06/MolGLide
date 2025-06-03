@@ -16,6 +16,8 @@ abstract class InputManager {
     abstract fun mouseClick(key: String) : Boolean
     abstract fun mousePos() : Vector2f
 
+    abstract fun blockInput(block: Boolean)
+
 
     fun registerKeybinding(name: String, key: RawInput) {
         this.bindings[name] = key
@@ -35,6 +37,10 @@ abstract class InputManager {
 interface IInputSubscriber {
 
     fun clickEvent(inputManager: InputManager, key: RawInput) {
+
+    }
+
+    fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
 
     }
 
