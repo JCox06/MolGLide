@@ -14,5 +14,6 @@ public interface IMoleculeManager {
 
     String getMolecularFormula(UUID moleculeID);
 
+
     IMoleculeManager clone();
 }

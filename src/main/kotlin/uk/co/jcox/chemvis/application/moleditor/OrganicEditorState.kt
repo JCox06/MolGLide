@@ -1,7 +1,7 @@
 package uk.co.jcox.chemvis.application.moleditor
 
 import imgui.ImGui
-import org.apache.jena.vocabulary.TestManifest.action
+import imgui.type.ImInt
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
@@ -32,12 +32,12 @@ class OrganicEditorState (
     private val workState: Stack<ChemLevelPair> = Stack()
 
     var selection: UUID? = null
-
     var draggedEntity: UUID? = null
-
+    var moleculeUIID: UUID? = null
     var debugUI = false
 
-    var moleculeUIID: UUID? = null
+    val imGuiTool = ImInt(0)
+    val imGuiMode = ImInt(0)
 
     override fun init() {
         workState.push(ChemLevelPair(EntityLevel(), CDKManager()))
@@ -65,63 +65,75 @@ class OrganicEditorState (
 
     override fun clickEvent(inputManager: InputManager, key: RawInput) {
         //If the user clicks LCTRL, then we can do some actions
-
-
-        if (key == RawInput.MOUSE_2 && selection != null) {
-            val selecEntity = workState.peek().level.findByID(selection!!)
-            val molEntity = selecEntity!!.parent
-            moleculeUIID = molEntity!!.getComponent(MolIDComponent::class).molID
-
+        if (inputManager.keyClick(RawInput.LCTRL)) {
+            inputControlActions(key)
         }
 
-        if (inputManager.keyClick(RawInput.LCTRL)) {
-            if (key == RawInput.KEY_F) {
-                workState.add(workState.peek().clone())
-            }
 
-            if (key == RawInput.KEY_Z) {
-                if (workState.size > 1) {
-                    workState.pop()
-                }
-            }
-
-            if (key == RawInput.KEY_L) {
-                debugUI = !debugUI
+        if (key == RawInput.MOUSE_2) {
+            selection?.let{
+                val selecEntity = workState.peek().level.findByID(it)
+                val molEntity = selecEntity?.parent
+                moleculeUIID = molEntity?.getComponent(MolIDComponent::class)?.molID
             }
         }
 
         //Currently assume carbon tool selected:
-
         if (key == RawInput.MOUSE_1) {
-
-            workState.push(workState.peek().clone())
-
-            val worldPos = camera2D.screenToWorld(inputManager.mousePos())
-
-
-            if (selection != null) {
+            inputOrganicInfo(inputManager)
+        }
+    }
 
 
-                val selectedEntity: EntityLevel? = workState.peek().level.findByID(selection!!)
-                if (selectedEntity == null) {
-                    return;
-                }
+    private fun inputControlActions(key: RawInput) {
+        if (key == RawInput.KEY_F) {
+            workState.add(workState.peek().clone())
+        }
 
-                val transformAtom = selectedEntity!!.getAbsolutePosition()
+        if (key == RawInput.KEY_Z) {
+            if (workState.size > 1) {
+                workState.pop()
+            }
+        }
 
-                val circlePos = closestPointToCircleCircumference(Vector2f(transformAtom.x, transformAtom.y), worldPos, CONNECTION_DIST)
+        if (key == RawInput.KEY_L) {
+            debugUI = !debugUI
+        }
+    }
 
-                val action = AtomInsertionAction(circlePos.x, circlePos.y, "C", selectedEntity!!.parent!!, selectedEntity!!)
-                prepareTransitionState(action)
+    private fun inputOrganicInfo(inputManager: InputManager) {
+        workState.push(workState.peek().clone())
 
-                draggedEntity = action.insertedAtom
+        val worldPos = camera2D.screenToWorld(inputManager.mousePos())
 
-            } else {
-                val action = AtomCreationAction(worldPos.x, worldPos.y, "C")
-                prepareTransitionState(action)
+        var element = "C"
+
+        if (imGuiTool.get() == 0) {
+           element = "C"
+        } else if (imGuiTool.get() == 1) {
+            element = "H"
+        } else if (imGuiTool.get() == 2) {
+            element = "Cl"
+        }
+
+        //If selection exists, add the new atom to the selected molecule
+        selection?.let {
+            val selectedEntity = workState.peek().level.findByID(it)
+            val transformAtom = selectedEntity?.getAbsolutePosition()
+            val parent = selectedEntity?.parent
+            if (transformAtom == null || parent == null) {
+                return
             }
 
+            val circlePos = closestPointToCircleCircumference(Vector2f(transformAtom.x, transformAtom.y), worldPos, CONNECTION_DIST)
+            val action = AtomInsertionAction(circlePos.x, circlePos.y, element, selectedEntity.parent, selectedEntity)
+            prepareTransitionState(action)
+            draggedEntity = action.insertedAtom
 
+            //If the selection does not exist, then create a new atom/molecule
+        } ?: run {
+            val action = AtomCreationAction(worldPos.x, worldPos.y, element)
+            prepareTransitionState(action)
         }
     }
 
@@ -134,28 +146,14 @@ class OrganicEditorState (
 
     override fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
 
-        if (draggedEntity != null && selection != null) {
-
-
-            val entity = workState.peek().level.findByID(draggedEntity!!)
-            val parent = entity!!.parent
-            val parentAbs = parent!!.getAbsolutePosition()
-            val selectedEntity = workState.peek().level.findByID(selection!!)
-
-            //Get position of the molecule
-            val transformMolecule = selectedEntity!!.getAbsolutePosition()
-
-            val mouseWorld = camera2D.screenToWorld(inputManager.mousePos())
-
-            val draggedPosition = closestPointToCircleCircumference(Vector2f(transformMolecule.x, transformMolecule.y), mouseWorld, CONNECTION_DIST)
-
-            val entityTransform = entity!!.getComponent(TransformComponent::class)
-            entityTransform.x = draggedPosition.x - parentAbs.x
-            entityTransform.y = draggedPosition.y - parentAbs.y
+        val dragging = draggedEntity
+        val selecting = selection
+        if (dragging != null && selecting != null) {
+            inputTransientDragAndDropAtomUI(inputManager, dragging, selecting)
         }
 
         if (inputManager.mouseClick(RawInput.MOUSE_1)) {
-            return;
+            return
         }
 
         //Check if the current mouse position has an element
@@ -165,10 +163,28 @@ class OrganicEditorState (
     }
 
 
-    override fun mouseScrollEvent(inputManager: InputManager, xScroll: Double, yScroll: Double) {
-        super.mouseScrollEvent(inputManager, xScroll, yScroll)
-    }
 
+    private fun inputTransientDragAndDropAtomUI(inputManager: InputManager, draggingEntity: UUID, selectedEntity: UUID) {
+        //Handles the drag and drop behaviour when adding an atom to an existing molecule
+
+        val entity = workState.peek().level.findByID(draggingEntity)
+        val parent = entity?.parent
+        val parentAbs = parent?.getAbsolutePosition()
+
+        val selectedEntity = workState.peek().level.findByID(selectedEntity)
+        //Get position of the molecule
+        val transformMolecule = selectedEntity?.getAbsolutePosition()
+
+        val mouseWorld = camera2D.screenToWorld(inputManager.mousePos())
+
+        if (transformMolecule != null && parentAbs != null) {
+            val draggedPosition = closestPointToCircleCircumference(Vector2f(transformMolecule.x, transformMolecule.y), mouseWorld, CONNECTION_DIST)
+
+            val entityTransform = entity.getComponent(TransformComponent::class)
+            entityTransform.x = draggedPosition.x - parentAbs.x
+            entityTransform.y = draggedPosition.y - parentAbs.y
+        }
+    }
 
     private fun updateSelection(level: EntityLevel, mouseWorld: Vector3f, radius: Float) {
 
@@ -225,14 +241,37 @@ class OrganicEditorState (
     private fun drawDebugUI() {
         ImGui.begin("Debug UI")
 
-        ImGui.textWrapped("Dragged Entity ${draggedEntity}")
 
-        ImGui.textWrapped("Selected Entity ${selection}")
+        ImGui.separatorText("Debug Info")
+
+        ImGui.textWrapped("Dragged Entity $draggedEntity")
+
+        ImGui.textWrapped("Selected Entity $selection")
 
         ImGui.textWrapped("WorkState Level: ${workState.size}")
 
         if (ImGui.button("Undo")) {
             workState.pop()
+        }
+
+        ImGui.separatorText("Tools")
+
+
+        ImGui.radioButton("Atom Bond Mode", imGuiMode, 0); ImGui.sameLine()
+        ImGui.radioButton("Inline Bond Mode", imGuiMode, 1)
+
+        ImGui.beginDisabled(imGuiMode.get() != 0)
+
+        ImGui.radioButton("Carbon Tool", imGuiTool, 0); ImGui.sameLine()
+        ImGui.radioButton("Hydrogen Tool", imGuiTool, 1); ImGui.sameLine()
+        ImGui.radioButton("Chlorine Tool", imGuiTool, 2);
+
+        ImGui.endDisabled()
+
+
+
+        if (imGuiMode.get() == 1) {
+            ImGui.text("Inline Bond mode is active!")
         }
 
         ImGui.end()
@@ -253,9 +292,9 @@ class OrganicEditorState (
     }
 
     companion object {
-        val SELECTION_RADIUS = 10.0f
-        val SELECTION_MARKER_RADIUS = 25.0f
-        val CONNECTION_DIST = 30.0f
+        const val SELECTION_RADIUS = 10.0f
+        const val SELECTION_MARKER_RADIUS = 25.0f
+        const val CONNECTION_DIST = 30.0f
     }
 
 }

@@ -89,7 +89,7 @@ class ChemVis : IApplication, IInputSubscriber {
 
     companion object {
         const val FONT: String = "APP_FONT"
-        const val GLOBAL_SCALE: Float = 0.1f
+        const val GLOBAL_SCALE: Float = 0.05f
         const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER"
     }
 }

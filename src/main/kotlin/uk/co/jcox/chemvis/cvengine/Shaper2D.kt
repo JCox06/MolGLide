@@ -41,10 +41,10 @@ object Shaper2D {
                   texTR: Vector2f, texBR: Vector2f, texBL: Vector2f, texTL: Vector2f) : Mesh {
 
         val positions = listOf(
-            Vector4f(startX + endX, startY + endY, -1.0f, W_COMP),
-            Vector4f(startX + endX, startY, -1.0f, W_COMP),
-            Vector4f(startX, startY, -1.0f, W_COMP),
-            Vector4f(startX, startY + endY, -1.0f, W_COMP)
+            Vector4f(startX + endX, startY + endY, -1.0f, W_COMP), //Top right
+            Vector4f(startX + endX, startY - endY, -1.0f, W_COMP), //Bottom Right
+            Vector4f(startX - endX, startY - endY, -1.0f, W_COMP), //Bottom Left
+            Vector4f(startX - endX, startY + endY, -1.0f, W_COMP) //Top Left
         )
 
         val textCoord = listOf(

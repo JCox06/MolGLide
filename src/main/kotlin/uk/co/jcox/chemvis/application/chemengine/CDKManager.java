@@ -1,14 +1,12 @@
 package uk.co.jcox.chemvis.application.chemengine;
 
 import org.checkerframework.checker.units.qual.A;
-import org.openscience.cdk.Atom;
-import org.openscience.cdk.AtomContainer;
-import org.openscience.cdk.Bond;
-import org.openscience.cdk.CDK;
+import org.openscience.cdk.*;
 import org.openscience.cdk.interfaces.IAtom;
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IBond;
 import org.openscience.cdk.interfaces.IMolecularFormula;
+import org.openscience.cdk.smiles.SmilesParser;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
 import java.util.HashMap;
@@ -154,6 +152,7 @@ public class CDKManager implements IMoleculeManager{
 
         return new CDKManager(copyMolecules);
     }
+
 
     private MoleculeHolder getMolHolder(UUID molID) {
         MoleculeHolder holder = molecules.get(molID);

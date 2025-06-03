@@ -29,7 +29,7 @@ abstract class EditorAction {
         //2) Add the selection marker for this atom
         //When the mouse is in a close enough range, the selection marker for this atom is shown
         val selectionMarkerEntity = atom.addEntity()
-        selectionMarkerEntity.addComponent(TransformComponent(OrganicEditorState.SELECTION_RADIUS / 2, OrganicEditorState.SELECTION_RADIUS / 2, -10.0f, OrganicEditorState.SELECTION_RADIUS))
+        selectionMarkerEntity.addComponent(TransformComponent(0.0f, 0.0f, -10.0f, OrganicEditorState.SELECTION_RADIUS))
         selectionMarkerEntity.addComponent(ObjComponent(ChemVis.SELECTION_MARKER_MESH))
         selectionMarkerEntity.getComponent(TransformComponent::class).visible = false
 

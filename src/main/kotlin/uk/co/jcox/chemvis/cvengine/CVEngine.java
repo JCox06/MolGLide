@@ -42,12 +42,12 @@ public class CVEngine implements ICVServices, AutoCloseable{
     boolean debugPanel = false;
 
     public static final String SHADER_SIMPLE_TEXTURE = "integrated/simple_font";
-    public static final String SHADER_SIMPLE_COLOUR = "integrated/simple/colour";
+    public static final String SHADER_SIMPLE_COLOUR = "integrated/simple_colour";
 
     public static final String STD_CHARACTER_SET = "@!?- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12345678";
 
     public CVEngine(String name) {
-        this.name = name;
+                this.name = name;
     }
 
     private void init() {
