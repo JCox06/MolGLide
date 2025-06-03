@@ -1,9 +1,11 @@
 package uk.co.jcox.chemvis.application.moleditor
 
+import org.checkerframework.checker.units.qual.m
 import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector3f
 import org.joml.minus
 import org.joml.plus
+import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
 import uk.co.jcox.chemvis.application.ChemVis
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
@@ -50,7 +52,20 @@ abstract class EditorAction {
 
         val transformAtomB = atomA.getAbsolutePosition()
 
-        l_bond.addComponent(LineDrawerComponent(Vector3f(transformAtomB.x, transformAtomB.y, transformAtomB.z - 1.0f), 1.5f))
+        l_bond.addComponent(LineDrawerComponent(Vector3f(transformAtomB.x, transformAtomB.y, transformAtomB.z - 0.5f), 1.5f))
+
+    }
+
+
+    protected fun checkImplictCarbons(molManager: IMoleculeManager, levelAtom: EntityLevel, molMolecule: UUID, molAtom: UUID) {
+        if (molManager.isOfElement(molMolecule, molAtom, "C")) {
+            println("TRUE with ${molManager.getBonds(molMolecule, molAtom)} bonds")
+            if (molManager.getBonds(molMolecule, molAtom) >= OrganicEditorState.CARBON_IMPLICIT_LIMIT) {
+                println("Almost very true")
+                val transform = levelAtom.getComponent(TransformComponent::class)
+                transform.visible = false
+            }
+        }
     }
 }
 
@@ -92,6 +107,7 @@ class AtomInsertionAction (
     private val preExistingSelection: EntityLevel,
 ) : EditorAction() {
 
+    //todo needs to be position of the bond of the last one
     lateinit var insertedAtom: UUID
 
     override fun execute(molManager: IMoleculeManager, level: EntityLevel) {
@@ -113,5 +129,10 @@ class AtomInsertionAction (
         val insertedAtomEntity =  createAtomLevelView(moleculeEntity, newAtomID, element, localAtomPos.x, localAtomPos.y)
         insertedAtom = insertedAtomEntity.id
         createSingleBondLevelView(moleculeEntity, preExistingSelection, insertedAtomEntity, m_bondID)
+
+        checkImplictCarbons(molManager, preExistingSelection, molecule.molID, m_preExisting.molID)
+        checkImplictCarbons(molManager, insertedAtomEntity, molecule.molID, newAtomID)
+
+        println("${localAtomPos.x} and ${localAtomPos.y}")
     }
 }

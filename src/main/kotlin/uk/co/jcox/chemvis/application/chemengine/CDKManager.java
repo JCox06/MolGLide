@@ -144,6 +144,22 @@ public class CDKManager implements IMoleculeManager{
     }
 
     @Override
+    public int getBonds(UUID molecule, UUID atom) {
+        MoleculeHolder moleculeHolder = getMolHolder(molecule);
+        IAtom cdkAtom = moleculeHolder.atoms.get(atom);
+
+        return moleculeHolder.mol.getConnectedBondsCount(cdkAtom);
+    }
+
+    @Override
+    public boolean isOfElement(UUID molecule, UUID Atom, String element) {
+        MoleculeHolder moleculeHolder = getMolHolder(molecule);
+        IAtom cdkAtom = moleculeHolder.atoms.get(Atom);
+
+        return cdkAtom.getSymbol().equals(element);
+    }
+
+    @Override
     public IMoleculeManager clone() {
         Map<UUID, MoleculeHolder> copyMolecules = new HashMap<>();
         molecules.forEach((molID, mol) -> {

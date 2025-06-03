@@ -14,6 +14,9 @@ public interface IMoleculeManager {
 
     String getMolecularFormula(UUID moleculeID);
 
+    int getBonds(UUID molecule, UUID atom);
+
+    boolean isOfElement(UUID molecule, UUID Atom, String element);
 
     IMoleculeManager clone();
 }

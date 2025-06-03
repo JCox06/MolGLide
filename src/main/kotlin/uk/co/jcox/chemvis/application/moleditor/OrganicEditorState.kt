@@ -295,6 +295,8 @@ class OrganicEditorState (
         const val SELECTION_RADIUS = 10.0f
         const val SELECTION_MARKER_RADIUS = 25.0f
         const val CONNECTION_DIST = 30.0f
+
+        const val CARBON_IMPLICIT_LIMIT = 4
     }
 
 }

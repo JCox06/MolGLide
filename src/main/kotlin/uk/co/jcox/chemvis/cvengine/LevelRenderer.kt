@@ -38,19 +38,6 @@ class LevelRenderer (
         batcher.end()
 
 
-        program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_COLOUR)
-        program.uniform("uPerspective", camera2D.combined())
-        program.uniform("u_viewport", viewport)
-        program.uniform("uModel", Matrix4f())
-
-        batcher.begin(Batch2D.Mode.LINE)
-        //Render lines (aka bonds)
-        lines.forEach { lineEntity ->
-            renderLine(lineEntity, program)
-        }
-
-        batcher.end()
-
 
         //Render the text (do this last as text is transparent and this is main thing)
         GL11.glEnable(GL11.GL_BLEND)
@@ -68,6 +55,20 @@ class LevelRenderer (
         batcher.end()
         GL11.glDisable(GL11.GL_BLEND)
 
+
+        program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_COLOUR)
+        program.uniform("uPerspective", camera2D.combined())
+        program.uniform("u_viewport", viewport)
+        program.uniform("uModel", Matrix4f())
+
+        batcher.begin(Batch2D.Mode.LINE)
+        //Render lines (aka bonds)
+        lines.forEach { lineEntity ->
+            renderLine(lineEntity, program)
+        }
+
+        batcher.end()
+
     }
 
 
@@ -82,7 +83,7 @@ class LevelRenderer (
 
         if (lineComponent.width != lastLineThickness) {
             val modeToRestore = batcher.end()
-            
+
             lastLineThickness = lineComponent.width
             program.uniform("u_lineThickness", lastLineThickness)
 
@@ -136,6 +137,11 @@ class LevelRenderer (
 
         val textComponent = textEntity.getComponent(TextComponent::class)
         val transformComponent = textEntity.getComponent(TransformComponent::class)
+
+
+        if (! transformComponent.visible) {
+            return
+        }
 
         val bitMapFontData = resourceManager.getFont(textComponent.bitmapFont)
 
