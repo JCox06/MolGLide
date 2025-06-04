@@ -2,6 +2,7 @@ package uk.co.jcox.chemvis.cvengine.scenegraph
 
 import com.github.jsonldjava.utils.Obj
 import org.joml.Vector3f
+import org.joml.plus
 import java.util.UUID
 import javax.vecmath.Vector2f
 import kotlin.enums.enumEntries
@@ -101,22 +102,30 @@ class EntityLevel (
     }
 
     fun getAbsolutePosition() : Vector3f {
+        if (hasComponent(TransformComponent::class)) {
+            val transComp = this.getComponent(TransformComponent::class)
+            return Vector3f(transComp.x, transComp.y, transComp.z) + getAbsoluteTranslation()
+        }
 
+        return getAbsoluteTranslation()
+    }
+
+    fun getAbsoluteTranslation() : Vector3f {
         var holder = this
+
         val pos: Vector3f = Vector3f()
 
         while (true) {
+            if (holder.parent != null) {
+                holder = holder.parent
+            } else {
+                return pos
+            }
             if (holder.hasComponent(TransformComponent::class)) {
                 val transformComp = holder.getComponent(TransformComponent::class)
                 pos.x += transformComp.x
                 pos.y += transformComp.y
                 pos.z += transformComp.z
-            }
-
-            if (holder.parent != null) {
-                holder = holder.parent
-            } else {
-                return pos
             }
         }
     }

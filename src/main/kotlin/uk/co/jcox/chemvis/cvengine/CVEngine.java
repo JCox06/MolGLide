@@ -204,10 +204,16 @@ public class CVEngine implements ICVServices, AutoCloseable{
 
     @Override
     public void setCurrentApplicationState(IApplicationState state) {
-        state.init();
+
         if (this.currentState != null) {
+
+            if (currentState instanceof IInputSubscriber) {
+                this.inputManager.unsubscribe((IInputSubscriber) currentState);
+            }
+
             this.currentState.cleanup();
         }
+        state.init();
         this.currentState = state;
     }
 

@@ -1,11 +1,8 @@
 package uk.co.jcox.chemvis.application.moleditor
 
-import org.checkerframework.checker.units.qual.m
 import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector3f
 import org.joml.minus
-import org.joml.plus
-import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
 import uk.co.jcox.chemvis.application.ChemVis
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
@@ -25,7 +22,7 @@ abstract class EditorAction {
         val atom = moleculeEntity.addEntity()
 
         atom.addComponent(MolIDComponent(molManagerAtomID))
-        atom.addComponent(TransformComponent(posX, posY, 0.0f, 1.0f))
+        atom.addComponent(TransformComponent(posX, posY, OrganicEditorState.XY_PLANE, 1.0f))
         atom.addComponent(TextComponent(element, ChemVis.FONT, 1.0f, 1.0f, 1.0f, ChemVis.GLOBAL_SCALE))
 
         //2) Add the selection marker for this atom
@@ -36,6 +33,10 @@ abstract class EditorAction {
         selectionMarkerEntity.getComponent(TransformComponent::class).visible = false
 
         atom.addComponent(MolSelectionComponent(selectionMarkerEntity.id))
+
+
+        //create inline anchors
+        createInlineDistAnchors(atom)
 
         return atom
     }
@@ -50,18 +51,47 @@ abstract class EditorAction {
         val transformAtomA = atomB.getComponent(TransformComponent::class)
         l_bond.addComponent(transformAtomA)
 
-        val transformAtomB = atomA.getAbsolutePosition()
+        val transformAtomB = atomA.getComponent(TransformComponent::class)
 
-        l_bond.addComponent(LineDrawerComponent(Vector3f(transformAtomB.x, transformAtomB.y, transformAtomB.z - 0.5f), 1.5f))
+        //Atom B is the old one
+        l_bond.addComponent(LineDrawerComponent(Vector3f(transformAtomB.x, transformAtomB.y, transformAtomB.z), 2.0f))
+
+    }
+
+    protected fun createInlineDistAnchors(lAtom: EntityLevel) {
+        //These are little anchors at 90 degrees to atoms. By default they are invisible. When you enter "Inline Bond Mode" they reveal themselves
+        //When clicked these anchors open a menu to allow you to add inline atoms without a physical bond Entity being created
+        //For example usually the -OH group on alcohols are inline, because no bond is shown on the OH alcohol
+
+        //First Anchor
+        var tempAnchor = lAtom.addEntity()
+        tempAnchor.addComponent(TransformComponent(OrganicEditorState.INLINE_DIST, 0.0f, 0.0f, 1.0f, false))
+        tempAnchor.addComponent(ObjComponent(ChemVis.INLINE_ANCHOR_MESH))
+        tempAnchor.addComponent(AnchorComponent())
+
+        tempAnchor = lAtom.addEntity()
+        tempAnchor.addComponent(TransformComponent(-OrganicEditorState.INLINE_DIST, 0.0f, 0.0f, 1.0f, false))
+        tempAnchor.addComponent(ObjComponent(ChemVis.INLINE_ANCHOR_MESH))
+        tempAnchor.addComponent(AnchorComponent())
+
+
+        tempAnchor = lAtom.addEntity()
+        tempAnchor.addComponent(TransformComponent(0.0f, OrganicEditorState.INLINE_DIST, 0.0f, 1.0f, false))
+        tempAnchor.addComponent(ObjComponent(ChemVis.INLINE_ANCHOR_MESH))
+        tempAnchor.addComponent(AnchorComponent())
+
+        tempAnchor = lAtom.addEntity()
+        tempAnchor.addComponent(TransformComponent(0.0f, -OrganicEditorState.INLINE_DIST, 0.0f, 1.0f, false))
+        tempAnchor.addComponent(ObjComponent(ChemVis.INLINE_ANCHOR_MESH))
+        tempAnchor.addComponent(AnchorComponent())
+        //Carry on for the rest...
 
     }
 
 
     protected fun checkImplictCarbons(molManager: IMoleculeManager, levelAtom: EntityLevel, molMolecule: UUID, molAtom: UUID) {
         if (molManager.isOfElement(molMolecule, molAtom, "C")) {
-            println("TRUE with ${molManager.getBonds(molMolecule, molAtom)} bonds")
             if (molManager.getBonds(molMolecule, molAtom) >= OrganicEditorState.CARBON_IMPLICIT_LIMIT) {
-                println("Almost very true")
                 val transform = levelAtom.getComponent(TransformComponent::class)
                 transform.visible = false
             }
@@ -91,7 +121,7 @@ class AtomCreationAction (
         //2) Update spatial representation on the Level
         val moleculeNode = level.addEntity()
         moleculeNode.addComponent(MolIDComponent(newMolecule))
-        moleculeNode.addComponent(TransformComponent(xPos, yPos, 0.0f, 1.0f))
+        moleculeNode.addComponent(TransformComponent(xPos, yPos, OrganicEditorState.XY_PLANE, 1.0f))
 
         createAtomLevelView(moleculeNode, firstAtom, element, 0.0f, 0.0f)
     }
@@ -135,4 +165,42 @@ class AtomInsertionAction (
 
         println("${localAtomPos.x} and ${localAtomPos.y}")
     }
+}
+
+
+class AtomInsertionInlineAction(
+    private val anchor: EntityLevel,
+    private val element: String,
+
+    //todo - Implement the Quantity
+    //and at some point - make it so different elements can be present in the Inline
+    private val quantity: Int
+
+) : EditorAction() {
+    override fun execute(molManager: IMoleculeManager, level: EntityLevel) {
+
+        val positionForPlacement = anchor.getAbsolutePosition()
+
+        val anchorTransform = anchor.getComponent(TransformComponent::class)
+        anchorTransform.visible = false
+
+        val atomOfAnchor = anchor.parent
+        val parentMolecule = atomOfAnchor?.parent
+        val cdkMolId = parentMolecule?.getComponent(MolIDComponent::class)
+        val cdkAtomOfAnchor = atomOfAnchor?.getComponent(MolIDComponent::class)
+
+        if (parentMolecule != null && cdkMolId != null) {
+
+            val molTransform = parentMolecule.getAbsolutePosition()
+            val localPos = positionForPlacement - molTransform
+
+            val newAtom = molManager.addAtom(cdkMolId.molID, element)
+            createAtomLevelView(parentMolecule, newAtom, element, localPos.x, localPos.y)
+
+            //Form a single bond between old atom and new atom
+            molManager.formBond(cdkMolId.molID, atomOfAnchor.getComponent(MolIDComponent::class).molID, newAtom, 1)
+        }
+
+    }
+
 }

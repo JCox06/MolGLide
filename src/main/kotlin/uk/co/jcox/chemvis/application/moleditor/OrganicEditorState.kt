@@ -5,7 +5,6 @@ import imgui.type.ImInt
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
-import org.joml.plus
 import uk.co.jcox.chemvis.application.chemengine.CDKManager
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IApplicationState
@@ -17,6 +16,10 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.Stack
 import java.util.UUID
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.roundToInt
+import kotlin.math.sin
 
 class OrganicEditorState (
     private val levelRenderer: LevelRenderer,
@@ -35,9 +38,12 @@ class OrganicEditorState (
     var draggedEntity: UUID? = null
     var moleculeUIID: UUID? = null
     var debugUI = false
-
     val imGuiTool = ImInt(0)
     val imGuiMode = ImInt(0)
+    var showInlineAddMenu: Boolean = false
+    var selectedAnchor: EntityLevel? = null
+
+    var mainMode = true
 
     override fun init() {
         workState.push(ChemLevelPair(EntityLevel(), CDKManager()))
@@ -56,7 +62,13 @@ class OrganicEditorState (
         if (moleculeUIID != null) {
             drawMoleculeLookup()
         }
+
+        if (showInlineAddMenu) {
+            drawInlineAddMenu()
+        }
     }
+
+
 
     override fun cleanup() {
 
@@ -79,8 +91,12 @@ class OrganicEditorState (
         }
 
         //Currently assume carbon tool selected:
-        if (key == RawInput.MOUSE_1) {
+        if (key == RawInput.MOUSE_1 && mainMode) {
             inputOrganicInfo(inputManager)
+        }
+
+        if (key == RawInput.MOUSE_1 && !mainMode) {
+            inputInlineModeInfo(inputManager)
         }
     }
 
@@ -108,12 +124,14 @@ class OrganicEditorState (
 
         var element = "C"
 
-        if (imGuiTool.get() == 0) {
+        if (imGuiTool.get() == 1) {
            element = "C"
-        } else if (imGuiTool.get() == 1) {
-            element = "H"
         } else if (imGuiTool.get() == 2) {
+            element = "H"
+        } else if (imGuiTool.get() == 3) {
             element = "Cl"
+        } else if (imGuiTool.get() == 4) {
+            element = "O"
         }
 
         //If selection exists, add the new atom to the selected molecule
@@ -138,6 +156,24 @@ class OrganicEditorState (
     }
 
 
+    private fun inputInlineModeInfo(inputManager: InputManager) {
+        val mouseWorldPos = camera2D.screenToWorld(inputManager.mousePos())
+        val minDist = 2.0f
+
+        workState.peek().level.traverseFunc {
+
+            if (it.hasComponent(AnchorComponent::class)) {
+                val absPos = it.getAbsolutePosition()
+                val mouseAbsPosDiff = absPos - Vector3f(mouseWorldPos, XY_PLANE)
+                if (mouseAbsPosDiff.length() <= minDist) {
+                    showInlineAddMenu = true
+                    selectedAnchor = it
+                }
+            }
+        }
+    }
+
+
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
         if (key == RawInput.MOUSE_1) {
             draggedEntity = null
@@ -157,8 +193,10 @@ class OrganicEditorState (
         }
 
         //Check if the current mouse position has an element
-        val mouseWorldPos = camera2D.screenToWorld(inputManager.mousePos())
-        updateSelection(workState.peek().level, Vector3f(mouseWorldPos, 0.0f), SELECTION_MARKER_RADIUS)
+        if (mainMode) {
+            val mouseWorldPos = camera2D.screenToWorld(inputManager.mousePos())
+            updateSelection(workState.peek().level, Vector3f(mouseWorldPos, 0.0f), SELECTION_MARKER_RADIUS)
+        }
 
     }
 
@@ -230,13 +268,51 @@ class OrganicEditorState (
         transAction.execute(workState.peek().molManager, workState.peek().level)
     }
 
-    private fun closestPointToCircleCircumference(circleCentre: Vector2f, randomPoint: Vector2f, radius: Float) : Vector2f {
-        val magCentreRandomPoint = (randomPoint - circleCentre).length()
-        val centreRandomPoint = (randomPoint - circleCentre)
-        val position = circleCentre + (centreRandomPoint.div(magCentreRandomPoint)).mul(radius)
-        return position
+    private fun closestPointToCircleCircumference(circleCentre: Vector2f, randomPoint: Vector2f, radius: Float, quantize: Int = 16) : Vector2f {
+//        val magCentreRandomPoint = (randomPoint - circleCentre).length()
+//        val centreRandomPoint = (randomPoint - circleCentre)
+//        val position = circleCentre + (centreRandomPoint.div(magCentreRandomPoint)).mul(radius)
+//        return position
+
+        val angleStep = (Math.PI * 2) / quantize
+
+        val direction = randomPoint - circleCentre //Direction to point in space
+
+        //Find the angle of this vector (between the positive x axis and the point tan(x) = o/a)
+        val angle = atan2(direction.y, direction.x)
+        val quantizedAngleIndex = (angle / angleStep).roundToInt()
+        val quantizedAngle = quantizedAngleIndex * angleStep
+
+        //Turn polar angle into cartesian coordinates
+        val x = circleCentre.x + radius * cos(quantizedAngle)
+        val y = circleCentre.y + radius * sin(quantizedAngle)
+        return Vector2f(x.toFloat(), y.toFloat())
     }
 
+
+    private fun switchToInlineBondMode() {
+        mainMode = false
+
+        //Go through all the Anchors and show them
+
+        workState.peek().level.traverseFunc {
+            if (it.hasComponent(AnchorComponent::class) && it.hasComponent(TransformComponent::class)) {
+                it.getComponent(TransformComponent::class).visible = true
+            }
+        }
+    }
+
+
+    private fun leaveInlineBondMode() {
+        mainMode = true
+
+        //Go through all the Anchors and hide them
+        workState.peek().level.traverseFunc {
+            if (it.hasComponent(AnchorComponent::class) && it.hasComponent(TransformComponent::class)) {
+                it.getComponent(TransformComponent::class).visible = false
+            }
+        }
+    }
 
     private fun drawDebugUI() {
         ImGui.begin("Debug UI")
@@ -257,14 +333,24 @@ class OrganicEditorState (
         ImGui.separatorText("Tools")
 
 
-        ImGui.radioButton("Atom Bond Mode", imGuiMode, 0); ImGui.sameLine()
-        ImGui.radioButton("Inline Bond Mode", imGuiMode, 1)
+        if (ImGui.radioButton("Atom Bond Mode", imGuiMode, 0)) {
+            leaveInlineBondMode()
+        }
+
+        ImGui.sameLine()
+
+
+        if (ImGui.radioButton("Inline Bond Mode", imGuiMode, 1)) {
+            switchToInlineBondMode()
+        }
 
         ImGui.beginDisabled(imGuiMode.get() != 0)
 
-        ImGui.radioButton("Carbon Tool", imGuiTool, 0); ImGui.sameLine()
-        ImGui.radioButton("Hydrogen Tool", imGuiTool, 1); ImGui.sameLine()
-        ImGui.radioButton("Chlorine Tool", imGuiTool, 2);
+        ImGui.radioButton("Implicit Carbon Tool", imGuiTool, 0)
+        ImGui.radioButton("Carbon Tool", imGuiTool, 1); ImGui.sameLine()
+        ImGui.radioButton("Hydrogen Tool", imGuiTool, 2); ImGui.sameLine()
+        ImGui.radioButton("Chlorine Tool", imGuiTool, 3); ImGui.sameLine()
+        ImGui.radioButton("Oxygen Tool", imGuiTool, 4)
 
         ImGui.endDisabled()
 
@@ -273,6 +359,10 @@ class OrganicEditorState (
         if (imGuiMode.get() == 1) {
             ImGui.text("Inline Bond mode is active!")
         }
+
+        ImGui.separatorText("Other Info")
+
+        ImGui.text("* Right click a molecule to show more details")
 
         ImGui.end()
     }
@@ -291,12 +381,42 @@ class OrganicEditorState (
         ImGui.end()
     }
 
+
+    private fun drawInlineAddMenu() {
+        ImGui.begin("Add atom inline")
+        ImGui.text("Choose a group to add:")
+
+        if (ImGui.button("H")) {
+          selectedAnchor?.let {
+              triggerInlineAction(it, "H", 1)
+          }
+        };
+        ImGui.button("H2");
+        ImGui.button("H3");
+        ImGui.button("H4");
+
+        ImGui.separatorText("EXIT")
+        if (ImGui.button("Close Menu")) {
+            showInlineAddMenu = false
+        }
+
+        ImGui.end()
+    }
+
+    private fun triggerInlineAction(anchorEntity: EntityLevel, element: String, quantity: Int) {
+        val action = AtomInsertionInlineAction(anchorEntity, element, quantity)
+        action.execute(workState.peek().molManager, workState.peek().level)
+    }
+
     companion object {
         const val SELECTION_RADIUS = 10.0f
         const val SELECTION_MARKER_RADIUS = 25.0f
-        const val CONNECTION_DIST = 30.0f
+        const val CONNECTION_DIST = 40.0f
+        const val INLINE_DIST = 10.0f
 
         const val CARBON_IMPLICIT_LIMIT = 4
+
+        const val XY_PLANE = -1.0f
     }
 
 }

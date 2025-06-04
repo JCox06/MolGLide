@@ -28,15 +28,22 @@ class ChemVis : IApplication, IInputSubscriber {
 
         GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
 
-
         loadCoreAssets()
 
-//        val state = TestState(services.levelRenderer(), camera)
+        services.inputs().subscribe(this)
+        setState()
+    }
+
+    private fun setState() {
         val state = OrganicEditorState(services.levelRenderer(), camera)
 
         services.setCurrentApplicationState(state)
         services.inputs().subscribe(state)
-        services.inputs().subscribe(this)
+    }
+
+    private fun testState() {
+        val state = TestState(services.levelRenderer(), camera)
+        services.setCurrentApplicationState(state)
     }
 
     override fun loop() {
@@ -81,6 +88,9 @@ class ChemVis : IApplication, IInputSubscriber {
     private fun loadCoreAssets() {
         val selectionMarkerMesh = Shaper2D.circle(0.0f, 0.0f, 1.0f)
         services.resourceManager().manageMesh(SELECTION_MARKER_MESH, selectionMarkerMesh)
+
+        val inlineAnchorMesh = Shaper2D.rectangle(0f, 0f, 2f, 2f)
+        services.resourceManager().manageMesh(INLINE_ANCHOR_MESH, inlineAnchorMesh)
     }
 
     override fun cleanup() {
@@ -91,5 +101,6 @@ class ChemVis : IApplication, IInputSubscriber {
         const val FONT: String = "APP_FONT"
         const val GLOBAL_SCALE: Float = 0.05f
         const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER"
+        const val INLINE_ANCHOR_MESH: String = "INLINE_ANCHOR_MESH"
     }
 }

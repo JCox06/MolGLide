@@ -27,6 +27,10 @@ abstract class InputManager {
         this.subscribers.add(subscriber)
     }
 
+    fun unsubscribe(subscriber: IInputSubscriber) {
+        this.subscribers.remove(subscriber)
+    }
+
     protected fun getBinding(id: String) : RawInput {
         val key = bindings[id]
         return key ?: RawInput.NULL
@@ -82,6 +86,16 @@ enum class RawInput(val glfwKey: Int) {
     KEY_X(GLFW.GLFW_KEY_X),
     KEY_Y(GLFW.GLFW_KEY_Y),
     KEY_Z(GLFW.GLFW_KEY_Z),
+
+    KEY_1(GLFW.GLFW_KEY_1),
+    KEY_2(GLFW.GLFW_KEY_2),
+    KEY_3(GLFW.GLFW_KEY_3),
+    KEY_4(GLFW.GLFW_KEY_4),
+    KEY_5(GLFW.GLFW_KEY_5),
+    KEY_6(GLFW.GLFW_KEY_6),
+    KEY_7(GLFW.GLFW_KEY_7),
+    KEY_8(GLFW.GLFW_KEY_8),
+    KEY_9(GLFW.GLFW_KEY_9),
 
 
     //Modifiers

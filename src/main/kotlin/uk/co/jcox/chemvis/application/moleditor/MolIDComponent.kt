@@ -21,3 +21,12 @@ class MolSelectionComponent(
     }
 
 }
+
+
+class AnchorComponent(
+
+) : IComponent {
+    override fun clone(): IComponent {
+        return this
+    }
+}

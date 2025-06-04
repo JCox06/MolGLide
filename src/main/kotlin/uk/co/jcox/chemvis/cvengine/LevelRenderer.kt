@@ -95,9 +95,9 @@ class LevelRenderer (
             return;
         }
 
-        val absPos = lineEntity.getAbsolutePosition()
+        val absTrans = lineEntity.getAbsoluteTranslation()
 
-        val mesh = Shaper2D.line(absPos.x, absPos.y, absPos.z, lineComponent.lineTo.x, lineComponent.lineTo.y, lineComponent.lineTo.z)
+        val mesh = Shaper2D.line(transformComp.x + absTrans.x, transformComp.y + absTrans.y, transformComp.z + absTrans.z, lineComponent.lineTo.x + absTrans.x, lineComponent.lineTo.y + absTrans.y, lineComponent.lineTo.z + absTrans.z)
 
         batcher.addBatch(mesh.pack(), mesh.indices)
     }
@@ -127,6 +127,10 @@ class LevelRenderer (
 
         val newMesh = mesh.apply(transform)
         batcher.addBatch(newMesh.pack(), newMesh.indices)
+
+        //todo Something odd is happening so temporarily disabled batching for objects
+        val restore = batcher.end()
+        batcher.begin(restore)
     }
 
 
@@ -192,7 +196,7 @@ class LevelRenderer (
             )
 
             batcher.addBatch(mesh.pack(), mesh.indices)
-            renderX += glyphData.glyphWidth * textComponent.scale
+            renderX += glyphData.glyphWidth * textComponent.scale * 2
         }
     }
 
