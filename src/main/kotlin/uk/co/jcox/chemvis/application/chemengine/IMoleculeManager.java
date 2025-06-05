@@ -1,7 +1,6 @@
 package uk.co.jcox.chemvis.application.chemengine;
 
 
-import java.util.Iterator;
 import java.util.UUID;
 
 public interface IMoleculeManager {
@@ -18,5 +17,12 @@ public interface IMoleculeManager {
 
     boolean isOfElement(UUID molecule, UUID Atom, String element);
 
+    int addImplicitHydrogens(UUID molecule, UUID atom);
+
+    void removeImplicitHydrogenIfPossible(UUID molecule, UUID atom);
+
     IMoleculeManager clone();
+
+    void recalculate(UUID molecule);
+
 }

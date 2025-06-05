@@ -34,17 +34,6 @@ class TestState (
 
         val lineEntity = grandChild.addEntity()
         lineEntity.addComponent(grandChild.getComponent(TransformComponent::class))
-
-        lineEntity.addComponent(LineDrawerComponent(Vector3f(10.0f, 10.0f, -1.0f), 2.0f))
-
-        val lineEntity2 = grandChild.addEntity()
-        lineEntity2.addComponent(TransformComponent(10.0f, 10.0f, -1.0f))
-        lineEntity2.addComponent(LineDrawerComponent(Vector3f(10.0f, 100.0f, -1.0f), 2.0f))
-
-
-        val lineEntity3 = grandChild.addEntity()
-        lineEntity3.addComponent(TransformComponent(10.0f, 100.0f, -1.0f, 1.0f))
-        lineEntity3.addComponent(LineDrawerComponent(Vector3f(100.0f, 50.0f, -1.0f), 2.0f))
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {

@@ -1,7 +1,5 @@
 package uk.co.jcox.chemvis.application.moleditor
 
-import org.checkerframework.checker.units.qual.mol
-import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.IComponent
 import java.util.UUID
 
@@ -23,10 +21,21 @@ class MolSelectionComponent(
 }
 
 
+//The remaining classes are used to "tag" entities in the level for quick retrieval/identification
+
 class AnchorComponent(
 
 ) : IComponent {
     override fun clone(): IComponent {
+        return this
+    }
+}
+
+
+class GhostImplicitHydrogenGroupComponent(
+
+) : IComponent {
+    override fun clone() : IComponent {
         return this
     }
 }

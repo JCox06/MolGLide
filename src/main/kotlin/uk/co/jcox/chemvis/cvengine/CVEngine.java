@@ -81,7 +81,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
         GLFW.glfwMakeContextCurrent(this.windowHandle);
         GLFW.glfwSwapInterval(1);
         GL.createCapabilities();
-        this.lwjglErrorCallback = GLUtil.setupDebugMessageCallback();
+//        this.lwjglErrorCallback = GLUtil.setupDebugMessageCallback();
         GL11.glClearColor(0.02f, 0.02f, 0.02f, 1.0f);
 
         initialiseCoreServices();

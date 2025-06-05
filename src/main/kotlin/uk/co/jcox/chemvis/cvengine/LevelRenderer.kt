@@ -64,7 +64,7 @@ class LevelRenderer (
         batcher.begin(Batch2D.Mode.LINE)
         //Render lines (aka bonds)
         lines.forEach { lineEntity ->
-            renderLine(lineEntity, program)
+            renderLine(level, lineEntity, program)
         }
 
         batcher.end()
@@ -72,7 +72,7 @@ class LevelRenderer (
     }
 
 
-    private fun renderLine(lineEntity: EntityLevel, program: ShaderProgram) {
+    private fun renderLine(level: EntityLevel, lineEntity: EntityLevel, program: ShaderProgram) {
         if (!lineEntity.hasComponent(LineDrawerComponent::class) || !lineEntity.hasComponent(TransformComponent::class)) {
             return
         }
@@ -95,11 +95,14 @@ class LevelRenderer (
             return;
         }
 
-        val absTrans = lineEntity.getAbsoluteTranslation()
+        val entityFrom = level.findByID(lineComponent.fromCompA)?.getAbsolutePosition()
+        val entityTo = level.findByID(lineComponent.toCompB)?.getAbsolutePosition()
 
-        val mesh = Shaper2D.line(transformComp.x + absTrans.x, transformComp.y + absTrans.y, transformComp.z + absTrans.z, lineComponent.lineTo.x + absTrans.x, lineComponent.lineTo.y + absTrans.y, lineComponent.lineTo.z + absTrans.z)
+        if (entityFrom != null && entityTo != null) {
+            val mesh = Shaper2D.line(entityFrom.x, entityFrom.y, entityFrom.z, entityTo.x, entityTo.y, entityTo.z)
 
-        batcher.addBatch(mesh.pack(), mesh.indices)
+            batcher.addBatch(mesh.pack(), mesh.indices)
+        }
     }
 
 

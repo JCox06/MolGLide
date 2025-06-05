@@ -1,10 +1,10 @@
 package uk.co.jcox.chemvis.application.moleditor
 
-import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector3f
 import org.joml.minus
 import uk.co.jcox.chemvis.application.ChemVis
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
+import uk.co.jcox.chemvis.cvengine.LevelRenderer
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
@@ -12,31 +12,54 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
 
+
+//todo This class is literately the worst class of the entire project
+//Needs complete re-write!
+
 abstract class EditorAction {
 
-    abstract fun execute(molManager: IMoleculeManager, level: EntityLevel)
+    protected abstract fun execute(molManager: IMoleculeManager, level: EntityLevel) : UUID?
+
+    fun runAction(molManager: IMoleculeManager, level: EntityLevel) {
+        val moleculeChanged = execute(molManager, level)
+        if (moleculeChanged != null) {
+            molManager.recalculate(moleculeChanged)
+        }
+    }
 
     //Add an atom to an existing molecule (Only does atom, no bonds, etc.)
-    protected fun createAtomLevelView(moleculeEntity: EntityLevel, molManagerAtomID: UUID, element: String, posX: Float, posY: Float) : EntityLevel {
+    protected fun createAtomLevelView(moleculeEntity: EntityLevel, molManagerAtomID: UUID?, element: String, posX: Float, posY: Float, quantity: Int = 1) : EntityLevel {
         //1) Create a new Entity for this atom using a local moleculeEntity as the root
         val atom = moleculeEntity.addEntity()
 
-        atom.addComponent(MolIDComponent(molManagerAtomID))
+
         atom.addComponent(TransformComponent(posX, posY, OrganicEditorState.XY_PLANE, 1.0f))
-        atom.addComponent(TextComponent(element, ChemVis.FONT, 1.0f, 1.0f, 1.0f, ChemVis.GLOBAL_SCALE))
+
+        if (molManagerAtomID != null) {
+            atom.addComponent(TextComponent(element, ChemVis.FONT, 1.0f, 1.0f, 1.0f, ChemVis.GLOBAL_SCALE))
+        } else {
+            atom.addComponent(TextComponent("${element}${quantity}", ChemVis.FONT, 1.0f, 1.0f, 1.0f, ChemVis.GLOBAL_SCALE))
+        }
 
         //2) Add the selection marker for this atom
         //When the mouse is in a close enough range, the selection marker for this atom is shown
-        val selectionMarkerEntity = atom.addEntity()
-        selectionMarkerEntity.addComponent(TransformComponent(0.0f, 0.0f, -10.0f, OrganicEditorState.SELECTION_RADIUS))
-        selectionMarkerEntity.addComponent(ObjComponent(ChemVis.SELECTION_MARKER_MESH))
-        selectionMarkerEntity.getComponent(TransformComponent::class).visible = false
-
-        atom.addComponent(MolSelectionComponent(selectionMarkerEntity.id))
 
 
-        //create inline anchors
-        createInlineDistAnchors(atom)
+        if (molManagerAtomID != null) {
+            atom.addComponent(MolIDComponent(molManagerAtomID))
+            val selectionMarkerEntity = atom.addEntity()
+            selectionMarkerEntity.addComponent(TransformComponent(0.0f, 0.0f, -10.0f, OrganicEditorState.SELECTION_RADIUS))
+            selectionMarkerEntity.addComponent(ObjComponent(ChemVis.SELECTION_MARKER_MESH))
+            selectionMarkerEntity.getComponent(TransformComponent::class).visible = false
+
+            atom.addComponent(MolSelectionComponent(selectionMarkerEntity.id))
+
+
+            //create inline anchors
+            createInlineDistAnchors(atom)
+        } else {
+            atom.addComponent(GhostImplicitHydrogenGroupComponent())
+        }
 
         return atom
     }
@@ -47,15 +70,9 @@ abstract class EditorAction {
         //1) Create a new bond for this atom using a local moleculeEntity as root
         val l_bond = moleculeEntity.addEntity()
         l_bond.addComponent(MolIDComponent(bondMolManID))
-
-        val transformAtomA = atomB.getComponent(TransformComponent::class)
-        l_bond.addComponent(transformAtomA)
-
-        val transformAtomB = atomA.getComponent(TransformComponent::class)
-
         //Atom B is the old one
-        l_bond.addComponent(LineDrawerComponent(Vector3f(transformAtomB.x, transformAtomB.y, transformAtomB.z), 2.0f))
-
+        l_bond.addComponent(LineDrawerComponent(atomA.id, atomB.id, 2.0f))
+        l_bond.addComponent(TransformComponent(0.0f, 0.0f, 0.0f))
     }
 
     protected fun createInlineDistAnchors(lAtom: EntityLevel) {
@@ -94,8 +111,23 @@ abstract class EditorAction {
             if (molManager.getBonds(molMolecule, molAtom) >= OrganicEditorState.CARBON_IMPLICIT_LIMIT) {
                 val transform = levelAtom.getComponent(TransformComponent::class)
                 transform.visible = false
+
+
+                val toRemove: MutableList<EntityLevel> = mutableListOf()
+
+                levelAtom.traverseFunc {
+                    if (it.hasComponent(GhostImplicitHydrogenGroupComponent::class)) {
+                        toRemove.add(it)
+                    }
+                }
+
+                toRemove.forEach { levelAtom.removeEntity(it) }
             }
         }
+    }
+
+    protected fun removeImplicitHydrogensFromStructure(molManager: IMoleculeManager, molecule: UUID, atom: UUID) {
+        molManager.removeImplicitHydrogenIfPossible(molecule, atom)
     }
 }
 
@@ -106,24 +138,30 @@ class AtomCreationAction (
     private val xPos: Float,
     private val yPos: Float,
     private val element: String,
+    private val addImplicitHydrogens: Boolean
 
 ) : EditorAction() {
 
 
 
-    override fun execute(molManager: IMoleculeManager, level: EntityLevel) {
+     override fun execute(molManager: IMoleculeManager, level: EntityLevel) : UUID? {
         //1) Create a new molecule using the molManager and add the atom into it
         val newMolecule = molManager.createMolecule()
         val firstAtom = molManager.addAtom(newMolecule, element)
-
-        println(firstAtom)
 
         //2) Update spatial representation on the Level
         val moleculeNode = level.addEntity()
         moleculeNode.addComponent(MolIDComponent(newMolecule))
         moleculeNode.addComponent(TransformComponent(xPos, yPos, OrganicEditorState.XY_PLANE, 1.0f))
 
-        createAtomLevelView(moleculeNode, firstAtom, element, 0.0f, 0.0f)
+        val firstAtomLevel = createAtomLevelView(moleculeNode, firstAtom, element, 0.0f, 0.0f)
+
+        if (addImplicitHydrogens && element == "C") {
+            val added = molManager.addImplicitHydrogens(newMolecule, firstAtom)
+            createAtomLevelView(firstAtomLevel, null, "H", OrganicEditorState.INLINE_DIST, 0.0f, added)
+        }
+
+         return newMolecule
     }
 }
 
@@ -135,12 +173,14 @@ class AtomInsertionAction (
     private val element: String,
     private val moleculeEntity: EntityLevel,
     private val preExistingSelection: EntityLevel,
+    private val checkImplicitCarbons: Boolean,
+    private val checkImplicitHydrogens: Boolean,
 ) : EditorAction() {
 
     //todo needs to be position of the bond of the last one
     lateinit var insertedAtom: UUID
 
-    override fun execute(molManager: IMoleculeManager, level: EntityLevel) {
+    override fun execute(molManager: IMoleculeManager, level: EntityLevel) : UUID? {
 
 
         val moleculePos = moleculeEntity.getAbsolutePosition()
@@ -160,10 +200,20 @@ class AtomInsertionAction (
         insertedAtom = insertedAtomEntity.id
         createSingleBondLevelView(moleculeEntity, preExistingSelection, insertedAtomEntity, m_bondID)
 
-        checkImplictCarbons(molManager, preExistingSelection, molecule.molID, m_preExisting.molID)
-        checkImplictCarbons(molManager, insertedAtomEntity, molecule.molID, newAtomID)
 
-        println("${localAtomPos.x} and ${localAtomPos.y}")
+        removeImplicitHydrogensFromStructure(molManager, molecule.molID, m_preExisting.molID)
+
+        if (checkImplicitHydrogens) {
+            val a = molManager.addImplicitHydrogens(molecule.molID, newAtomID)
+
+        }
+
+        if (checkImplicitCarbons) {
+            checkImplictCarbons(molManager, preExistingSelection, molecule.molID, m_preExisting.molID)
+            checkImplictCarbons(molManager, insertedAtomEntity, molecule.molID, newAtomID)
+        }
+
+        return molecule.molID;
     }
 }
 
@@ -177,7 +227,7 @@ class AtomInsertionInlineAction(
     private val quantity: Int
 
 ) : EditorAction() {
-    override fun execute(molManager: IMoleculeManager, level: EntityLevel) {
+    override fun execute(molManager: IMoleculeManager, level: EntityLevel) : UUID? {
 
         val positionForPlacement = anchor.getAbsolutePosition()
 
@@ -199,8 +249,11 @@ class AtomInsertionInlineAction(
 
             //Form a single bond between old atom and new atom
             molManager.formBond(cdkMolId.molID, atomOfAnchor.getComponent(MolIDComponent::class).molID, newAtom, 1)
-        }
 
+            return cdkMolId.molID
+        }
+        return null
     }
+
 
 }

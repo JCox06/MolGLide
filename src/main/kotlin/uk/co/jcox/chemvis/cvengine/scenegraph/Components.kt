@@ -48,11 +48,12 @@ class ObjComponent (
 }
 
 class LineDrawerComponent (
-    val lineTo: Vector3f,
+    val fromCompA: UUID,
+    val toCompB: UUID,
     val width: Float = 1.0f
 ) : IComponent {
     override fun clone(): IComponent {
-        return LineDrawerComponent(Vector3f(lineTo))
+        return LineDrawerComponent(fromCompA, toCompB, width)
     }
 }
 

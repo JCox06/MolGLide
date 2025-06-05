@@ -2,17 +2,22 @@ package uk.co.jcox.chemvis.application.chemengine;
 
 import org.checkerframework.checker.units.qual.A;
 import org.openscience.cdk.*;
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IAtomContainer;
-import org.openscience.cdk.interfaces.IBond;
-import org.openscience.cdk.interfaces.IMolecularFormula;
+import org.openscience.cdk.atomtype.CDKAtomTypeMatcher;
+import org.openscience.cdk.atomtype.IAtomTypeMatcher;
+import org.openscience.cdk.exception.CDKException;
+import org.openscience.cdk.graph.invariant.EquivalentClassPartitioner;
+import org.openscience.cdk.interfaces.*;
 import org.openscience.cdk.smiles.SmilesParser;
+import org.openscience.cdk.tools.CDKHydrogenAdder;
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator;
+import org.openscience.cdk.tools.manipulator.AtomTypeManipulator;
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class CDKManager implements IMoleculeManager{
 
@@ -157,6 +162,74 @@ public class CDKManager implements IMoleculeManager{
         IAtom cdkAtom = moleculeHolder.atoms.get(Atom);
 
         return cdkAtom.getSymbol().equals(element);
+    }
+
+    @Override
+    public int addImplicitHydrogens(UUID molecule, UUID atom) {
+        MoleculeHolder moleculeHolder = getMolHolder(molecule);
+        IAtom cdkAtom = moleculeHolder.atoms.get(atom);
+
+
+        //Get the atom type = In other words get the object to calculate more details of the atom
+        IAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(moleculeHolder.mol.getBuilder());
+
+        try {
+
+            //Actually calculate the type
+            IAtomType type = matcher.findMatchingAtomType(moleculeHolder.mol, cdkAtom);
+
+            //Import these properties into the atom
+            AtomTypeManipulator.configure(cdkAtom, type);
+
+            //Get the property we want
+            CDKHydrogenAdder hAdder = CDKHydrogenAdder.getInstance(moleculeHolder.mol.getBuilder());
+
+            hAdder.addImplicitHydrogens(moleculeHolder.mol);
+
+            int count = cdkAtom.getImplicitHydrogenCount();
+
+            AtomContainerManipulator.convertImplicitToExplicitHydrogens(moleculeHolder.mol);
+            return count;
+        } catch (
+                CDKException e) {
+            return 0;
+        }
+    }
+
+    @Override
+    public void removeImplicitHydrogenIfPossible(UUID molecule, UUID atom) {
+        MoleculeHolder moleculeHolder = getMolHolder(molecule);
+        IAtom cdkAtom = moleculeHolder.atoms.get(atom);
+
+        List<IAtom> bonded = moleculeHolder.mol.getConnectedAtomsList(cdkAtom);
+        for (IAtom iAtom : bonded) {
+            if (iAtom.getSymbol().equals("H")) {
+                IBond bond = moleculeHolder.mol.getBond(cdkAtom, iAtom);
+                moleculeHolder.mol.removeAtom(iAtom);
+                moleculeHolder.mol.removeBond(bond);
+                break;
+            }
+        }
+    }
+
+
+    @Override
+    public void recalculate(UUID molecule) {
+        MoleculeHolder moleculeHolder = getMolHolder(molecule);
+
+        try {
+            IAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(moleculeHolder.mol.getBuilder());
+            for (IAtom atom: moleculeHolder.mol.atoms()) {
+                IAtomType type = matcher.findMatchingAtomType(moleculeHolder.mol, atom);
+                AtomTypeManipulator.configure(atom, type);
+            }
+
+            CDKHydrogenAdder.getInstance(moleculeHolder.mol.getBuilder()).addImplicitHydrogens(moleculeHolder.mol);
+        } catch (CDKException e) {
+            //Error!
+        }
+
+
     }
 
     @Override
