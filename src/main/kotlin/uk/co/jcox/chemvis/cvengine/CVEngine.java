@@ -71,7 +71,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3);
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);
 
-        this.windowHandle = GLFW.glfwCreateWindow(800, 600, "CV Engine: " + name, 0, 0);
+        this.windowHandle = GLFW.glfwCreateWindow(800, 600, name, 0, 0);
 
         if (this.windowHandle == 0) {
             throw new RuntimeException("Filed to create a window and setup OpenGL");

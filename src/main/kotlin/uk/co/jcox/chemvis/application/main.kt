@@ -5,7 +5,7 @@ import uk.co.jcox.chemvis.cvengine.IApplication
 
 
 fun main() {
-    val engine = CVEngine("ChemVis")
+    val engine = CVEngine("MolGLide")
     val cvApp: IApplication = ChemVis()
     engine.run(cvApp)
     engine.close()
