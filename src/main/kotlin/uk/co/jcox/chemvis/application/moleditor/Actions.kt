@@ -15,7 +15,7 @@ import java.util.UUID
 
 //todo This class is literately the worst class of the entire project
 //Needs complete re-write!
-//todo Weird things are currently happening
+//todo Weird things are currently happening - Implicit hydrogens are not being removed, (or one is being added) when an oxygen is added - Seems to have slightly fixed for now
 
 abstract class EditorAction {
 
@@ -128,6 +128,7 @@ abstract class EditorAction {
     }
 
     protected fun removeImplicitHydrogensFromStructure(molManager: IMoleculeManager, molecule: UUID, atom: UUID) {
+        //Removes one hydrogen
         molManager.removeImplicitHydrogenIfPossible(molecule, atom)
     }
 }
@@ -193,6 +194,9 @@ class AtomInsertionAction (
 
         //2) Add a bond in-between the selected atoms and this newly created atom
         val m_preExisting = preExistingSelection.getComponent(MolIDComponent::class)
+
+        removeImplicitHydrogensFromStructure(molManager, molecule.molID, m_preExisting.molID)
+
         println(m_preExisting.molID)
         val m_bondID = molManager.formBond(molecule.molID, m_preExisting.molID, newAtomID, 1)
 
@@ -201,13 +205,11 @@ class AtomInsertionAction (
         insertedAtom = insertedAtomEntity.id
         createSingleBondLevelView(moleculeEntity, preExistingSelection, insertedAtomEntity, m_bondID)
 
-
-        removeImplicitHydrogensFromStructure(molManager, molecule.molID, m_preExisting.molID)
-
-        if (checkImplicitHydrogens) {
+        if (checkImplicitHydrogens && element == "C") {
             val a = molManager.addImplicitHydrogens(molecule.molID, newAtomID)
-
+            println("Running and added $a hydrogens")
         }
+
 
         if (checkImplicitCarbons) {
             checkImplictCarbons(molManager, preExistingSelection, molecule.molID, m_preExisting.molID)

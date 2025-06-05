@@ -169,6 +169,7 @@ public class CDKManager implements IMoleculeManager{
         MoleculeHolder moleculeHolder = getMolHolder(molecule);
         IAtom cdkAtom = moleculeHolder.atoms.get(atom);
 
+        System.out.println("===================================================================");
 
         //Get the atom type = In other words get the object to calculate more details of the atom
         IAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(moleculeHolder.mol.getBuilder());
@@ -204,6 +205,7 @@ public class CDKManager implements IMoleculeManager{
         List<IAtom> bonded = moleculeHolder.mol.getConnectedAtomsList(cdkAtom);
         for (IAtom iAtom : bonded) {
             if (iAtom.getSymbol().equals("H")) {
+                System.out.println("REMOVING THIS HYDROGEN!!!!!!!!!!!!!!1");
                 IBond bond = moleculeHolder.mol.getBond(cdkAtom, iAtom);
                 moleculeHolder.mol.removeAtom(iAtom);
                 moleculeHolder.mol.removeBond(bond);
@@ -224,7 +226,7 @@ public class CDKManager implements IMoleculeManager{
                 AtomTypeManipulator.configure(atom, type);
             }
 
-            CDKHydrogenAdder.getInstance(moleculeHolder.mol.getBuilder()).addImplicitHydrogens(moleculeHolder.mol);
+//            CDKHydrogenAdder.getInstance(moleculeHolder.mol.getBuilder()).addImplicitHydrogens(moleculeHolder.mol);
         } catch (CDKException e) {
             //Error!
         }

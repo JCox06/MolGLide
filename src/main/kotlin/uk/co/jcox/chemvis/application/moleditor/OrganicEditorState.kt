@@ -43,7 +43,7 @@ class OrganicEditorState (
     var selection: UUID? = null
     var draggedEntity: UUID? = null
     var moleculeUIID: UUID? = null
-    var debugUI = false
+    var debugUI = true
     val imGuiTool = ImInt(1)
     val imGuiMode = ImInt(0)
     val imGuiImplicitCarbon = ImBoolean(true)
