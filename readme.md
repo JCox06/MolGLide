@@ -9,6 +9,7 @@ The project uses Kotlin/Java, LWJGL, CDK and Dear ImGui
 The project can be built with Maven with all dependencies on Maven Central
 
 
+![Screenshot](screenshots/2.png)
 
 ## Todo
 - [ ] Sort out codebase (refactor, clean, rebuild some areas)

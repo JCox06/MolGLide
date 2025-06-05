@@ -15,6 +15,7 @@ import java.util.UUID
 
 //todo This class is literately the worst class of the entire project
 //Needs complete re-write!
+//todo Weird things are currently happening
 
 abstract class EditorAction {
 
@@ -240,6 +241,8 @@ class AtomInsertionInlineAction(
         val cdkAtomOfAnchor = atomOfAnchor?.getComponent(MolIDComponent::class)
 
         if (parentMolecule != null && cdkMolId != null) {
+
+            println("JUST TESTING")
 
             val molTransform = parentMolecule.getAbsolutePosition()
             val localPos = positionForPlacement - molTransform
