@@ -1,6 +1,6 @@
 package uk.co.jcox.chemvis.cvengine
 
-import Jama.Matrix
+
 import org.joml.*
 
 

@@ -20,7 +20,6 @@ class MolSelectionComponent(
 
 }
 
-
 //The remaining classes are used to "tag" entities in the level for quick retrieval/identification
 
 class AnchorComponent(
@@ -31,11 +30,26 @@ class AnchorComponent(
     }
 }
 
-
 class GhostImplicitHydrogenGroupComponent(
 
 ) : IComponent {
     override fun clone() : IComponent {
+        return this
+    }
+}
+
+class AtomComponent(
+
+) : IComponent {
+    override fun clone(): IComponent {
+        return this
+    }
+}
+
+class AlwaysExplicit(
+
+) : IComponent {
+    override fun clone(): IComponent {
         return this
     }
 }

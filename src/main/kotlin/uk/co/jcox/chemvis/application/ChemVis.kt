@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
+import javax.print.DocFlavor
 
 class ChemVis : IApplication, IInputSubscriber {
 
@@ -26,7 +27,8 @@ class ChemVis : IApplication, IInputSubscriber {
         camera = Camera2D(wm.x, wm.y)
 
 
-        GL11.glClearColor(0.22f, 0.22f, 0.22f, 1.0f)
+        GL11.glClearColor(0.22f, 0.22f, 0.26f, 1.0f)
+
 
         loadCoreAssets()
 
@@ -91,6 +93,9 @@ class ChemVis : IApplication, IInputSubscriber {
 
         val inlineAnchorMesh = Shaper2D.rectangle(0f, 0f, 2f, 2f)
         services.resourceManager().manageMesh(INLINE_ANCHOR_MESH, inlineAnchorMesh)
+
+        val markerMaterial = Material(Vector3f(0.11f, 0.11f, 0.11f))
+        services.resourceManager().manageMaterial(SELECTION_MARKER_MATERIAL, markerMaterial)
     }
 
     override fun cleanup() {
@@ -100,7 +105,8 @@ class ChemVis : IApplication, IInputSubscriber {
     companion object {
         const val FONT: String = "APP_FONT"
         const val GLOBAL_SCALE: Float = 0.05f
-        const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER"
+        const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER_MESH"
         const val INLINE_ANCHOR_MESH: String = "INLINE_ANCHOR_MESH"
+        const val SELECTION_MARKER_MATERIAL: String = "SELECTION_MARKER_MATERIAL"
     }
 }

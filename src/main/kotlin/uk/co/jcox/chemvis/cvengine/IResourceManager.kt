@@ -11,7 +11,13 @@ interface IResourceManager {
 
     fun manageMesh(id: String, mesh: Mesh)
 
+    fun manageMaterial(id: String, material: Material)
+
     fun destroyMesh(id: String)
+
+    fun destroyMaterial(id: String)
+
+    fun getMaterial(id: String) : Material
 
     fun getMesh(id: String) : Mesh
 

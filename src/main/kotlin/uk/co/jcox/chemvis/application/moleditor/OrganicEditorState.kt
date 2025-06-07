@@ -6,9 +6,11 @@ import imgui.type.ImInt
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
-import org.joml.plus
-import org.openscience.cdk.renderer.generators.ExtendedAtomGenerator
 import uk.co.jcox.chemvis.application.chemengine.CDKManager
+import uk.co.jcox.chemvis.application.moleditor.actions.AtomCreationAction
+import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionAction
+import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionInlineAction
+import uk.co.jcox.chemvis.application.moleditor.actions.EditorAction
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IApplicationState
 import uk.co.jcox.chemvis.cvengine.IInputSubscriber
@@ -16,12 +18,9 @@ import uk.co.jcox.chemvis.cvengine.InputManager
 import uk.co.jcox.chemvis.cvengine.LevelRenderer
 import uk.co.jcox.chemvis.cvengine.RawInput
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
-import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.Stack
 import java.util.UUID
-import javax.sound.sampled.Line
-import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -50,6 +49,7 @@ class OrganicEditorState (
     val imGuiImplicitHydrogen = ImBoolean(true)
     var showInlineAddMenu: Boolean = false
     var selectedAnchor: EntityLevel? = null
+    var implicitCycle = false
 
     var mainMode = true
 
@@ -58,6 +58,13 @@ class OrganicEditorState (
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
+
+        selection?.let{
+            val selecEntity = workState.peek().level.findByID(it)
+            val molEntity = selecEntity?.parent
+            moleculeUIID = molEntity?.getComponent(MolIDComponent::class)?.molID
+        }
+
     }
 
     override fun render(viewport: Vector2f) {
@@ -65,10 +72,6 @@ class OrganicEditorState (
 
         if (debugUI) {
             drawDebugUI()
-        }
-
-        if (moleculeUIID != null) {
-            drawMoleculeLookup()
         }
 
         if (showInlineAddMenu) {
@@ -87,15 +90,6 @@ class OrganicEditorState (
         //If the user clicks LCTRL, then we can do some actions
         if (inputManager.keyClick(RawInput.LCTRL)) {
             inputControlActions(key)
-        }
-
-
-        if (key == RawInput.MOUSE_2) {
-            selection?.let{
-                val selecEntity = workState.peek().level.findByID(it)
-                val molEntity = selecEntity?.parent
-                moleculeUIID = molEntity?.getComponent(MolIDComponent::class)?.molID
-            }
         }
 
         //Currently assume carbon tool selected:
@@ -130,16 +124,16 @@ class OrganicEditorState (
 
         val worldPos = camera2D.screenToWorld(inputManager.mousePos())
 
-        var element = "C"
+        var element = AtomInsert.CARBON
 
         if (imGuiTool.get() == 1) {
-           element = "C"
+           element = AtomInsert.CARBON
         } else if (imGuiTool.get() == 2) {
-            element = "H"
+            element = AtomInsert.HYDROGEN
         } else if (imGuiTool.get() == 3) {
-            element = "Cl"
+            element = AtomInsert.CHLORINE
         } else if (imGuiTool.get() == 4) {
-            element = "O"
+            element = AtomInsert.OXYGEN
         }
 
         //If selection exists, add the new atom to the selected molecule
@@ -152,7 +146,7 @@ class OrganicEditorState (
             }
 
             val circlePos = closestPointToCircleCircumference(Vector2f(transformAtom.x, transformAtom.y), worldPos, CONNECTION_DIST)
-            val action = AtomInsertionAction(circlePos.x, circlePos.y, element, selectedEntity.parent, selectedEntity, imGuiImplicitCarbon.get(), imGuiImplicitHydrogen.get())
+            val action = AtomInsertionAction(circlePos.x, circlePos.y, element, selectedEntity.parent, selectedEntity, imGuiImplicitCarbon.get())
             prepareTransitionState(action)
             draggedEntity = action.insertedAtom
 
@@ -161,6 +155,8 @@ class OrganicEditorState (
             val action = AtomCreationAction(worldPos.x, worldPos.y, element, imGuiImplicitHydrogen.get())
             prepareTransitionState(action)
         }
+
+        setImplicitCarbons(implicitCycle)
     }
 
 
@@ -341,14 +337,14 @@ class OrganicEditorState (
 
         ImGui.separatorText("Implicit Options")
 
-
-        ImGui.checkbox("Create Implicit Carbons", imGuiImplicitCarbon)
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip("Stops drawing the carbon atoms when 4 bonds are reached")
-        }
         ImGui.checkbox("Create Implicit Hydrogens", imGuiImplicitHydrogen)
         if (ImGui.isItemHovered()) {
             ImGui.setTooltip("Automatically add hydrogen to carbon to fill the octet")
+        }
+
+        if (ImGui.button("Toggle Carbon View")) {
+            implicitCycle = !implicitCycle
+            setImplicitCarbons(implicitCycle)
         }
 
         ImGui.separatorText("Tools")
@@ -380,22 +376,12 @@ class OrganicEditorState (
             ImGui.text("Inline Bond mode is active!")
         }
 
-        ImGui.separatorText("Other Info")
 
-        ImGui.text("* Right click a molecule to show more details")
+        ImGui.separatorText("CURRENT SELECTION DETAILS")
+        if (selection != null && moleculeUIID != null) {
+            ImGui.separatorText("Molecule")
+            ImGui.text("Molecular Formula ${workState.peek().molManager.getMolecularFormula(moleculeUIID)}")
 
-        ImGui.end()
-    }
-
-    private fun drawMoleculeLookup() {
-        ImGui.begin("Molecule Lookup")
-
-        ImGui.text("Molecule Manager ID ${this.moleculeUIID}")
-
-        ImGui.text("Formula: ${workState.peek().molManager.getMolecularFormula(this.moleculeUIID)}")
-
-        if (ImGui.button("Close Window")) {
-            this.moleculeUIID = null
         }
 
         ImGui.end()
@@ -408,7 +394,7 @@ class OrganicEditorState (
 
         if (ImGui.button("H")) {
           selectedAnchor?.let {
-              triggerInlineAction(it, "H", 1)
+              triggerInlineAction(it, AtomInsert.HYDROGEN)
           }
         };
 
@@ -420,14 +406,36 @@ class OrganicEditorState (
         ImGui.end()
     }
 
-    private fun triggerInlineAction(anchorEntity: EntityLevel, element: String, quantity: Int) {
-        val action = AtomInsertionInlineAction(anchorEntity, element, quantity)
+
+    private fun triggerInlineAction(anchorEntity: EntityLevel, element: AtomInsert) {
+        val action = AtomInsertionInlineAction(anchorEntity, element)
         prepareTransitionState(action)
     }
 
+
+    private fun setImplicitCarbons(implicit: Boolean) {
+        workState.peek().level.traverseFunc {
+            if (it.hasComponent(MolIDComponent::class) && it.hasComponent(TransformComponent::class) && it.hasComponent(AtomComponent::class) && !it.hasComponent(AlwaysExplicit::class)) {
+                val atomID = it.getComponent(MolIDComponent::class)
+                val trans = it.getComponent(TransformComponent::class)
+                val mol = it.parent
+
+                if (mol != null) {
+                    val mols = mol.getComponent(MolIDComponent::class)
+                    if (workState.peek().molManager.isOfElement(mols.molID, atomID.molID, "C")) {
+                        val bonds = workState.peek().molManager.getBonds(mols.molID, atomID.molID)
+                        if (bonds >= CARBON_IMPLICIT_LIMIT) {
+                            trans.visible = implicit
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     companion object {
-        const val SELECTION_RADIUS = 10.0f
-        const val SELECTION_MARKER_RADIUS = 25.0f
+        const val SELECTION_RADIUS = 8.0f
+        const val SELECTION_MARKER_RADIUS = 15.0f
         const val CONNECTION_DIST = 40.0f
         const val INLINE_DIST = 10.0f
 

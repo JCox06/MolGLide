@@ -1,11 +1,11 @@
 package uk.co.jcox.chemvis.cvengine
 
-import org.apache.commons.lang3.mutable.Mutable
+
 import org.joml.Math
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.Vector4f
-import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
+
 import kotlin.math.PI
 
 object Shaper2D {

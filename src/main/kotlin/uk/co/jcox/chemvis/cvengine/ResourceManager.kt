@@ -1,5 +1,5 @@
 package uk.co.jcox.chemvis.cvengine
-import org.apache.commons.logging.Log
+
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL30
@@ -27,6 +27,7 @@ class ResourceManager : IResourceManager{
     private val textures: MutableMap<String, Int> = mutableMapOf()
     private val fonts: MutableMap<String, BitmapFont> = mutableMapOf()
     private val meshes: MutableMap<String, Mesh> = mutableMapOf()
+    private val materials: MutableMap<String, Material> = mutableMapOf()
 
     init {
         STBImage.stbi_set_flip_vertically_on_load(true)
@@ -395,5 +396,26 @@ class ResourceManager : IResourceManager{
             return true
         }
         return false
+    }
+
+
+    override fun manageMaterial(id: String, material: Material) {
+        Logger.info { "Managing external material $id" }
+        materials[id] = material
+    }
+
+    override fun destroyMaterial(id: String) {
+        this.materials.remove(id)
+    }
+
+    override fun getMaterial(id: String): Material {
+        val material = materials[id]
+
+        if (material == null) {
+            Logger.info { "Material requested was null: $id" }
+            throw NullPointerException("Material not found")
+        }
+
+        return material
     }
 }

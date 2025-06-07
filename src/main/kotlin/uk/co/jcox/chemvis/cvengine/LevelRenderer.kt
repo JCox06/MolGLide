@@ -11,6 +11,7 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
+//todo - this is also such a dodgy class. Instance rendering for everything but text will make unfiorm changes easier (I think?)
 class LevelRenderer (
     private val batcher: Batch2D,
     private val resourceManager: IResourceManager
@@ -29,6 +30,8 @@ class LevelRenderer (
         var program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
         program.uniform("uPerspective", camera2D.combined())
         program.uniform("uModel", Matrix4f())
+        program.uniform("uIgnoreTextures", 1)
+        program.uniform("uLight", Vector3f(0.11f, 0.11f, 0.11f))
 
         batcher.begin(Batch2D.Mode.FAN)
         //Render other objects
@@ -37,6 +40,8 @@ class LevelRenderer (
         }
         batcher.end()
 
+        program.uniform("uIgnoreTextures", 0)
+        program.uniform("uLight", Vector3f(1f, 1f, 1f))
 
 
         //Render the text (do this last as text is transparent and this is main thing)
@@ -121,6 +126,7 @@ class LevelRenderer (
         }
 
         val mesh = resourceManager.getMesh(objectComponent.modelGeomID)
+        val material = resourceManager.getMaterial(objectComponent.materialID)
 
         val absPos = getAbsPosition(objectEntity)
 

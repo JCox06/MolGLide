@@ -1,11 +1,8 @@
 package uk.co.jcox.chemvis.cvengine.scenegraph
 
-import com.github.jsonldjava.utils.Obj
 import org.joml.Vector3f
 import org.joml.plus
 import java.util.UUID
-import javax.vecmath.Vector2f
-import kotlin.enums.enumEntries
 import kotlin.reflect.KClass
 
 
@@ -40,10 +37,11 @@ class TextComponent (
 
 class ObjComponent (
     var modelGeomID: String,
+    var materialID: String,
     //Room to include other things later!
 ) : IComponent {
     override fun clone(): IComponent {
-        return ObjComponent(modelGeomID)
+        return ObjComponent(modelGeomID, materialID)
     }
 }
 
@@ -75,6 +73,10 @@ class EntityLevel (
 
     fun <T: IComponent> hasComponent(componentClass: KClass<T>) : Boolean {
         return components.contains(componentClass)
+    }
+
+    fun <T: IComponent> removeComponent(componentClass: KClass<T>){
+        components.remove(componentClass)
     }
 
     fun getComponents() : Iterator<IComponent> {
