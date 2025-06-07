@@ -2,6 +2,9 @@
 _2D molecular drawing system_
 ___
 
+> [!CAUTION]
+> MolGLide currently exists as a prototype. It just about draws extremely simple molecules.
+
 MolGLide is a project I am writing to allow you to build organic molecules in a 2D editor.
 
 It's currently a work in progress, and it will get things wrong. There will be bugs and weird errors.
