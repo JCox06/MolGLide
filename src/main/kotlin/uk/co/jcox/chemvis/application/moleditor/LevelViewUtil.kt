@@ -1,9 +1,8 @@
 package uk.co.jcox.chemvis.application.moleditor
 
 
-import org.joml.Vector3f
 import org.joml.minus
-import uk.co.jcox.chemvis.application.ChemVis
+import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
@@ -24,7 +23,7 @@ object LevelViewUtil {
         //1) Create a new entity for the atom/label to sit in from the molecule entity
         val label = molecule.addEntity()
         label.addComponent(TransformComponent(posX, posY, OrganicEditorState.XY_PLANE))
-        label.addComponent(TextComponent(text, ChemVis.FONT, 1.0f, 1.0f, 1.0f, ChemVis.GLOBAL_SCALE))
+        label.addComponent(TextComponent(text, MolGLide.FONT, 1.0f, 1.0f, 1.0f, MolGLide.GLOBAL_SCALE))
         return label
     }
 
@@ -35,7 +34,7 @@ object LevelViewUtil {
     fun createSelectionMarker(interactiveAtom: EntityLevel) {
         val selectionMarker = interactiveAtom.addEntity()
         selectionMarker.addComponent(TransformComponent(0.0f, 0.0f, -10.0f, OrganicEditorState.SELECTION_RADIUS))
-        selectionMarker.addComponent(ObjComponent(ChemVis.SELECTION_MARKER_MESH, ChemVis.SELECTION_MARKER_MATERIAL))
+        selectionMarker.addComponent(ObjComponent(MolGLide.SELECTION_MARKER_MESH, MolGLide.SELECTION_MARKER_MATERIAL))
         selectionMarker.getComponent(TransformComponent::class).visible = false
 
         //Register the selection marker with the atom for easy retrieval
@@ -49,7 +48,7 @@ object LevelViewUtil {
     fun createInlinePlaceholder(atom: EntityLevel, xPos: Float, yPos: Float, zPos: Float) : EntityLevel {
         val tempAnchor = atom.addEntity()
         tempAnchor.addComponent(TransformComponent(xPos, yPos, zPos, 1.0f, false))
-        tempAnchor.addComponent(ObjComponent(ChemVis.INLINE_ANCHOR_MESH, ChemVis.SELECTION_MARKER_MATERIAL))
+        tempAnchor.addComponent(ObjComponent(MolGLide.INLINE_ANCHOR_MESH, MolGLide.SELECTION_MARKER_MATERIAL))
         tempAnchor.addComponent(AnchorComponent())
 
         return tempAnchor;

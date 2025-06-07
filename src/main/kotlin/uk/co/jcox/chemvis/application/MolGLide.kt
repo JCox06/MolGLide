@@ -5,9 +5,8 @@ import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
-import javax.print.DocFlavor
 
-class ChemVis : IApplication, IInputSubscriber {
+class MolGLide : IApplication, IInputSubscriber {
 
     private lateinit var camera: Camera2D
 
