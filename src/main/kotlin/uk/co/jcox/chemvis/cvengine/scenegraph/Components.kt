@@ -167,4 +167,9 @@ class EntityLevel (
         }
         return null
     }
+
+    fun clear() {
+        this.children.clear()
+        this.components.clear()
+    }
 }

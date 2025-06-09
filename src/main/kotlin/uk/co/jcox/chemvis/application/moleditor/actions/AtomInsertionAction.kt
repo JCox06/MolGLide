@@ -9,7 +9,7 @@ import uk.co.jcox.chemvis.application.moleditor.GhostImplicitHydrogenGroupCompon
 import uk.co.jcox.chemvis.application.moleditor.LevelMolLinkUtil
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
 import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
-import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
@@ -28,7 +28,7 @@ class AtomInsertionAction (
 
     override fun execute(molManager: IMoleculeManager, level: EntityLevel): UUID? {
         val levelMolPos = levelMolecule.getAbsolutePosition()
-        val levelLocalMolPos = Vector3f(xPos, yPos, OrganicEditorState.Companion.XY_PLANE) - levelMolPos
+        val levelLocalMolPos = Vector3f(xPos, yPos, NewOrganicEditorState.Companion.XY_PLANE) - levelMolPos
 
         //1) Add the atom to the molecule struct side
         val structMolecule = levelMolecule.getComponent(MolIDComponent::class)
@@ -53,10 +53,10 @@ class AtomInsertionAction (
         val levelNewAtom = LevelViewUtil.createLabel(levelMolecule, insert.symbol, levelLocalMolPos.x, levelLocalMolPos.y)
         LevelViewUtil.createSelectionMarker(levelNewAtom)
 
-        LevelViewUtil.createInlinePlaceholder(levelNewAtom, OrganicEditorState.INLINE_DIST, 0.0f, 0.0f)
-        LevelViewUtil.createInlinePlaceholder(levelNewAtom, -OrganicEditorState.INLINE_DIST, 0.0f, 0.0f)
-        LevelViewUtil.createInlinePlaceholder(levelNewAtom, 0.0f , OrganicEditorState.INLINE_DIST, 0.0f)
-        LevelViewUtil.createInlinePlaceholder(levelNewAtom, 0.0f , -OrganicEditorState.INLINE_DIST, 0.0f)
+        LevelViewUtil.createInlinePlaceholder(levelNewAtom, NewOrganicEditorState.INLINE_DIST, 0.0f, 0.0f)
+        LevelViewUtil.createInlinePlaceholder(levelNewAtom, -NewOrganicEditorState.INLINE_DIST, 0.0f, 0.0f)
+        LevelViewUtil.createInlinePlaceholder(levelNewAtom, 0.0f , NewOrganicEditorState.INLINE_DIST, 0.0f)
+        LevelViewUtil.createInlinePlaceholder(levelNewAtom, 0.0f , -NewOrganicEditorState.INLINE_DIST, 0.0f)
 
         LevelMolLinkUtil.linkObject(structNewAtom, levelNewAtom)
         val levelBond = LevelViewUtil.createBond(levelMolecule, levelSelection, levelNewAtom)

@@ -22,7 +22,7 @@ object LevelViewUtil {
     fun createLabel(molecule: EntityLevel, text: String, posX: Float, posY: Float) : EntityLevel {
         //1) Create a new entity for the atom/label to sit in from the molecule entity
         val label = molecule.addEntity()
-        label.addComponent(TransformComponent(posX, posY, OrganicEditorState.XY_PLANE))
+        label.addComponent(TransformComponent(posX, posY, NewOrganicEditorState.XY_PLANE))
         label.addComponent(TextComponent(text, MolGLide.FONT, 1.0f, 1.0f, 1.0f, MolGLide.GLOBAL_SCALE))
         return label
     }
@@ -33,7 +33,7 @@ object LevelViewUtil {
      */
     fun createSelectionMarker(interactiveAtom: EntityLevel) {
         val selectionMarker = interactiveAtom.addEntity()
-        selectionMarker.addComponent(TransformComponent(0.0f, 0.0f, -10.0f, OrganicEditorState.SELECTION_RADIUS))
+        selectionMarker.addComponent(TransformComponent(0.0f, 0.0f, -10.0f, NewOrganicEditorState.SELECTION_RADIUS))
         selectionMarker.addComponent(ObjComponent(MolGLide.SELECTION_MARKER_MESH, MolGLide.SELECTION_MARKER_MATERIAL))
         selectionMarker.getComponent(TransformComponent::class).visible = false
 

@@ -2,7 +2,7 @@ package uk.co.jcox.chemvis.application
 
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
-import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
 
@@ -18,29 +18,32 @@ class MolGLide : IApplication, IInputSubscriber {
 
     private val fontSize = 140
 
-    override fun init(cvServices: ICVServices) {
+    override fun init(engineServices: ICVServices) {
 
-        this.services = cvServices
+        this.services = engineServices
         services.resourceManager().loadFontFromDisc(FONT, File("data/chemvis/fonts/ubuntu.ttf"), CVEngine.STD_CHARACTER_SET, fontSize)
         val wm = services.windowMetrics()
         camera = Camera2D(wm.x, wm.y)
 
 
         GL11.glClearColor(0.22f, 0.22f, 0.26f, 1.0f)
+//        GL11.glClearColor(254/128f, 250/128f, 224/128f, 1.0f)
 
 
         loadCoreAssets()
 
         services.inputs().subscribe(this)
-        setState()
+        newState()
     }
 
-    private fun setState() {
-        val state = OrganicEditorState(services.levelRenderer(), camera)
+
+    private fun newState() {
+        val state = NewOrganicEditorState(services, camera, services.levelRenderer())
 
         services.setCurrentApplicationState(state)
         services.inputs().subscribe(state)
     }
+
 
     private fun testState() {
         val state = TestState(services.levelRenderer(), camera)
@@ -107,5 +110,6 @@ class MolGLide : IApplication, IInputSubscriber {
         const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER_MESH"
         const val INLINE_ANCHOR_MESH: String = "INLINE_ANCHOR_MESH"
         const val SELECTION_MARKER_MATERIAL: String = "SELECTION_MARKER_MATERIAL"
+        const val VERSION = "MolGLide 1.0-SNAPSHOT"
     }
 }
