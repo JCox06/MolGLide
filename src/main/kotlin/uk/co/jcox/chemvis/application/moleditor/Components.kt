@@ -22,13 +22,6 @@ class MolSelectionComponent(
 
 //The remaining classes are used to "tag" entities in the level for quick retrieval/identification
 
-class AnchorComponent(
-
-) : IComponent {
-    override fun clone(): IComponent {
-        return this
-    }
-}
 
 class GhostImplicitHydrogenGroupComponent(
 

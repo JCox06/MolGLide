@@ -1,0 +1,40 @@
+package uk.co.jcox.chemvis.application.moleditor
+
+import uk.co.jcox.chemvis.application.chemengine.CDKManager
+import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
+import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+
+class WorkState {
+
+    private val stack = ArrayDeque<ChemLevelPair>()
+    private val redoStack = ArrayDeque<ChemLevelPair>()
+
+    fun init() {
+        stack.add(ChemLevelPair(EntityLevel(), CDKManager()))
+    }
+
+    fun makeCheckpoint(clp: ChemLevelPair) {
+        stack.addLast(clp.clone())
+        redoStack.clear()
+    }
+
+    fun get() : ChemLevelPair {
+        val clp = stack.last()
+        val clone =  clp.clone()
+        return clone
+    }
+
+
+    fun undo() {
+        if (stack.size > 1) {
+            redoStack.add(stack.removeLast())
+        }
+    }
+
+    fun redo() {
+        if (redoStack.isNotEmpty()) {
+            stack.add(redoStack.removeLast())
+        }
+    }
+
+}

@@ -181,7 +181,7 @@ public class CDKManager implements IMoleculeManager{
 
 
             for (IAtom atom : moleculeHolder.mol.atoms()) {
-                if (!atom.getSymbol().equals("C")) {
+                if (! AtomInsert.Companion.fromSymbol(atom.getSymbol()).getHydrogenable()) {
                     atom.setImplicitHydrogenCount(0);
                 }
             }

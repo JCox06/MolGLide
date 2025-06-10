@@ -1,8 +1,6 @@
 package uk.co.jcox.chemvis.cvengine;
 
-import imgui.ImFont;
-import imgui.ImGui;
-import imgui.ImGuiIO;
+import imgui.*;
 import imgui.flag.ImGuiConfigFlags;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
@@ -70,6 +68,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3);
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE);
+        GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GLFW.GLFW_TRUE);
 
         this.windowHandle = GLFW.glfwCreateWindow(800, 600, name, 0, 0);
 
@@ -116,13 +115,24 @@ public class CVEngine implements ICVServices, AutoCloseable{
     private void setupImGui() {
         ImGui.createContext();
         ImGui.styleColorsDark();
+
+        ImGuiStyle style = ImGui.getStyle();
+        style.setWindowTitleAlign(new ImVec2(0.5f, 0.5f));
+        style.setWindowBorderSize(0.0f);
+        style.setChildBorderSize(0.0f);
+        style.setFrameBorderSize(0.0f);
+        style.setTabBorderSize(0.0f);
+        style.setFrameRounding(5.0f);
+        style.setScrollbarRounding(0.0f);
+        style.setDisplaySafeAreaPadding(20.0f, 9.0f);
+
         glfwImGui = new ImGuiImplGlfw();
         openGlImGui = new ImGuiImplGl3();
 
         ImGuiIO io = ImGui.getIO();
         ImFont font = io.getFonts().addFontDefault();
-//        ImFont experience = io.getFonts().addFontFromFileTTF("data/fonts/ubuntu.ttf", 32);
-//        io.setFontDefault(experience);
+        ImFont experience = io.getFonts().addFontFromFileTTF("data/integrated/fonts/Roboto-Black.ttf", 18);
+        io.setFontDefault(experience);
         io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable);
         io.setConfigViewportsNoDecoration(false);
@@ -218,6 +228,7 @@ public class CVEngine implements ICVServices, AutoCloseable{
     }
 
 
+    @Override
     public void shutdown() {
         GLFW.glfwSetWindowShouldClose(this.windowHandle, true);
     }
