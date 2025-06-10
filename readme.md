@@ -15,7 +15,7 @@ Chemical structure details are stored using CDK, and the 2D diagrams are stored 
 
 This project uses the Ubuntu font, see data/chemvis/fonts/ for the full licence.
 
-![Screenshot](screenshots/3.png)
+![Screenshot](screenshots/4.png)
 
 ## Building
 This is a bit weird. Maven will error if you try to build the project initially. First run the main class in IntelliJ, and then if you want package in Maven. This is because I have some old Java files in the project and the Maven Compiler Plugin will error out. I plan on converting these to Kotlin at some point. 
