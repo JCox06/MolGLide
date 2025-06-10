@@ -13,16 +13,15 @@ class WorkState {
         stack.add(ChemLevelPair(EntityLevel(), CDKManager()))
     }
 
-    fun makeCheckpoint() {
-        stack.addLast(stack.last().clone())
+    fun makeCheckpoint(clp: ChemLevelPair) {
+        stack.addLast(clp.clone())
+        redoStack.clear()
     }
 
-    fun getLevel() : EntityLevel {
-        return stack.last().level
-    }
-
-    fun getStruct(): IMoleculeManager {
-        return stack.last().molManager
+    fun get() : ChemLevelPair {
+        val clp = stack.last()
+        val clone =  clp.clone()
+        return clone
     }
 
 
@@ -33,7 +32,7 @@ class WorkState {
     }
 
     fun redo() {
-        if (redoStack.size > 1) {
+        if (redoStack.isNotEmpty()) {
             stack.add(redoStack.removeLast())
         }
     }

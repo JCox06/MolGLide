@@ -38,6 +38,7 @@ class AtomCreationAction(
             molManager.recalculate(structMolecule)
             val inserted = molManager.getImplicitHydrogens(structMolecule, structFirstAtom)
             val fakeH = LevelViewUtil.createLabel(levelFirstAtom, "H$inserted", NewOrganicEditorState.INLINE_DIST, 0.0f)
+            println(inserted)
             fakeH.addComponent(GhostImplicitHydrogenGroupComponent())
         }
 

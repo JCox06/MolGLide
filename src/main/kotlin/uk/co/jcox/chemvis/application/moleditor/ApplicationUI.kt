@@ -17,11 +17,11 @@ class ApplicationUI {
     private var showMetrics = false
     private var showStyles = false
 
-    fun mainMenu(services: ICVServices) {
+    fun mainMenu(services: ICVServices, workState: WorkState, tool: Tool, formula: String) {
         if (ImGui.beginMainMenuBar()) {
 
             renderFile(services)
-            renderEdit()
+            renderEdit(workState, tool)
             renderDebug()
 
             ImGui.separator()
@@ -31,7 +31,7 @@ class ApplicationUI {
 
             ImGui.separator()
 
-            ImGui.text("No Molecule Selected")
+            ImGui.text(formula)
 
             ImGui.separator()
 
@@ -75,15 +75,17 @@ class ApplicationUI {
     }
 
 
-    private fun renderEdit() {
+    private fun renderEdit(workState: WorkState, tool: Tool) {
         if (ImGui.beginMenu("Edit")) {
 
-            if (ImGui.menuItem("Undo")) {
-
+            if (ImGui.menuItem("Undo (CTRL + Z)")) {
+                workState.undo()
+                tool.refreshWorkingState()
             }
 
-            if (ImGui.menuItem("Redo")) {
-
+            if (ImGui.menuItem("Redo (CTRL + Y)")) {
+                workState.redo()
+                tool.refreshWorkingState()
             }
 
             ImGui.endMenu()

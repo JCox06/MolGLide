@@ -2,9 +2,6 @@ package uk.co.jcox.chemvis.application.moleditor
 
 
 import org.joml.Vector2f
-import org.joml.minus
-import uk.co.jcox.chemvis.application.MolGLide
-import uk.co.jcox.chemvis.application.moleditor.actions.AtomCreationAction
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IApplicationState
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -13,13 +10,6 @@ import uk.co.jcox.chemvis.cvengine.InputManager
 import uk.co.jcox.chemvis.cvengine.LevelRenderer
 import uk.co.jcox.chemvis.cvengine.RawInput
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
-import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
-import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
-import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.roundToInt
-import kotlin.math.sin
 
 class NewOrganicEditorState (
     private val services: ICVServices,
@@ -31,32 +21,62 @@ class NewOrganicEditorState (
     private val ui = ApplicationUI()
     private val selection = SelectionManager()
 
-    private var renderTransientBonds = false
+    private var moformula = "null"
+
+    private lateinit var atomBondTool: Tool
 
     override fun init() {
         workState.init()
+
+        atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), selection, camera2D))
+
+        atomBondTool.setCommit {
+            workState.makeCheckpoint(it.clone())
+        }
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
         if (! inputManager.mouseClick(RawInput.MOUSE_1)) {
             val mousePos = camera2D.screenToWorld(inputManager.mousePos())
-            selection.update(workState.getLevel(), mousePos.x, mousePos.y)
+            selection.update(workState.get().level, mousePos.x, mousePos.y)
         }
 
-        renderTransientBonds = selection.getPrimary() is Selection.Active && inputManager.mouseClick(RawInput.MOUSE_1)
+        atomBondTool.update()
+
+        val sel = selection.getPrimary()
+        if (sel is Selection.Active) {
+            val mol = sel.id
+            val levelMol = workState.get().level.findByID(mol)
+            val parent = levelMol?.parent
+            val molIdComp = parent?.getComponent(MolIDComponent::class)
+
+            if (molIdComp == null) {
+                return
+            }
+
+            val formula = workState.get().molManager.getMolecularFormula(molIdComp.molID)
+            moformula = formula
+            return
+        }
+
+        moformula = "No molecule selected"
     }
 
     override fun render(viewport: Vector2f) {
-
         val transientUI = EntityLevel()
-        renderTransientSelectionMarker(transientUI)
-        renderTransientBond(transientUI)
+
+        atomBondTool.renderTransientUI(transientUI)
         levelRenderer.renderLevel(transientUI, camera2D, viewport)
 
-        levelRenderer.renderLevel(workState.getLevel(), camera2D, viewport)
+        if (atomBondTool.actionInProgress) {
+            levelRenderer.renderLevel(atomBondTool.getWorkingState().level, camera2D, viewport)
+        } else {
+            levelRenderer.renderLevel(workState.get().level, camera2D, viewport)
+        }
 
-        ui.mainMenu(services)
+        ui.mainMenu(services, workState, atomBondTool, moformula)
         ui.renderWidgets()
+
     }
 
 
@@ -64,94 +84,32 @@ class NewOrganicEditorState (
         if (inputManager.keyClick(RawInput.LCTRL)) {
             if (key == RawInput.KEY_Z) {
                 workState.undo()
+                atomBondTool.refreshWorkingState()
             }
             if (key == RawInput.KEY_Y) {
                 workState.redo()
+                atomBondTool.refreshWorkingState()
             }
+        }
+
+        if (inputManager.mouseClick(RawInput.MOUSE_1)) {
+            val mousePos = camera2D.screenToWorld(inputManager.mousePos())
+            atomBondTool.processClick(ClickContext(mousePos.x, mousePos.y, ui.getActiveElement()))
         }
 
     }
 
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
-        if (key == RawInput.MOUSE_1 && selection.getPrimary() is Selection.None) {
 
-            workState.makeCheckpoint()
-
+        if (key == RawInput.MOUSE_1) {
             val mousePos = camera2D.screenToWorld(inputManager.mousePos())
-
-            val action = AtomCreationAction(mousePos.x, mousePos.y, ui.getActiveElement())
-            action.runAction(workState.getStruct(), workState.getLevel())
+            atomBondTool.processClickRelease(ClickContext(mousePos.x, mousePos.y, ui.getActiveElement()))
         }
     }
 
-    private fun renderTransientSelectionMarker(transientUI: EntityLevel) {
-       val primary = selection.getPrimary()
-        if (primary is Selection.Active) {
-            val entity = workState.getLevel().findByID(primary.id)
-            val position = entity?.getAbsolutePosition()
-
-            if (position == null) {
-                return
-            }
-
-            val ui = transientUI.addEntity()
-            ui.addComponent(TransformComponent(position.x, position.y, position.z, SELECTION_MARKER_SIZE))
-            ui.addComponent(ObjComponent(MolGLide.SELECTION_MARKER_MESH, MolGLide.SELECTION_MARKER_MATERIAL))
-        }
-    }
-
-    private fun renderTransientBond(transientUI: EntityLevel) {
-
-        if (!renderTransientBonds) {
-            return
-        }
-
-        val mousePos = camera2D.screenToWorld(services.inputs().mousePos())
-
-        val primary = selection.getPrimary()
-        if (primary is Selection.Active) {
-            val entity = workState.getLevel().findByID(primary.id)
-            val position = entity?.getAbsolutePosition()
-
-            if (position == null) {
-                return
-            }
-
-            val closestPoint = closestPointToCircleCircumference(Vector2f(position.x, position.y), mousePos, CONNECTION_DIST)
-            val connectionHolder = transientUI.addEntity()
-            connectionHolder.addComponent(TransformComponent(closestPoint.x, closestPoint.y, XY_PLANE))
-            val line = transientUI.addEntity()
-            val entityInTransient = transientUI.addEntity()
-            entityInTransient.addComponent(TransformComponent(position.x, position.y, position.z))
-            line.addComponent(TransformComponent(0.0f, 0.0f, 0.0f))
-            line.addComponent(LineDrawerComponent(entityInTransient.id, connectionHolder.id, BOND_WIDTH))
-        }
-
-    }
 
     override fun cleanup() {
 
-    }
-
-    private fun closestPointToCircleCircumference(circleCentre: Vector2f, randomPoint: Vector2f, radius: Float, quantize: Int = 16) : Vector2f {
-//        val magCentreRandomPoint = (randomPoint - circleCentre).length()
-//        val centreRandomPoint = (randomPoint - circleCentre)
-//        val position = circleCentre + (centreRandomPoint.div(magCentreRandomPoint)).mul(radius)
-//        return position
-
-        val angleStep = (Math.PI * 2) / quantize
-
-        val direction = randomPoint - circleCentre //Direction to point in space
-
-        //Find the angle of this vector (between the positive x axis and the point tan(x) = o/a)
-        val angle = atan2(direction.y, direction.x)
-        val quantizedAngleIndex = (angle / angleStep).roundToInt()
-        val quantizedAngle = quantizedAngleIndex * angleStep
-
-        //Turn polar angle into cartesian coordinates
-        val x = circleCentre.x + radius * cos(quantizedAngle)
-        val y = circleCentre.y + radius * sin(quantizedAngle)
-        return Vector2f(x.toFloat(), y.toFloat())
     }
 
     companion object {
@@ -161,5 +119,6 @@ class NewOrganicEditorState (
         const val INLINE_DIST = 10.0f
         const val CONNECTION_DIST = 35.0f
         const val BOND_WIDTH = 2.5f
+        const val CARBON_IMPLICIT_LIMIT = 4
     }
 }
