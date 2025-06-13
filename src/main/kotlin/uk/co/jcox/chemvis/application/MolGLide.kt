@@ -16,12 +16,10 @@ class MolGLide : IApplication, IInputSubscriber {
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
 
-    private val fontSize = 140
-
     override fun init(engineServices: ICVServices) {
 
         this.services = engineServices
-        services.resourceManager().loadFontFromDisc(FONT, File("data/chemvis/fonts/ubuntu.ttf"), CVEngine.STD_CHARACTER_SET, fontSize)
+        services.resourceManager().loadFontFromDisc(FONT, File("data/chemvis/fonts/ubuntu.ttf"), CVEngine.STD_CHARACTER_SET, FONT_SIZE)
         val wm = services.windowMetrics()
         camera = Camera2D(wm.x, wm.y)
 
@@ -106,6 +104,7 @@ class MolGLide : IApplication, IInputSubscriber {
 
     companion object {
         const val FONT: String = "APP_FONT"
+        const val FONT_SIZE = 140
         const val GLOBAL_SCALE: Float = 0.05f
         const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER_MESH"
         const val INLINE_ANCHOR_MESH: String = "INLINE_ANCHOR_MESH"

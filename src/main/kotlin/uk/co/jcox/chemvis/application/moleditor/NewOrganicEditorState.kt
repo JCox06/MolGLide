@@ -2,6 +2,7 @@ package uk.co.jcox.chemvis.application.moleditor
 
 
 import org.joml.Vector2f
+import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IApplicationState
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -10,6 +11,8 @@ import uk.co.jcox.chemvis.cvengine.InputManager
 import uk.co.jcox.chemvis.cvengine.LevelRenderer
 import uk.co.jcox.chemvis.cvengine.RawInput
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
+import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
 class NewOrganicEditorState (
     private val services: ICVServices,
@@ -33,6 +36,7 @@ class NewOrganicEditorState (
         atomBondTool.setCommit {
             workState.makeCheckpoint(it.clone())
         }
+
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
@@ -64,6 +68,9 @@ class NewOrganicEditorState (
 
     override fun render(viewport: Vector2f) {
         val transientUI = EntityLevel()
+
+        val textTest = transientUI.addEntity()
+        textTest.addComponent(TransformComponent(0.0f, 0.0f, 0.0f))
 
         atomBondTool.renderTransientUI(transientUI)
         levelRenderer.renderLevel(transientUI, camera2D, viewport)

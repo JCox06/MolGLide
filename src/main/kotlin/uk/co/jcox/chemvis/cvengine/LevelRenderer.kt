@@ -194,7 +194,7 @@ class LevelRenderer (
                 return
             }
 
-            val mesh = Shaper2D.rectangle(renderX, renderY, glyphData.glyphWidth * textComponent.scale, glyphData.glyphHeight * textComponent.scale,
+            val mesh = Shaper2D.rectangle(renderX , renderY, glyphData.glyphWidth * textComponent.scale, glyphData.glyphHeight * textComponent.scale,
                 Vector2f(
                     glyphData.textureUnitAddX + glyphData.textureUnitX,
                     glyphData.textureUnitAddY - glyphData.textureUnitY
@@ -205,7 +205,7 @@ class LevelRenderer (
             )
 
             batcher.addBatch(mesh.pack(), mesh.indices)
-            renderX += glyphData.glyphWidth * textComponent.scale * 2
+            renderX += glyphData.glyphWidth * textComponent.scale * 2 //2 because the rectangle is drawn from the centre
         }
     }
 

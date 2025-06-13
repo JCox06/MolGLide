@@ -16,6 +16,7 @@ class ApplicationUI {
 
     private var showMetrics = false
     private var showStyles = false
+    private var showWelcome = true
 
     fun mainMenu(services: ICVServices, workState: WorkState, tool: Tool, formula: String) {
         if (ImGui.beginMainMenuBar()) {
@@ -59,6 +60,11 @@ class ApplicationUI {
 
             ImGui.separator()
 
+            if (ImGui.menuItem("Show Welcome")) {
+                showWelcome = !showWelcome
+
+            }
+
             if (ImGui.menuItem("Visit Website")) {
                 Desktop.getDesktop().browse(URI("https://github.com/JCox06/MolGLide/tree/master"))
 
@@ -73,7 +79,6 @@ class ApplicationUI {
             ImGui.endMenu()
         }
     }
-
 
     private fun renderEdit(workState: WorkState, tool: Tool) {
         if (ImGui.beginMenu("Edit")) {
@@ -91,7 +96,6 @@ class ApplicationUI {
             ImGui.endMenu()
         }
     }
-
 
     private fun renderDebug() {
         if (ImGui.beginMenu("Debug")) {
@@ -116,6 +120,32 @@ class ApplicationUI {
 
         if (showStyles) {
             ImGui.showStyleEditor()
+        }
+
+        if (showWelcome) {
+            renderWelcome()
+        }
+    }
+
+    private fun renderWelcome() {
+        ImGui.openPopup("Welcome to MolGLide")
+        if (ImGui.beginPopupModal("Welcome to MolGLide", null, 0)) {
+
+
+            ImGui.text("Thank you for using MolGLide!")
+            ImGui.text("This is a very simple molecule editor that allows you to create simple organic molecules.")
+
+            ImGui.separator()
+
+            ImGui.bulletText("Use the AtomBondTool to create and insert atoms")
+            ImGui.bulletText("Find the info about an atom using the InfoTool")
+            ImGui.bulletText("Go back using standard undo/redo")
+
+            if (ImGui.button("Close Welcome Menu")) {
+                showWelcome = false
+                ImGui.closeCurrentPopup()
+            }
+            ImGui.endPopup()
         }
     }
 

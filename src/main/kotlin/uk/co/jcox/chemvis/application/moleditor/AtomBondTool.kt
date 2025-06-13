@@ -2,12 +2,13 @@ package uk.co.jcox.chemvis.application.moleditor
 
 import org.joml.Vector2f
 import org.joml.Vector3f
-import org.lwjgl.system.linux.XSelectionEvent
+import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.a
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionAction
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
+import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
 
@@ -22,6 +23,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
     override fun update() {
 
+        //Handle when the user is dragging an atom
         val atomToDrag = draggingAtom
 
         if (! actionInProgress || atomToDrag == null) {
@@ -44,6 +46,25 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         val entityTransform = draggingAtomLevel.getComponent(TransformComponent::class)
         entityTransform.x = draggedPos.x - effectiveParentPos.x
         entityTransform.y = draggedPos.y - effectiveParentPos.y
+
+        //Now we need to move the implicit Ghost hydrogen group if the new bond position is going through it
+
+
+        //For the pre-existing atom
+        if (context.selectionManager.primarySelection is Selection.Active) {
+            val select = context.selectionManager.primarySelection as Selection.Active
+            val selecAtom = getWorkingState().level.findByID(select.id)
+            selecAtom?.let {
+                moveImplicitHydrogenGhostGroup(Vector2f(entityTransform.x, entityTransform.y), it)
+
+                //For the atom being dragged
+                val selecAtomTrans = selecAtom.getComponent(TransformComponent::class)
+                //todo - This is not working properly, so commenting out for now and coming back to it later
+//                moveImplicitHydrogenGhostGroup(Vector2f(selecAtomTrans.x, selecAtomTrans.y), draggingAtomLevel)
+
+            }
+        }
+
     }
 
     override fun updateProposedModifications() {
@@ -107,4 +128,66 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         selectionMarker.addComponent(ObjComponent(MolGLide.SELECTION_MARKER_MESH, MolGLide.SELECTION_MARKER_MATERIAL))
     }
 
+
+    private fun moveImplicitHydrogenGhostGroup(bondLineEnd: Vector2f, atom: EntityLevel) {
+        //Moves the implicit hydrogen ghost group if the bond is going through it
+        //The action event will handle removing it
+
+
+        //1) Get the implicit hydrogen group
+        var ghostGroup: EntityLevel? = null
+        atom.traverseFunc {
+            if (it.hasComponent(GhostImplicitHydrogenGroupComponent::class)) {
+                ghostGroup = it
+                return@traverseFunc
+            }
+        }
+
+        val groupPos = ghostGroup?.getComponent(TransformComponent::class)
+        val atomPos = atom.getComponent(TransformComponent::class)
+
+        if (groupPos == null) {
+            return
+        }
+
+        val newAtomPos = Vector3f(groupPos.x + atomPos.x, groupPos.y + atomPos.y, groupPos.z + atomPos.z)
+
+
+        //2) Check if the bond line end is close to the group position
+        val initialTest = bondLineEnd.distance(newAtomPos.x, newAtomPos.y)
+
+        //3) Now check the distance if we use the alternative position
+        val secondTest = bondLineEnd.distance(-newAtomPos.x, -newAtomPos.y)
+
+        if (initialTest == secondTest) {
+            return
+        }
+
+        if (initialTest > secondTest) {
+            //4) If the initial test is closer, we can just leave it as is
+            return
+        }
+
+
+        //5) If the second test is closer, we need to move the group
+        val newPos = getPositionForGhostPlacement(ghostGroup)
+        val transformComp = ghostGroup.getComponent(TransformComponent::class)
+        transformComp.x = newPos.x
+        transformComp.y = newPos.y
+        transformComp.z = newPos.z
+    }
+
+
+
+    private fun getPositionForGhostPlacement(ghostGroup: EntityLevel) : Vector3f {
+        if (!ghostGroup.hasComponent(TextComponent::class)) {
+            return Vector3f(0.0f, 0.0f, 0.0f)
+        }
+
+        val textComp = ghostGroup.getComponent(TextComponent::class)
+        val lengthOffset = textComp.text.length * NewOrganicEditorState.INLINE_DIST /2f
+        val ghostGroupPos = ghostGroup.getComponent(TransformComponent::class)
+        //Because the text itself consumes space, the position of the group needs to be adjusted
+        return Vector3f(-lengthOffset - ghostGroupPos.x, ghostGroupPos.y, NewOrganicEditorState.XY_PLANE)
+    }
 }

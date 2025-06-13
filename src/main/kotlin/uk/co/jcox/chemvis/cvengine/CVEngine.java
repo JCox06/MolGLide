@@ -226,8 +226,6 @@ public class CVEngine implements ICVServices, AutoCloseable{
         state.init();
         this.currentState = state;
     }
-
-
     @Override
     public void shutdown() {
         GLFW.glfwSetWindowShouldClose(this.windowHandle, true);
