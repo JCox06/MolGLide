@@ -24,4 +24,8 @@ public interface IMoleculeManager {
     void recalculate(UUID molecule);
 
     int getImplicitHydrogens(UUID molecule, UUID atom);
+
+    void updateBondOrder(UUID molecule, UUID bond, int newBondOrder);
+
+    UUID getJoiningBond(UUID molecule, UUID atomA, UUID atomB);
 }

@@ -1,11 +1,13 @@
 package uk.co.jcox.chemvis.application.moleditor
 
+import org.checkerframework.checker.units.qual.m
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.a
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionAction
+import uk.co.jcox.chemvis.application.moleditor.actions.BondOrderAction
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
@@ -20,6 +22,8 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
     private var draggingAtom: UUID? = null
     private var dragBase = Vector3f()
+
+    private var allowBondOrderChanges = true
 
     override fun update() {
 
@@ -62,9 +66,15 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
                 //todo - This is not working properly, so commenting out for now and coming back to it later
 //                moveImplicitHydrogenGhostGroup(Vector2f(selecAtomTrans.x, selecAtomTrans.y), draggingAtomLevel)
 
+
+
+
+                //TODO - JUST PUTTING THIS HERE FOR NOW!
+                //We also need to check if the user drags the dragging atom to the position of the selected atom
+                //If they do this, then we need to ignore the previous action, and create a DoubleBondInsertionAction
+                checkForBondOrderChange(parentEntity, selecAtom)
             }
         }
-
     }
 
     override fun updateProposedModifications() {
@@ -107,6 +117,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
         if (actionInProgress) {
             draggingAtom = null
+            allowBondOrderChanges = true
             pushChanges()
         }
     }
@@ -189,5 +200,46 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         val ghostGroupPos = ghostGroup.getComponent(TransformComponent::class)
         //Because the text itself consumes space, the position of the group needs to be adjusted
         return Vector3f(-lengthOffset - ghostGroupPos.x, ghostGroupPos.y, NewOrganicEditorState.XY_PLANE)
+    }
+
+
+    private fun checkForBondOrderChange(levelMolecule: EntityLevel, selecAtom: EntityLevel) {
+        //Get position of the dragging atom First
+        val atomDrag = draggingAtom
+        if (atomDrag == null) {
+            return
+        }
+
+        val atomDragEntity = getWorkingState().level.findByID(atomDrag)
+
+        if (atomDragEntity == null) {
+            return
+        }
+
+        val draggingAtomPos = atomDragEntity.getAbsolutePosition()
+
+        //Now see if it matches any of the atoms in the scenegraph
+
+        var matcher: EntityLevel? = null
+        getWorkingState().level.traverseFunc {
+            if (it.getAbsolutePosition() == draggingAtomPos && it != atomDragEntity) {
+                matcher = it
+                return@traverseFunc
+            }
+        }
+
+        matcher?.let {
+            //Now send a bond order action
+            if (allowBondOrderChanges) {
+                refreshWorkingState()
+                actionInProgress = true
+                //Stop the new atom or whatever being added and restore the working state to that of the actual level
+
+
+                val action = BondOrderAction(levelMolecule, it, selecAtom)
+                action.runAction(getWorkingState().molManager, getWorkingState().level)
+                allowBondOrderChanges = false
+            }
+        }
     }
 }
