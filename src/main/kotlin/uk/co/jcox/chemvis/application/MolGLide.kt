@@ -81,12 +81,6 @@ class MolGLide : IApplication, IInputSubscriber {
         lastMouseY = yPos.toFloat()
     }
 
-    override fun clickEvent(inputManager: InputManager, key: RawInput) {
-        if (key == RawInput.KEY_P) {
-            services.toggleDebugPanel()
-        }
-    }
-
     private fun loadCoreAssets() {
         val selectionMarkerMesh = Shaper2D.circle(0.0f, 0.0f, 1.0f)
         services.resourceManager().manageMesh(SELECTION_MARKER_MESH, selectionMarkerMesh)

@@ -1,0 +1,252 @@
+package uk.co.jcox.chemvis.cvengine
+
+import imgui.ImGui
+import imgui.ImVec2
+import imgui.flag.ImGuiConfigFlags
+import imgui.gl3.ImGuiImplGl3
+import imgui.glfw.ImGuiImplGlfw
+import org.joml.Vector2f
+import org.joml.Vector2i
+import org.lwjgl.glfw.Callbacks
+import org.lwjgl.glfw.GLFW
+import org.lwjgl.glfw.GLFWErrorCallback
+import org.lwjgl.opengl.GL
+import org.lwjgl.opengl.GL11
+import org.lwjgl.system.Callback
+import org.tinylog.Logger
+import java.io.File
+import java.lang.AutoCloseable
+
+class CVEngine(private val name: String) : ICVServices, AutoCloseable {
+    private val lwjglErrorCallback: Callback? = null
+    private var windowHandle: Long = 0
+
+    private lateinit var openGlImGui: ImGuiImplGl3
+    private lateinit var glfwImGui: ImGuiImplGlfw
+    private lateinit var inputManager: InputManager
+    private lateinit var batcher: Batch2D
+    private lateinit var resourceManager: IResourceManager
+    private lateinit var levelRenderer: LevelRenderer
+
+    private var currentState: IApplicationState? = null
+
+    private val viewport = Vector2f()
+
+    private fun init() {
+        Logger.info{"Starting CV3D Engine..."}
+
+        GLFW.glfwSetErrorCallback { code: Int, desc: Long ->
+            Logger.error { "[GLFW ERROR] " + code + GLFWErrorCallback.getDescription(desc) }
+        }
+
+        check(GLFW.glfwInit()) { "Could not init GLFW" }
+
+        //Set render hints
+        GLFW.glfwDefaultWindowHints()
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3)
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3)
+        GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE)
+        GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GLFW.GLFW_TRUE)
+
+        this.windowHandle = GLFW.glfwCreateWindow(800, 600, name, 0, 0)
+
+        if (this.windowHandle == 0L) {
+            throw RuntimeException("Filed to create a window and setup OpenGL")
+        }
+
+        //Setup window
+        GLFW.glfwMakeContextCurrent(this.windowHandle)
+        GLFW.glfwSwapInterval(1)
+        GL.createCapabilities()
+        //        this.lwjglErrorCallback = GLUtil.setupDebugMessageCallback();
+        GL11.glClearColor(0.02f, 0.02f, 0.02f, 1.0f)
+
+        initialiseCoreServices()
+        initialiseIntegratedResources()
+
+
+        GL11.glEnable(GL11.GL_DEPTH_TEST)
+
+        setupImGui()
+
+        Logger.info{"GLFW and OpenGL have successfully started"}
+    }
+
+
+    private fun initialiseCoreServices() {
+        Logger.info{"Initialising CV3D core services..."}
+        this.inputManager = GLFWInputManager(windowHandle)
+        this.batcher = Batch2D()
+        this.resourceManager = ResourceManager()
+        this.levelRenderer = LevelRenderer(batcher, resourceManager)
+        Logger.info{"Success! InputManager, Batcher, ResourceManager, and LevelRenderer have all started"}
+    }
+
+
+    private fun initialiseIntegratedResources() {
+        Logger.info{"Loading integrated resources..."}
+        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_TEXTURE, File("data/integrated/shaders/simpleTexture.vert"), File("data/integrated/shaders/simpleTexture.frag"), null)
+        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_COLOUR, File("data/integrated/shaders/simpleLine.vert"), File(("data/integrated/shaders/simpleLine.frag")), File("data/integrated/shaders/simpleLine.geom"))
+    }
+
+
+    private fun setupImGui() {
+        ImGui.createContext()
+        ImGui.styleColorsDark()
+
+        val style = ImGui.getStyle()
+        style.windowTitleAlign = ImVec2(0.5f, 0.5f)
+        style.windowBorderSize = 0.0f
+        style.childBorderSize = 0.0f
+        style.frameBorderSize = 0.0f
+        style.tabBorderSize = 0.0f
+        style.frameRounding = 5.0f
+        style.scrollbarRounding = 0.0f
+        style.setDisplaySafeAreaPadding(20.0f, 9.0f)
+
+        glfwImGui = ImGuiImplGlfw()
+        openGlImGui = ImGuiImplGl3()
+
+        val io = ImGui.getIO()
+        val experience = io.fonts.addFontFromFileTTF("data/integrated/fonts/Roboto-Black.ttf", 18f)
+        io.fontDefault = experience
+        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable)
+        io.addConfigFlags(ImGuiConfigFlags.DockingEnable)
+        io.configViewportsNoDecoration = false
+        io.configViewportsNoTaskBarIcon = false
+        io.iniFilename = null
+
+
+        glfwImGui.init(this.windowHandle, true)
+        openGlImGui.init()
+    }
+
+    fun run(application: IApplication) {
+        Logger.info("Ready, initialising application: {}", name)
+        init()
+        application.init(this)
+
+
+        Logger.info{"Engine startup successful! Entering main render loop"}
+
+        while (!GLFW.glfwWindowShouldClose(this.windowHandle)) {
+            if (inputManager.keyClick(RawInput.KEY_Q) && inputManager.keyClick(RawInput.LCTRL)) {
+                shutdown()
+            }
+
+            glfwImGui.newFrame()
+            openGlImGui.newFrame()
+            ImGui.newFrame()
+
+            //Always run the main application first
+            application.loop()
+
+            //Then check if the current state needs running
+            if (ImGui.getIO().wantCaptureMouse) {
+                inputManager.blockInput(true)
+            } else {
+                inputManager.blockInput(false)
+            }
+
+            if (currentState != null) {
+                currentState!!.update(inputManager, GLFW.glfwGetTime().toFloat())
+                currentState!!.render(viewport)
+            }
+
+            ImGui.render()
+            openGlImGui.renderDrawData(ImGui.getDrawData())
+
+
+            //ImGui flags
+            if (ImGui.getIO().hasConfigFlags(ImGuiConfigFlags.ViewportsEnable)) {
+                val toRestore = GLFW.glfwGetCurrentContext()
+                ImGui.updatePlatformWindows()
+                ImGui.renderPlatformWindowsDefault()
+                GLFW.glfwMakeContextCurrent(toRestore)
+            }
+
+
+            GLFW.glfwSwapBuffers(this.windowHandle)
+            GLFW.glfwPollEvents()
+        }
+        application.cleanup()
+    }
+
+
+    override fun windowMetrics(): Vector2i {
+        val width = IntArray(1)
+        val height = IntArray(1)
+        GLFW.glfwGetWindowSize(this.windowHandle, width, height)
+        return Vector2i(width[0], height[0])
+    }
+
+
+    override fun setCurrentApplicationState(state: IApplicationState) {
+        if (this.currentState != null) {
+            if (currentState is IInputSubscriber) {
+                this.inputManager.unsubscribe(currentState as IInputSubscriber)
+            }
+
+            this.currentState!!.cleanup()
+        }
+        state.init()
+        this.currentState = state
+    }
+
+    override fun shutdown() {
+        GLFW.glfwSetWindowShouldClose(this.windowHandle, true)
+    }
+
+    override fun inputs(): InputManager {
+        return inputManager
+    }
+
+    override fun renderer(): Batch2D {
+        return this.batcher
+    }
+
+    override fun levelRenderer(): LevelRenderer {
+        return levelRenderer
+    }
+
+    override fun resourceManager(): IResourceManager {
+        return this.resourceManager
+    }
+
+
+    override fun setViewport(a: Int, b: Int, c: Int, d: Int) {
+        viewport.x = c.toFloat()
+        viewport.y = d.toFloat()
+        GL11.glViewport(a, b, c, d)
+    }
+
+    override fun close() {
+        Logger.info{"====SHUTTING-DOWN===="}
+
+        batcher.close()
+        resourceManager.destroy()
+
+        this.lwjglErrorCallback?.close()
+
+        openGlImGui.shutdown()
+        //this causes null pointer exception and I don't know why
+        //According to the documentation I have done everything correctly ?
+//        glfwImGui?.shutdown();
+        ImGui.destroyContext()
+
+        GLFW.glfwSetErrorCallback(null)!!.free()
+
+        Callbacks.glfwFreeCallbacks(this.windowHandle)
+        GLFW.glfwDestroyWindow(this.windowHandle)
+        GLFW.glfwTerminate()
+
+        Logger.info{"Shut down successfully"}
+    }
+
+    companion object {
+        const val SHADER_SIMPLE_TEXTURE: String = "integrated/simple_font"
+        const val SHADER_SIMPLE_COLOUR: String = "integrated/simple_line"
+
+        const val STD_CHARACTER_SET: String = "@!?- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12345678"
+    }
+}

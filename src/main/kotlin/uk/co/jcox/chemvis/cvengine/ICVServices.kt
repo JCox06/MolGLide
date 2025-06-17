@@ -15,8 +15,6 @@ interface ICVServices {
 
     fun resourceManager(): IResourceManager
 
-    fun toggleDebugPanel()
-
     fun setViewport(a: Int, b: Int, c: Int, d: Int)
 
     fun shutdown()
