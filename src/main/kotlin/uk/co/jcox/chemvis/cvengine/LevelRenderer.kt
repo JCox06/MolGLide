@@ -104,7 +104,7 @@ class LevelRenderer (
         val entityTo = level.findByID(lineComponent.toCompB)?.getAbsolutePosition()
 
         if (entityFrom != null && entityTo != null) {
-            val mesh = Shaper2D.line(entityFrom.x, entityFrom.y, entityFrom.z, entityTo.x, entityTo.y, entityTo.z)
+            val mesh = Shaper2D.line(entityFrom.x + transformComp.x, entityFrom.y + transformComp.y, entityFrom.z + transformComp.z, entityTo.x + transformComp.x, entityTo.y + transformComp.y, entityTo.z + transformComp.z)
 
             batcher.addBatch(mesh.pack(), mesh.indices)
         }

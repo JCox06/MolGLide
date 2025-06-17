@@ -127,5 +127,6 @@ class NewOrganicEditorState (
         const val CONNECTION_DIST = 35.0f
         const val BOND_WIDTH = 2.5f
         const val CARBON_IMPLICIT_LIMIT = 4
+        const val DOUBLE_BOND_DISTANCE = 0.1f
     }
 }
