@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application.moleditor.actions
 
+import org.checkerframework.checker.units.qual.mol
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.moleditor.GhostImplicitHydrogenGroupComponent
@@ -36,11 +37,8 @@ class AtomCreationAction(
         //Always add implicit hydrogens
         if (insert.hydrogenable) {
             molManager.recalculate(structMolecule)
-            val inserted = molManager.getImplicitHydrogens(structMolecule, structFirstAtom)
-            val fakeH = LevelViewUtil.createLabel(levelFirstAtom, "H$inserted", NewOrganicEditorState.INLINE_DIST, 0.0f)
-            fakeH.addComponent(GhostImplicitHydrogenGroupComponent())
+            addGhostGroup(molManager, levelFirstAtom, structMolecule, structFirstAtom)
         }
-
         return structMolecule
     }
 }

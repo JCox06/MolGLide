@@ -227,7 +227,7 @@ class ResourceManager : IResourceManager{
 
         //Now load this as an image into OpenGL
         val textureData: ByteBuffer = convertImageData(atlasImage)
-        val glTextureObject: Int = loadTextureToOpenGL(textureData, squareTextureSize, squareTextureSize, GL11.GL_LINEAR, GL11.GL_LINEAR, false)
+        val glTextureObject: Int = loadTextureToOpenGL(textureData, squareTextureSize, squareTextureSize, GL11.GL_LINEAR_MIPMAP_LINEAR, GL11.GL_LINEAR, false)
 
         textures[id] = glTextureObject
 

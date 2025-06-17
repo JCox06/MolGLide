@@ -1,19 +1,17 @@
 package uk.co.jcox.chemvis.application.moleditor.actions
 
-import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
 import org.joml.times
-import org.xmlcml.euclid.Vector3
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
+import uk.co.jcox.chemvis.application.moleditor.GhostImplicitHydrogenGroupComponent
 import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
 import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
-import javax.swing.text.html.parser.Entity
 
 class BondOrderAction (
     val levelMolecule: EntityLevel,
@@ -30,10 +28,12 @@ class BondOrderAction (
 
         val structBond = molManager.getJoiningBond(structMolecule.molID, structAtomA.molID, structAtomB.molID)
 
-
         updateStruct(molManager, structMolecule.molID, structBond)
-
         updateLevel(level)
+
+        molManager.recalculate(structMolecule.molID)
+        replaceOldLabels(molManager, structMolecule.molID, structAtomA.molID, levelAtomA)
+        replaceOldLabels(molManager, structMolecule.molID, structAtomB.molID, levelAtomB)
 
         return structMolecule.molID
     }

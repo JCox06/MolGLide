@@ -3,21 +3,21 @@ package uk.co.jcox.chemvis.cvengine
 import org.joml.Vector2i
 
 interface ICVServices {
-    open fun windowMetrics(): Vector2i
+    fun windowMetrics(): Vector2i
 
-    open fun setCurrentApplicationState(state: IApplicationState)
+    fun setCurrentApplicationState(state: IApplicationState)
 
-    open fun inputs(): InputManager
+    fun inputs(): InputManager
 
-    open fun renderer(): Batch2D
+    fun renderer(): Batch2D
 
-    open fun levelRenderer(): LevelRenderer
+    fun levelRenderer(): LevelRenderer
 
-    open fun resourceManager(): IResourceManager
+    fun resourceManager(): IResourceManager
 
-    open fun toggleDebugPanel()
+    fun toggleDebugPanel()
 
-    open fun setViewport(a: Int, b: Int, c: Int, d: Int)
+    fun setViewport(a: Int, b: Int, c: Int, d: Int)
 
-    open fun shutdown()
+    fun shutdown()
 }

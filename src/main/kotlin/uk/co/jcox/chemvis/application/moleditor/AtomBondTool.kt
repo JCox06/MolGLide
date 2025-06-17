@@ -235,8 +235,13 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
                 actionInProgress = true
                 //Stop the new atom or whatever being added and restore the working state to that of the actual level
 
+                //This also requires to re-collect the level entities as they might have changed
+                //todo - This class should probably just work on the IDs this is just temp for now:
+                val mol = getWorkingState().level.findByID(levelMolecule.id)
+                val atomA = getWorkingState().level.findByID(it.id)
+                val atomB = getWorkingState().level.findByID(selecAtom.id)
 
-                val action = BondOrderAction(levelMolecule, it, selecAtom)
+                val action = BondOrderAction(mol!!, atomA!!, atomB!!)
                 action.runAction(getWorkingState().molManager, getWorkingState().level)
                 allowBondOrderChanges = false
             }
