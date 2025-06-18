@@ -14,6 +14,7 @@ import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GLUtil
 import org.lwjgl.system.Callback
+import org.lwjgl.system.Configuration
 import org.tinylog.Logger
 import java.io.File
 import java.lang.AutoCloseable
@@ -26,6 +27,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private lateinit var glfwImGui: ImGuiImplGlfw
     private lateinit var inputManager: InputManager
     private lateinit var batcher: Batch2D
+    private lateinit var instancer: InstancedRenderer
     private lateinit var resourceManager: IResourceManager
     private lateinit var levelRenderer: LevelRenderer
 
@@ -64,6 +66,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
         initialiseCoreServices()
         batcher.setup()
+        instancer.setup()
         initialiseIntegratedResources()
 
 
@@ -80,18 +83,19 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         Logger.info{"Initialising CV3D core services..."}
         this.inputManager = GLFWInputManager(windowHandle)
         this.batcher = Batch2D()
+        this.instancer = InstancedRenderer()
         this.resourceManager = ResourceManager()
-        this.levelRenderer = LevelRenderer(batcher, resourceManager)
-        Logger.info{"Success! InputManager, Batcher, ResourceManager, and LevelRenderer have all started"}
+        this.levelRenderer = LevelRenderer(batcher, instancer, resourceManager)
+        Logger.info{"Success! InputManager, Batcher, Instancer, ResourceManager, and LevelRenderer have all started"}
     }
 
 
     private fun initialiseIntegratedResources() {
         Logger.info{"Loading integrated resources..."}
         this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_TEXTURE, File("data/integrated/shaders/simpleTexture.vert"), File("data/integrated/shaders/simpleTexture.frag"), null)
-        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_LINE, File("data/integrated/shaders/simpleLine.vert"), File(("data/integrated/shaders/simpleLine.frag")), File("data/integrated/shaders/simpleLine.geom"))
+        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_LINE, File("data/integrated/shaders/instanceLine.vert"), File(("data/integrated/shaders/instanceLine.frag")), File("data/integrated/shaders/instanceLine.geom"))
 
-        this.resourceManager.manageMesh(MESH_UNIT_LINE, Shaper2D.line(0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f))
+        this.resourceManager.manageMesh(MESH_HOLDER_LINE, Shaper2D.line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f), instancer)
     }
 
 
@@ -229,6 +233,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         Logger.info{"====SHUTTING-DOWN===="}
 
         batcher.close()
+        instancer.close()
         resourceManager.destroy()
 
         this.lwjglErrorCallback?.close()
@@ -254,7 +259,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
         const val STD_CHARACTER_SET: String = "@!?- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12345678"
 
-        const val MESH_UNIT_LINE: String = "integrated/unit_line"
+        const val MESH_HOLDER_LINE: String = "integrated/unit_line"
 
 
         //[3 float pos] [2 float texture] = 5 floats

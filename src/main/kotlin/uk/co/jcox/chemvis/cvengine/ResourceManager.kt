@@ -78,12 +78,12 @@ class ResourceManager : IResourceManager{
         }
     }
 
-    override fun manageMesh(id: String, mesh: Mesh) {
+    override fun manageMesh(id: String, mesh: Mesh, instancedRenderer: InstancedRenderer) {
         Logger.info { "Managing external mesh and loading into OpenGL $id" }
 
         //Meshes that are sent to the ResourceManager need to be first loaded into OpenGL
         //Once loaded they can be retrieved as a VAO
-        meshes[id] = loadMeshIntoOpenGL(mesh)
+        meshes[id] = loadMeshIntoOpenGL(instancedRenderer, mesh)
     }
 
     override fun destroyMesh(id: String) {
@@ -431,7 +431,10 @@ class ResourceManager : IResourceManager{
     }
 
 
-    private fun loadMeshIntoOpenGL(mesh: Mesh) : GLMesh {
+    private fun loadMeshIntoOpenGL(instancedRenderer: InstancedRenderer, mesh: Mesh) : GLMesh {
+
+        //Currently only supports meshes that should be lines
+
         val vertexSet = mesh.pack()
         val vertexArray = GL30.glGenVertexArrays()
         GL30.glBindVertexArray(vertexArray)
@@ -451,6 +454,18 @@ class ResourceManager : IResourceManager{
         GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, CVEngine.VERTEX_SIZE_BYTES, 3L * Float.SIZE_BYTES)
         GL20.glEnableVertexAttribArray(0)
         GL20.glEnableVertexAttribArray(1)
+
+        //Instanced OpenGL attribute objects
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, instancedRenderer.lineInstancedBuffer)
+        GL20.glVertexAttribPointer(2, 3, GL11.GL_FLOAT, false, 7 * Float.SIZE_BYTES, 0L)
+        GL20.glVertexAttribPointer(3, 3, GL11.GL_FLOAT, false, 7 * Float.SIZE_BYTES, 3L * Float.SIZE_BYTES)
+        GL20.glVertexAttribPointer(4, 1, GL11.GL_FLOAT, false, 7 * Float.SIZE_BYTES, 6L * Float.SIZE_BYTES)
+        GL20.glEnableVertexAttribArray(2)
+        GL20.glEnableVertexAttribArray(3)
+        GL20.glEnableVertexAttribArray(4)
+        GL33.glVertexAttribDivisor(2, 1)
+        GL33.glVertexAttribDivisor(3, 1)
+        GL33.glVertexAttribDivisor(4, 1)
 
         val bufferList = listOf(vertexBuffer, elementBuffer)
 

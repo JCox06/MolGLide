@@ -1,11 +1,11 @@
 package uk.co.jcox.chemvis.cvengine
 
+import org.apache.jena.vocabulary.VOID.entities
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
-import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
@@ -14,6 +14,7 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
 class LevelRenderer (
     private val batcher: Batch2D,
+    private val instancer: InstancedRenderer,
     private val resourceManager: IResourceManager
 ) {
 
@@ -34,8 +35,8 @@ class LevelRenderer (
         traverseAndCollect(level, textEntities, objectEntities, lineEntities)
 
 
-        renderTexts(textEntities, batcher, resourceManager, camera2D)
-        renderLines(lineEntities, batcher, resourceManager, camera2D, viewport)
+        renderTexts(textEntities, camera2D)
+        renderLines(level, lineEntities, camera2D, viewport)
     }
 
 
@@ -66,7 +67,7 @@ class LevelRenderer (
     }
 
 
-    private fun renderTexts(entities: MutableList<EntityLevel>, batch2D: Batch2D, resourceManager: IResourceManager, camera2D: Camera2D) {
+    private fun renderTexts(entities: MutableList<EntityLevel>, camera2D: Camera2D) {
 
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
@@ -74,14 +75,14 @@ class LevelRenderer (
         program.uniform("uPerspective", camera2D.combined())
 
         entities.forEach {
-            renderText(it, batch2D, resourceManager, program)
+            renderText(it, program)
         }
 
         GL11.glDisable(GL11.GL_BLEND)
     }
 
 
-    private fun renderText(textEntity: EntityLevel, batcher: Batch2D, resourceManager: IResourceManager, program: ShaderProgram) {
+    private fun renderText(textEntity: EntityLevel, program: ShaderProgram) {
         val textComponent = textEntity.getComponent(TextComponent::class)
         val transformComponent = textEntity.getComponent(TransformComponent::class)
 
@@ -135,16 +136,38 @@ class LevelRenderer (
     }
 
 
-    private fun renderLines(entities: MutableList<EntityLevel>, batch2D: Batch2D, resourceManager: IResourceManager, camera2D: Camera2D, viewport: Vector2f) {
+    private fun renderLines(level: EntityLevel, entities: MutableList<EntityLevel>, camera2D: Camera2D, viewport: Vector2f) {
         val lineProgram = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_LINE)
         lineProgram.uniform("uPerspective", camera2D.combined())
         lineProgram.uniform("u_viewport", viewport)
         lineProgram.uniform("uModel", Matrix4f())
 
-        val glMesh = resourceManager.getMesh(CVEngine.MESH_UNIT_LINE)
+        val glMesh = resourceManager.getMesh(CVEngine.MESH_HOLDER_LINE)
 
-        GL30.glBindVertexArray(glMesh.vertexArray)
+        val instanceData = mutableListOf<Float>()
 
+        for (line in entities) {
+            if (!line.hasComponent(LineDrawerComponent::class)) {
+                continue
+            }
+
+            val lineComp = line.getComponent(LineDrawerComponent::class)
+
+            val startEntity = level.findByID(lineComp.fromCompA)
+            val endEntity = level.findByID(lineComp.toCompB)
+
+            val startTrans = startEntity?.getAbsolutePosition()
+            val endTrans = endEntity?.getAbsolutePosition()
+
+            if (startTrans == null || endTrans == null) {
+                continue
+            }
+
+            val perInstanceData = listOf(startTrans.x, startTrans.y, startTrans.z, endTrans.x, endTrans.y, endTrans.z, lineComp.width)
+
+            instanceData.addAll(perInstanceData)
+        }
+        instancer.drawLines(glMesh, instanceData, instanceData.size / 7 )
     }
 
 }

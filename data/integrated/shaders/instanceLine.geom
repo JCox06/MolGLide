@@ -16,10 +16,14 @@
 
 #version 330 core
 
-layout(lines) in;
+layout(points) in;
 layout(triangle_strip, max_vertices = 4) out;
 
-uniform float u_lineThickness = 1.0f;
+in float lThickness[1];
+
+in vec4 lPos1[1];
+in vec4 lPos2[1];
+
 uniform vec2 u_viewport;
 
 
@@ -54,8 +58,8 @@ void main() {
     //gl_in = Built in variable (has access to vertex output)
 
     //Step 1 - Get the two vertices that correspond to the start of the line and end of the line
-    vec4 cs_lineStart = gl_in[0].gl_Position;
-    vec4 cs_lineEnd = gl_in[1].gl_Position;
+    vec4 cs_lineStart = lPos1[0];
+    vec4 cs_lineEnd = lPos2[0];
 
     //Step 2 - Convert to NDC by taking clip space and dividing by w comp
     //This gives us a 2D scene to work with, allowing the z component to be dropped.
@@ -63,7 +67,7 @@ void main() {
     vec2 ndc_lineEnd = cs_lineEnd.xy / cs_lineEnd.w;
     vec2 ndc_direction = normalize(ndc_lineEnd - ndc_lineStart);
 
-    float ndc_lineScale = u_lineThickness;
+    float ndc_lineScale = lThickness[0];
 
     vec2 ndc_dir_perp = vec2(ndc_direction.y, -ndc_direction.x);
 

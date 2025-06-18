@@ -9,7 +9,7 @@ interface IResourceManager {
     fun useProgram(programID: String): ShaderProgram
     fun destroyProgram(programID: String)
 
-    fun manageMesh(id: String, mesh: Mesh)
+    fun manageMesh(id: String, mesh: Mesh, instancedRenderer: InstancedRenderer)
 
     fun manageMaterial(id: String, material: Material)
 
