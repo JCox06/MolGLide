@@ -5,7 +5,6 @@ import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL30
 import org.lwjgl.opengl.GL33
 import java.lang.AutoCloseable
-import kotlin.math.sign
 
 class InstancedRenderer : AutoCloseable {
 
@@ -26,7 +25,7 @@ class InstancedRenderer : AutoCloseable {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, lineInstancedBuffer)
         GL15.glBufferSubData(GL15.GL_ARRAY_BUFFER, 0L, instancedData.toFloatArray())
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
-        GL33.glDrawElementsInstanced(GL11.GL_POINTS, mesh.indices, GL11.GL_UNSIGNED_INT, 0,count)
+        GL33.glDrawElementsInstanced(GL11.GL_POINTS, mesh.vertices, GL11.GL_UNSIGNED_INT, 0,count)
     }
 
     override fun close() {

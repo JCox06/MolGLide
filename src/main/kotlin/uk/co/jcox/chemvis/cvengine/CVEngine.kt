@@ -14,7 +14,6 @@ import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GLUtil
 import org.lwjgl.system.Callback
-import org.lwjgl.system.Configuration
 import org.tinylog.Logger
 import java.io.File
 import java.lang.AutoCloseable
@@ -61,7 +60,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         GLFW.glfwMakeContextCurrent(this.windowHandle)
         GLFW.glfwSwapInterval(1)
         GL.createCapabilities()
-//        GLUtil.setupDebugMessageCallback();
+        GLUtil.setupDebugMessageCallback();
         GL11.glClearColor(0.02f, 0.02f, 0.02f, 1.0f)
 
         initialiseCoreServices()
@@ -93,7 +92,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private fun initialiseIntegratedResources() {
         Logger.info{"Loading integrated resources..."}
         this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_TEXTURE, File("data/integrated/shaders/simpleTexture.vert"), File("data/integrated/shaders/simpleTexture.frag"), null)
-        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_LINE, File("data/integrated/shaders/instanceLine.vert"), File(("data/integrated/shaders/instanceLine.frag")), File("data/integrated/shaders/instanceLine.geom"))
+        this.resourceManager.loadShadersFromDisc(SHADER_INSTANCED_LINE, File("data/integrated/shaders/instanceLine.vert"), File(("data/integrated/shaders/instanceLine.frag")), File("data/integrated/shaders/instanceLine.geom"))
 
         this.resourceManager.manageMesh(MESH_HOLDER_LINE, Shaper2D.line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f), instancer)
     }
@@ -210,7 +209,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         return inputManager
     }
 
-    override fun renderer(): Batch2D {
+    override fun batchRenderer(): Batch2D {
         return this.batcher
     }
 
@@ -227,6 +226,11 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         viewport.x = c.toFloat()
         viewport.y = d.toFloat()
         GL11.glViewport(a, b, c, d)
+    }
+
+
+    override fun instancedRenderer(): InstancedRenderer {
+        return this.instancer
     }
 
     override fun close() {
@@ -255,7 +259,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     companion object {
         const val SHADER_SIMPLE_TEXTURE: String = "integrated/simple_font"
-        const val SHADER_SIMPLE_LINE: String = "integrated/simple_line"
+        const val SHADER_INSTANCED_LINE: String = "integrated/simple_line"
 
         const val STD_CHARACTER_SET: String = "@!?- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12345678"
 

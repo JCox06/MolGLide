@@ -1,11 +1,12 @@
 package uk.co.jcox.chemvis.cvengine
 
-import org.apache.jena.vocabulary.VOID.entities
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL30
+import org.lwjgl.opengl.GL33
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
@@ -17,9 +18,6 @@ class LevelRenderer (
     private val instancer: InstancedRenderer,
     private val resourceManager: IResourceManager
 ) {
-
-    //MUCH BETTER CLASS NOW - ALTHOUGH IT WILL NEED TO BE EDITED TO SUPPORT MULTIPLE OBJECT TYPES
-    //I think its probably best to edit this when as needed
 
 
 //    To render a level:
@@ -35,8 +33,23 @@ class LevelRenderer (
         traverseAndCollect(level, textEntities, objectEntities, lineEntities)
 
 
+
+        //There are so few other objects that at the moment it makes no sense
+        //to either batch them or instance them, so they are each rendered with their own GLDrawArrays function
+        //However the meshes used are setup for instance rendering, so if more are needed, they can easily be changed
+        renderObjects(objectEntities, camera2D)
+
+        //Text objects contain dynamic geometry
+        //The meshes are calculated from the Shaper2D each frame and then sent to OpenGL
+        //Therefore texts are rendered through Batch Rendering
         renderTexts(textEntities, camera2D)
+
+
+        //Since there might be a lot of lines, and since all lines have fixed geometry
+        //Then they are rendered by the InstancedRenderer
         renderLines(level, lineEntities, camera2D, viewport)
+
+
     }
 
 
@@ -121,7 +134,8 @@ class LevelRenderer (
             val height = glyphMetrics.glyphHeight * textComponent.scale /2
 
             //Dont understand how I fixed it but it works
-            val meshToDraw = Shaper2D.rectangle(renderX + width, renderY + height, width, height,
+//            val meshToDraw = Shaper2D.rectangle(renderX + width, renderY + height, width, height, (Text rendering works fine If you use this line instead of the one below) - However then the text is uncentred
+            val meshToDraw = Shaper2D.rectangle(renderX + width / 2, renderY, width, height,
                 Vector2f(glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX, glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY),
                 Vector2f(glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
                 Vector2f(0.0f + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
@@ -129,7 +143,7 @@ class LevelRenderer (
             )
 
             batcher.addBatch(meshToDraw.pack(), meshToDraw.indices)
-            renderX += width * 2f
+            renderX += width * 2
         }
 
         batcher.end()
@@ -137,7 +151,7 @@ class LevelRenderer (
 
 
     private fun renderLines(level: EntityLevel, entities: MutableList<EntityLevel>, camera2D: Camera2D, viewport: Vector2f) {
-        val lineProgram = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_LINE)
+        val lineProgram = resourceManager.useProgram(CVEngine.SHADER_INSTANCED_LINE)
         lineProgram.uniform("uPerspective", camera2D.combined())
         lineProgram.uniform("u_viewport", viewport)
         lineProgram.uniform("uModel", Matrix4f())
@@ -152,6 +166,7 @@ class LevelRenderer (
             }
 
             val lineComp = line.getComponent(LineDrawerComponent::class)
+            val trans = line.getComponent(TransformComponent::class)
 
             val startEntity = level.findByID(lineComp.fromCompA)
             val endEntity = level.findByID(lineComp.toCompB)
@@ -163,11 +178,38 @@ class LevelRenderer (
                 continue
             }
 
-            val perInstanceData = listOf(startTrans.x, startTrans.y, startTrans.z, endTrans.x, endTrans.y, endTrans.z, lineComp.width)
+            val perInstanceData = listOf(startTrans.x + trans.x, startTrans.y + trans.y, startTrans.z + trans.z, endTrans.x + trans.x, endTrans.y + trans.y, endTrans.z + trans.z, lineComp.width)
 
             instanceData.addAll(perInstanceData)
         }
         instancer.drawLines(glMesh, instanceData, instanceData.size / 7 )
     }
 
+
+    private fun renderObjects(objects: List<EntityLevel>, camera2D: Camera2D) {
+
+        val objectProgram = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
+        objectProgram.uniform("uPerspective", camera2D.combined())
+        objectProgram.uniform("uIgnoreTextures", 1)
+
+        for (entity in objects) {
+
+            val objComp = entity.getComponent(ObjComponent::class)
+            val transComp = entity.getComponent(TransformComponent::class)
+
+            val material = resourceManager.getMaterial(objComp.materialID)
+            objectProgram.uniform("uLight", material.colour)
+            objectProgram.uniform("uModel", Matrix4f().translate(entity.getAbsolutePosition()).scale(transComp.scale))
+
+            val mesh = resourceManager.getMesh(objComp.modelGeomID)
+
+//            GL15.glDrawElements(mode.openGlID, this.indices.size, GL11.GL_UNSIGNED_INT, 0)
+
+            GL33.glBindVertexArray(mesh.vertexArray)
+            GL11.glDrawElements(GL11.GL_TRIANGLE_FAN, mesh.vertices, GL11.GL_UNSIGNED_INT, 0)
+            GL33.glBindVertexArray(0)
+        }
+
+        objectProgram.uniform("uIgnoreTextures", 0)
+    }
 }

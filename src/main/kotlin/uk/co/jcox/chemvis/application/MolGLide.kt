@@ -82,14 +82,14 @@ class MolGLide : IApplication, IInputSubscriber {
     }
 
     private fun loadCoreAssets() {
-//        val selectionMarkerMesh = Shaper2D.circle(0.0f, 0.0f, 1.0f)
-//        services.resourceManager().manageMesh(SELECTION_MARKER_MESH, selectionMarkerMesh)
-//
-//        val inlineAnchorMesh = Shaper2D.rectangle(0f, 0f, 2f, 2f)
-//        services.resourceManager().manageMesh(INLINE_ANCHOR_MESH, inlineAnchorMesh)
-//
-//        val markerMaterial = Material(Vector3f(0.11f, 0.11f, 0.11f))
-//        services.resourceManager().manageMaterial(SELECTION_MARKER_MATERIAL, markerMaterial)
+
+        val instancer = services.instancedRenderer()
+
+        val selectionMarkerMesh = Shaper2D.circle(0.0f, 0.0f, 1.0f)
+        services.resourceManager().manageMesh(SELECTION_MARKER_MESH, selectionMarkerMesh, instancer)
+
+        val markerMaterial = Material(Vector3f(0.11f, 0.11f, 0.11f))
+        services.resourceManager().manageMaterial(SELECTION_MARKER_MATERIAL, markerMaterial)
     }
 
     override fun cleanup() {

@@ -9,7 +9,9 @@ interface ICVServices {
 
     fun inputs(): InputManager
 
-    fun renderer(): Batch2D
+    fun batchRenderer(): Batch2D
+
+    fun instancedRenderer() : InstancedRenderer
 
     fun levelRenderer(): LevelRenderer
 
