@@ -12,6 +12,7 @@ import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GLUtil
 import org.lwjgl.system.Callback
 import org.tinylog.Logger
 import java.io.File
@@ -58,10 +59,11 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         GLFW.glfwMakeContextCurrent(this.windowHandle)
         GLFW.glfwSwapInterval(1)
         GL.createCapabilities()
-        //        this.lwjglErrorCallback = GLUtil.setupDebugMessageCallback();
+//        GLUtil.setupDebugMessageCallback();
         GL11.glClearColor(0.02f, 0.02f, 0.02f, 1.0f)
 
         initialiseCoreServices()
+        batcher.setup()
         initialiseIntegratedResources()
 
 
@@ -70,6 +72,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         setupImGui()
 
         Logger.info{"GLFW and OpenGL have successfully started"}
+
     }
 
 
@@ -86,7 +89,9 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private fun initialiseIntegratedResources() {
         Logger.info{"Loading integrated resources..."}
         this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_TEXTURE, File("data/integrated/shaders/simpleTexture.vert"), File("data/integrated/shaders/simpleTexture.frag"), null)
-        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_COLOUR, File("data/integrated/shaders/simpleLine.vert"), File(("data/integrated/shaders/simpleLine.frag")), File("data/integrated/shaders/simpleLine.geom"))
+        this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_LINE, File("data/integrated/shaders/simpleLine.vert"), File(("data/integrated/shaders/simpleLine.frag")), File("data/integrated/shaders/simpleLine.geom"))
+
+        this.resourceManager.manageMesh(MESH_UNIT_LINE, Shaper2D.line(0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f))
     }
 
 
@@ -245,8 +250,16 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     companion object {
         const val SHADER_SIMPLE_TEXTURE: String = "integrated/simple_font"
-        const val SHADER_SIMPLE_COLOUR: String = "integrated/simple_line"
+        const val SHADER_SIMPLE_LINE: String = "integrated/simple_line"
 
         const val STD_CHARACTER_SET: String = "@!?- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12345678"
+
+        const val MESH_UNIT_LINE: String = "integrated/unit_line"
+
+
+        //[3 float pos] [2 float texture] = 5 floats
+        //Application-Wide standard vertex set
+        const val VERTEX_SIZE = 5
+        const val VERTEX_SIZE_BYTES = 5 * Float.SIZE_BYTES
     }
 }

@@ -71,8 +71,10 @@ class NewOrganicEditorState (
 
         val textTest = transientUI.addEntity()
         textTest.addComponent(TransformComponent(0.0f, 0.0f, 0.0f))
+        textTest.addComponent(TextComponent("Welcome to MolGLide", MolGLide.FONT, 0.5f, 1.0f, 1.0f, MolGLide.GLOBAL_SCALE))
 
         atomBondTool.renderTransientUI(transientUI)
+
         levelRenderer.renderLevel(transientUI, camera2D, viewport)
 
         if (atomBondTool.actionInProgress) {

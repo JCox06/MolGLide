@@ -1,13 +1,14 @@
 package uk.co.jcox.chemvis.cvengine
 
+import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL15
+import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
 import org.lwjgl.opengl.GL33
 import org.lwjgl.stb.STBImage
 import org.lwjgl.system.MemoryStack
 import org.tinylog.Logger
-import sun.swing.SwingUtilities2.getFontMetrics
 import uk.co.jcox.chemvis.cvengine.BitmapFont.GlyphData
 import java.awt.Color
 import java.awt.Font
@@ -26,7 +27,7 @@ class ResourceManager : IResourceManager{
     private val shaderPrograms: MutableMap<String, ShaderProgram> = mutableMapOf()
     private val textures: MutableMap<String, Int> = mutableMapOf()
     private val fonts: MutableMap<String, BitmapFont> = mutableMapOf()
-    private val meshes: MutableMap<String, Mesh> = mutableMapOf()
+    private val meshes: MutableMap<String, GLMesh> = mutableMapOf()
     private val materials: MutableMap<String, Material> = mutableMapOf()
 
     init {
@@ -78,16 +79,27 @@ class ResourceManager : IResourceManager{
     }
 
     override fun manageMesh(id: String, mesh: Mesh) {
-        Logger.info { "Managing external mesh $id" }
-        meshes[id] = mesh
+        Logger.info { "Managing external mesh and loading into OpenGL $id" }
+
+        //Meshes that are sent to the ResourceManager need to be first loaded into OpenGL
+        //Once loaded they can be retrieved as a VAO
+        meshes[id] = loadMeshIntoOpenGL(mesh)
     }
 
     override fun destroyMesh(id: String) {
         Logger.info { "Destroying mesh $id" }
+
+        val mesh = meshes[id]
+
+        mesh?.let { buff ->
+            buff.buffers.forEach { GL15.glDeleteBuffers(it) }
+
+            GL30.glDeleteVertexArrays(buff.vertexArray)
+        }
         meshes.remove(id)
     }
 
-    override fun getMesh(id: String): Mesh {
+    override fun getMesh(id: String): GLMesh {
         val mesh = meshes[id]
         if (mesh == null) {
             throw NullPointerException("No such model exists ${id}")
@@ -152,8 +164,7 @@ class ResourceManager : IResourceManager{
         keysToRemove.forEach { destroyFont(it) }
         keysToRemove.clear()
 
-
-        meshes.keys.forEach { keysToRemove.add(it) } //Not really required (no external resources associated)
+        meshes.keys.forEach { keysToRemove.add(it) }
         keysToRemove.forEach { destroyMesh(it) }
         keysToRemove.clear()
     }
@@ -417,5 +428,37 @@ class ResourceManager : IResourceManager{
         }
 
         return material
+    }
+
+
+    private fun loadMeshIntoOpenGL(mesh: Mesh) : GLMesh {
+        val vertexSet = mesh.pack()
+        val vertexArray = GL30.glGenVertexArrays()
+        GL30.glBindVertexArray(vertexArray)
+
+
+        val vertexBuffer = GL15.glGenBuffers()
+        println(vertexBuffer)
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vertexBuffer)
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertexSet.toFloatArray(), GL15.GL_STATIC_DRAW)
+
+        val elementBuffer = GL15.glGenBuffers()
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, elementBuffer)
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, mesh.indices.toIntArray(), GL15.GL_STATIC_DRAW)
+
+        //Map OpenGL attribute Objects
+        GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, CVEngine.VERTEX_SIZE_BYTES, 0)
+        GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, CVEngine.VERTEX_SIZE_BYTES, 3L * Float.SIZE_BYTES)
+        GL20.glEnableVertexAttribArray(0)
+        GL20.glEnableVertexAttribArray(1)
+
+        val bufferList = listOf(vertexBuffer, elementBuffer)
+
+        val gpuSideMesh = GLMesh(vertexArray, bufferList, mesh.indices.size)
+
+        GL30.glBindVertexArray(0)
+
+        return gpuSideMesh
+
     }
 }

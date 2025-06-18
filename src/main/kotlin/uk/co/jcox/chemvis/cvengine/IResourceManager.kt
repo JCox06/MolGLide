@@ -19,7 +19,7 @@ interface IResourceManager {
 
     fun getMaterial(id: String) : Material
 
-    fun getMesh(id: String) : Mesh
+    fun getMesh(id: String) : GLMesh
 
     fun loadTextureFromDisc(id: String, texture: File)
 

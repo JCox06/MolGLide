@@ -99,7 +99,7 @@ class MolGLide : IApplication, IInputSubscriber {
     companion object {
         const val FONT: String = "APP_FONT"
         const val FONT_SIZE = 140
-        const val GLOBAL_SCALE: Float = 0.05f
+        const val GLOBAL_SCALE: Float = 0.1f
         const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER_MESH"
         const val INLINE_ANCHOR_MESH: String = "INLINE_ANCHOR_MESH"
         const val SELECTION_MARKER_MATERIAL: String = "SELECTION_MARKER_MATERIAL"
