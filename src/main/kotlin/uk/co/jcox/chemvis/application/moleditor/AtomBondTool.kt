@@ -1,9 +1,8 @@
 package uk.co.jcox.chemvis.application.moleditor
 
-import org.checkerframework.checker.units.qual.m
+import io.github.dan2097.jnainchi.inchi.InchiLibrary
 import org.joml.Vector2f
 import org.joml.Vector3f
-import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.a
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionAction
@@ -27,18 +26,29 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
     override fun update() {
 
-        //Handle when the user is dragging an atom
-        val atomToDrag = draggingAtom
+        val atomDragID = draggingAtom
+        val selection = context.selectionManager.primarySelection
 
-        if (! actionInProgress || atomToDrag == null) {
-            return
+        if (atomDragID != null && actionInProgress && selection is Selection.Active) {
+
+            val atomDrag = getWorkingState().level.findByID(atomDragID)
+            val selectedID = selection.id
+            val atomSelect = getWorkingState().level.findByID(selectedID)
+            if (atomDrag != null && atomSelect != null) {
+                updateDraggingAtomPosition(atomDrag)
+                moveGhostHydrogenGroups(atomDrag)
+                checkForBondOrderChange(atomDrag, atomSelect)
+            }
+
         }
+    }
 
-        //Make the atom of interest follow the mouse
-        val draggingAtomLevel = getWorkingState().level.findByID(atomToDrag)
-        val parentEntity = draggingAtomLevel?.parent
 
-        if (draggingAtomLevel == null || parentEntity == null) {
+    private fun updateDraggingAtomPosition(draggingAtomLevel: EntityLevel) {
+
+        val parentEntity = draggingAtomLevel.parent
+
+        if (parentEntity == null) {
             return
         }
 
@@ -50,36 +60,80 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         val entityTransform = draggingAtomLevel.getComponent(TransformComponent::class)
         entityTransform.x = draggedPos.x - effectiveParentPos.x
         entityTransform.y = draggedPos.y - effectiveParentPos.y
+    }
 
-        //Now we need to move the implicit Ghost hydrogen group if the new bond position is going through it
+    private fun moveGhostHydrogenGroups(draggingAtomLevel: EntityLevel) {
+
+        if (context.selectionManager.primarySelection !is Selection.Active || draggingAtomLevel == null) {
+            return
+        }
+        val draggingTransform = draggingAtomLevel.getComponent(TransformComponent::class)
+
+        val select = context.selectionManager.primarySelection as Selection.Active
+        val selectedAtom = getWorkingState().level.findByID(select.id)
+        selectedAtom?.let {
+            moveImplicitHydrogenGhostGroup(Vector2f(draggingTransform.x, draggingTransform.y), it)
+        }
+
+        //todo - FIX BELOW
+//          moveImplicitHydrogenGhostGroup(Vector2f(selecAtomTrans.x, selecAtomTrans.y), draggingAtomLevel)
+    }
 
 
-        //For the pre-existing atom
-        if (context.selectionManager.primarySelection is Selection.Active) {
-            val select = context.selectionManager.primarySelection as Selection.Active
-            val selecAtom = getWorkingState().level.findByID(select.id)
-            selecAtom?.let {
-                moveImplicitHydrogenGhostGroup(Vector2f(entityTransform.x, entityTransform.y), it)
+    private fun checkForBondOrderChange(atomDrag: EntityLevel, selecAtom: EntityLevel) {
 
-                //For the atom being dragged
-                val selecAtomTrans = selecAtom.getComponent(TransformComponent::class)
-                //todo - This is not working properly, so commenting out for now and coming back to it later
-//                moveImplicitHydrogenGhostGroup(Vector2f(selecAtomTrans.x, selecAtomTrans.y), draggingAtomLevel)
+        //Check if the dragging pos matches any other pos in the scenegraph
+        val draggingPos = atomDrag.getAbsolutePosition()
 
+        val matcher = findMatchingPosition(getWorkingState().level, draggingPos, atomDrag)
 
+        val parent = atomDrag.parent
 
+        if (parent == null) {
+            return
+        }
 
-                //TODO - JUST PUTTING THIS HERE FOR NOW!
-                //We also need to check if the user drags the dragging atom to the position of the selected atom
-                //If they do this, then we need to ignore the previous action, and create a DoubleBondInsertionAction
-                checkForBondOrderChange(parentEntity, selecAtom)
+        matcher?.let {
+
+            //Because this is run every frame, this should only be fired once
+            if (! allowBondOrderChanges) {
+                return
             }
+            refreshWorkingState(false)
+            actionInProgress = true
+
+            //Refreshing the state stops the new atom being added
+            //However in doing so all the references to the entities are now of that from the old state
+            //Therefore new references are required from the new working state
+            val atomA = getWorkingState().level.findByID(it.id)
+            val atomB = getWorkingState().level.findByID(selecAtom.id)
+            val mol = getWorkingState().level.findByID(parent.id)
+
+            //Make sure the new entities are not null
+            if (atomA == null || atomB == null || mol == null) {
+                return
+            }
+
+            val action = BondOrderAction(mol, atomA, atomB)
+            action.runAction(getWorkingState().molManager,  getWorkingState().level)
+            allowBondOrderChanges = false
         }
     }
 
-    override fun updateProposedModifications() {
 
+
+    private fun findMatchingPosition(lvl: EntityLevel, posToCheck: Vector3f, discard: EntityLevel) : EntityLevel? {
+        var matcher: EntityLevel? = null
+        lvl.traverseFunc {
+            //Check for match, but make sure to not select itself
+            if (it.getAbsolutePosition() == posToCheck && it != discard) {
+                matcher = it
+                return@traverseFunc
+            }
+        }
+        return matcher
     }
+
 
     override fun processClick(clickDetails: ClickContext) {
         //First check if something is selected
@@ -202,49 +256,4 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         return Vector3f(-lengthOffset - ghostGroupPos.x, ghostGroupPos.y, NewOrganicEditorState.XY_PLANE)
     }
 
-
-    private fun checkForBondOrderChange(levelMolecule: EntityLevel, selecAtom: EntityLevel) {
-        //Get position of the dragging atom First
-        val atomDrag = draggingAtom
-        if (atomDrag == null) {
-            return
-        }
-
-        val atomDragEntity = getWorkingState().level.findByID(atomDrag)
-
-        if (atomDragEntity == null) {
-            return
-        }
-
-        val draggingAtomPos = atomDragEntity.getAbsolutePosition()
-
-        //Now see if it matches any of the atoms in the scenegraph
-
-        var matcher: EntityLevel? = null
-        getWorkingState().level.traverseFunc {
-            if (it.getAbsolutePosition() == draggingAtomPos && it != atomDragEntity) {
-                matcher = it
-                return@traverseFunc
-            }
-        }
-
-        matcher?.let {
-            //Now send a bond order action
-            if (allowBondOrderChanges) {
-                refreshWorkingState()
-                actionInProgress = true
-                //Stop the new atom or whatever being added and restore the working state to that of the actual level
-
-                //This also requires to re-collect the level entities as they might have changed
-                //todo - This class should probably just work on the IDs this is just temp for now:
-                val mol = getWorkingState().level.findByID(levelMolecule.id)
-                val atomA = getWorkingState().level.findByID(it.id)
-                val atomB = getWorkingState().level.findByID(selecAtom.id)
-
-                val action = BondOrderAction(mol!!, atomA!!, atomB!!)
-                action.runAction(getWorkingState().molManager, getWorkingState().level)
-                allowBondOrderChanges = false
-            }
-        }
-    }
 }

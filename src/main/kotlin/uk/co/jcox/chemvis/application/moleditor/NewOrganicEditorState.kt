@@ -93,11 +93,11 @@ class NewOrganicEditorState (
         if (inputManager.keyClick(RawInput.LCTRL)) {
             if (key == RawInput.KEY_Z) {
                 workState.undo()
-                atomBondTool.refreshWorkingState()
+                atomBondTool.refreshWorkingState(true)
             }
             if (key == RawInput.KEY_Y) {
                 workState.redo()
-                atomBondTool.refreshWorkingState()
+                atomBondTool.refreshWorkingState(true)
             }
         }
 

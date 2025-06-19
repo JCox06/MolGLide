@@ -22,8 +22,6 @@ abstract class Tool (
 
     private var commit: ((ChemLevelPair) -> Unit)? = null
 
-    abstract fun updateProposedModifications()
-
     abstract fun renderTransientUI(transientUI: EntityLevel)
 
     abstract fun processClick(clickDetails: ClickContext)
@@ -51,9 +49,17 @@ abstract class Tool (
     }
 
 
-    fun refreshWorkingState() {
+    fun refreshWorkingState(fullRefresh: Boolean) {
         workStateCopy = context.levelStack.get()
-        actionInProgress = false
+
+        if (fullRefresh) {
+            actionInProgress = false
+        }
+    }
+
+
+    fun overrideWorkingState(clp: ChemLevelPair) {
+        workStateCopy = clp
     }
 
     fun getWorkingState() : ChemLevelPair {

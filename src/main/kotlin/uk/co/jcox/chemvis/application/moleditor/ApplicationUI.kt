@@ -3,6 +3,7 @@ package uk.co.jcox.chemvis.application.moleditor
 import imgui.ImGui
 import imgui.ImVec4
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiWindowFlags
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import java.awt.Desktop
@@ -85,12 +86,12 @@ class ApplicationUI {
 
             if (ImGui.menuItem("Undo (CTRL + Z)")) {
                 workState.undo()
-                tool.refreshWorkingState()
+                tool.refreshWorkingState(true)
             }
 
             if (ImGui.menuItem("Redo (CTRL + Y)")) {
                 workState.redo()
-                tool.refreshWorkingState()
+                tool.refreshWorkingState(true)
             }
 
             ImGui.endMenu()
@@ -129,7 +130,7 @@ class ApplicationUI {
 
     private fun renderWelcome() {
         ImGui.openPopup("Welcome to MolGLide")
-        if (ImGui.beginPopupModal("Welcome to MolGLide", null, 0)) {
+        if (ImGui.beginPopupModal("Welcome to MolGLide", null, ImGuiWindowFlags.NoBackground or ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove)) {
 
 
             ImGui.text("Thank you for using MolGLide!")
@@ -138,7 +139,6 @@ class ApplicationUI {
             ImGui.separator()
 
             ImGui.bulletText("Use the AtomBondTool to create and insert atoms")
-            ImGui.bulletText("Find the info about an atom using the InfoTool")
             ImGui.bulletText("Go back using standard undo/redo")
 
             if (ImGui.button("Close Welcome Menu")) {
