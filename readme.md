@@ -21,6 +21,7 @@ This project uses the Ubuntu font, see data/chemvis/fonts/ for the full licence.
 This is a bit weird. Maven will error if you try to build the project initially. First run the main class in IntelliJ, and then if you want package in Maven. This is because I have some old Java files in the project and the Maven Compiler Plugin will error out. I plan on converting these to Kotlin at some point. 
 
 ## Todo
-- [ ] Sort out codebase (refactor, clean, rebuild some areas)
+- [ ] Sort out codebase (refactor, clean, rebuild some areas) <Partially Complete>
 - [x] Primitive Carbon Skeleton Tool
-- [ ] Better carbon skeleton tool
+- [ ] Fix and properly centre Text Rendering
+- [x] Better carbon skeleton tool

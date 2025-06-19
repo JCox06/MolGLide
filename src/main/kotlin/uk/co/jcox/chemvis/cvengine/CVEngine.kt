@@ -12,6 +12,8 @@ import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL43
+import org.lwjgl.opengl.GLDebugMessageCallback
 import org.lwjgl.opengl.GLUtil
 import org.lwjgl.system.Callback
 import org.tinylog.Logger
@@ -29,6 +31,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private lateinit var instancer: InstancedRenderer
     private lateinit var resourceManager: IResourceManager
     private lateinit var levelRenderer: LevelRenderer
+
+    private var callback: GLDebugMessageCallback? = null
 
     private var currentState: IApplicationState? = null
 
@@ -60,7 +64,18 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         GLFW.glfwMakeContextCurrent(this.windowHandle)
         GLFW.glfwSwapInterval(1)
         GL.createCapabilities()
-        GLUtil.setupDebugMessageCallback();
+
+
+        GL43.glEnable(GL43.GL_DEBUG_OUTPUT)
+        GL43.glEnable(GL43.GL_DEBUG_OUTPUT_SYNCHRONOUS)
+
+        callback = GLDebugMessageCallback.create { source: Int, type: Int, id: Int, severity: Int, length: Int, message: Long, userParam: Long ->
+            if (type == GL43.GL_DEBUG_TYPE_ERROR) {
+                Logger.error { "[OpenGL ERROR] " + GLDebugMessageCallback.getMessage(length, message) }
+            }
+        }
+        GL43.glDebugMessageCallback(callback, 0)
+
         GL11.glClearColor(0.02f, 0.02f, 0.02f, 1.0f)
 
         initialiseCoreServices()
@@ -241,6 +256,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         resourceManager.destroy()
 
         this.lwjglErrorCallback?.close()
+
+        this.callback?.close()
 
         openGlImGui.shutdown()
         //this causes null pointer exception and I don't know why
