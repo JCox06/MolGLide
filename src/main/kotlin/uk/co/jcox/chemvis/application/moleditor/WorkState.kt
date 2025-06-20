@@ -9,12 +9,21 @@ class WorkState {
     private val stack = ArrayDeque<ChemLevelPair>()
     private val redoStack = ArrayDeque<ChemLevelPair>()
 
+    fun size() : Int  {
+        return stack.size
+    }
+
     fun init() {
         stack.add(ChemLevelPair(EntityLevel(), CDKManager()))
     }
 
     fun makeCheckpoint(clp: ChemLevelPair) {
         stack.addLast(clp.clone())
+        redoStack.clear()
+    }
+
+    fun makeCheckpoint() {
+        stack.addLast(stack.last().clone())
         redoStack.clear()
     }
 
@@ -35,6 +44,11 @@ class WorkState {
         if (redoStack.isNotEmpty()) {
             stack.add(redoStack.removeLast())
         }
+    }
+
+    fun clear() {
+        stack.clear()
+        redoStack.clear()
     }
 
 }

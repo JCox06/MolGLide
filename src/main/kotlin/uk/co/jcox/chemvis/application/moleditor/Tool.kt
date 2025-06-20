@@ -16,11 +16,47 @@ abstract class Tool (
     var actionInProgress = false
     protected set
 
-    //Upon class init, get a copy of the current state
-    //So we can safely mutate it without worrying about the actual real state
-    private var workStateCopy = context.levelStack.get()
+    var workingState: ChemLevelPair = context.levelStack.get()
+        private set
+
+    private var localStack: WorkState = WorkState()
 
     private var commit: ((ChemLevelPair) -> Unit)? = null
+
+    init {
+        refreshWorkingState()
+    }
+
+    fun refreshWorkingState(refreshLocalStack: Boolean = true) {
+        this.workingState = context.levelStack.get()
+
+        if (refreshLocalStack) {
+            this.localStack = WorkState()
+        }
+        actionInProgress = false
+    }
+
+    protected fun makeRestorePoint() {
+        localStack.makeCheckpoint(workingState)
+    }
+
+    protected fun restoreOnce() {
+        if (localStack.size() < 1) {
+            return
+        }
+        this.workingState = localStack.get()
+        localStack.undo()
+    }
+
+    fun onCommit(func: (ChemLevelPair) -> Unit) {
+        this.commit = func
+    }
+
+    protected fun pushChanges() {
+        commit?.invoke(workingState)
+
+        refreshWorkingState()
+    }
 
     abstract fun renderTransientUI(transientUI: EntityLevel)
 
@@ -31,47 +67,7 @@ abstract class Tool (
     abstract fun update()
 
 
-    fun setCommit(func: (ChemLevelPair) -> Unit) {
-        commit = func
-    }
-
-
-    protected fun pushChanges() {
-        //Ask the app state to push the latest changes to the stack
-        //Then refresh our workStateCopy
-
-        commit?.invoke(workStateCopy)
-
-        workStateCopy = context.levelStack.get()
-        actionInProgress = false
-
-
-    }
-
-
-    fun refreshWorkingState(fullRefresh: Boolean) {
-        workStateCopy = context.levelStack.get()
-
-        if (fullRefresh) {
-            actionInProgress = false
-        }
-    }
-
-
-    fun overrideWorkingState(clp: ChemLevelPair) {
-        workStateCopy = clp
-    }
-
-    fun getWorkingState() : ChemLevelPair {
-        return workStateCopy
-    }
-
     protected fun closestPointToCircleCircumference(circleCentre: Vector2f, randomPoint: Vector2f, radius: Float, quantize: Int = 16) : Vector2f {
-//        val magCentreRandomPoint = (randomPoint - circleCentre).length()
-//        val centreRandomPoint = (randomPoint - circleCentre)
-//        val position = circleCentre + (centreRandomPoint.div(magCentreRandomPoint)).mul(radius)
-//        return position
-
         val angleStep = (Math.PI * 2) / quantize
 
         val direction = randomPoint - circleCentre //Direction to point in space

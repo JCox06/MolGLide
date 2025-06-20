@@ -21,7 +21,12 @@ This project uses the Ubuntu font, see data/chemvis/fonts/ for the full licence.
 This is a bit weird. Maven will error if you try to build the project initially. First run the main class in IntelliJ, and then if you want package in Maven. This is because I have some old Java files in the project and the Maven Compiler Plugin will error out. I plan on converting these to Kotlin at some point. 
 
 ## Todo
-- [ ] Sort out codebase (refactor, clean, rebuild some areas) <Partially Complete>
-- [x] Primitive Carbon Skeleton Tool
+- [ ] Re-write CDKManager and IMoleculeManager in Kotlin 
 - [ ] Fix and properly centre Text Rendering
+- [ ] Elemental Label editing (Clicking on an atom where you can swap it for another element, or for Me, Et, Ph groups)
+- [ ] Structure Templates (Benzene, other rings)
+- [ ] Snap to vertex (maybe will add this?) 
+- [ ] Diagonal bonds shorter than standard bonds to allow for cyclopropane looking nice and other weird rings
+- [x] Primitive Carbon Skeleton Tool
 - [x] Better carbon skeleton tool
+- [x] Sort out codebase (refactor, clean, rebuild some areas)

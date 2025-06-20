@@ -86,12 +86,12 @@ class ApplicationUI {
 
             if (ImGui.menuItem("Undo (CTRL + Z)")) {
                 workState.undo()
-                tool.refreshWorkingState(true)
+                tool.refreshWorkingState()
             }
 
             if (ImGui.menuItem("Redo (CTRL + Y)")) {
                 workState.redo()
-                tool.refreshWorkingState(true)
+                tool.refreshWorkingState()
             }
 
             ImGui.endMenu()

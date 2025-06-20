@@ -19,7 +19,6 @@ class AtomInsertionAction (
     private val insert: AtomInsert,
     private val levelMolecule: EntityLevel,
     private val levelSelection: EntityLevel,
-    private val insertImplicitHydrogens: Boolean,
 ) : EditorAction() {
 
     var insertedAtom: UUID? = null
@@ -55,9 +54,7 @@ class AtomInsertionAction (
 
 
         //5) Recalculate hydrogens
-        if (insertImplicitHydrogens && insert.hydrogenable) {
-            molManager.recalculate(structMolecule.molID)
-        }
+        molManager.recalculate(structMolecule.molID)
 
         replaceOldLabels(molManager, structMolecule.molID, structOldAtom.molID, levelSelection)
 
