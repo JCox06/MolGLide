@@ -42,12 +42,6 @@ class MolGLide : IApplication, IInputSubscriber {
         services.inputs().subscribe(state)
     }
 
-
-    private fun testState() {
-        val state = TestState(services.levelRenderer(), camera)
-        services.setCurrentApplicationState(state)
-    }
-
     override fun loop() {
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
 
@@ -81,18 +75,12 @@ class MolGLide : IApplication, IInputSubscriber {
         lastMouseY = yPos.toFloat()
     }
 
-    override fun clickEvent(inputManager: InputManager, key: RawInput) {
-        if (key == RawInput.KEY_P) {
-            services.toggleDebugPanel()
-        }
-    }
-
     private fun loadCoreAssets() {
-        val selectionMarkerMesh = Shaper2D.circle(0.0f, 0.0f, 1.0f)
-        services.resourceManager().manageMesh(SELECTION_MARKER_MESH, selectionMarkerMesh)
 
-        val inlineAnchorMesh = Shaper2D.rectangle(0f, 0f, 2f, 2f)
-        services.resourceManager().manageMesh(INLINE_ANCHOR_MESH, inlineAnchorMesh)
+        val instancer = services.instancedRenderer()
+
+        val selectionMarkerMesh = Shaper2D.circle(0.0f, 0.0f, 1.0f)
+        services.resourceManager().manageMesh(SELECTION_MARKER_MESH, selectionMarkerMesh, instancer)
 
         val markerMaterial = Material(Vector3f(0.11f, 0.11f, 0.11f))
         services.resourceManager().manageMaterial(SELECTION_MARKER_MATERIAL, markerMaterial)
@@ -105,9 +93,8 @@ class MolGLide : IApplication, IInputSubscriber {
     companion object {
         const val FONT: String = "APP_FONT"
         const val FONT_SIZE = 140
-        const val GLOBAL_SCALE: Float = 0.05f
+        const val GLOBAL_SCALE: Float = 0.1f
         const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER_MESH"
-        const val INLINE_ANCHOR_MESH: String = "INLINE_ANCHOR_MESH"
         const val SELECTION_MARKER_MATERIAL: String = "SELECTION_MARKER_MATERIAL"
         const val VERSION = "MolGLide 1.0-SNAPSHOT"
     }

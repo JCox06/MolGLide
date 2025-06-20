@@ -9,13 +9,13 @@ interface ICVServices {
 
     fun inputs(): InputManager
 
-    fun renderer(): Batch2D
+    fun batchRenderer(): Batch2D
+
+    fun instancedRenderer() : InstancedRenderer
 
     fun levelRenderer(): LevelRenderer
 
     fun resourceManager(): IResourceManager
-
-    fun toggleDebugPanel()
 
     fun setViewport(a: Int, b: Int, c: Int, d: Int)
 

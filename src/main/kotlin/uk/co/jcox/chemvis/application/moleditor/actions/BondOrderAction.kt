@@ -43,6 +43,12 @@ class BondOrderAction (
         //Then the struct bond is null so we can just form a normal bond between the two atoms
         val newStructBond = updateStructForNewBond(molManager, structMolecule.molID, structAtomA.molID, structAtomB.molID)
         updateLevelForNewBond(levelMolecule, levelAtomA, levelAtomB, newStructBond)
+
+        molManager.recalculate(structMolecule.molID)
+        replaceOldLabels(molManager, structMolecule.molID, structAtomA.molID, levelAtomA)
+        replaceOldLabels(molManager, structMolecule.molID, structAtomB.molID, levelAtomB)
+
+
         return structMolecule.molID
     }
 

@@ -4,7 +4,6 @@ import uk.co.jcox.chemvis.cvengine.RawInput
 import uk.co.jcox.chemvis.cvengine.RawInput.NULL
 
 enum class AtomInsert(val symbol: String, val hydrogenable: Boolean) {
-    //todo Make some of these more hydrogenable like nitrogen and oxygen
     CARBON("C", true),
     HYDROGEN("H", false),
     CHLORINE("Cl", false),

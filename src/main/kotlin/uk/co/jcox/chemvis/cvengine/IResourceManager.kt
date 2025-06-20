@@ -9,7 +9,7 @@ interface IResourceManager {
     fun useProgram(programID: String): ShaderProgram
     fun destroyProgram(programID: String)
 
-    fun manageMesh(id: String, mesh: Mesh)
+    fun manageMesh(id: String, mesh: Mesh, instancedRenderer: InstancedRenderer)
 
     fun manageMaterial(id: String, material: Material)
 
@@ -19,7 +19,7 @@ interface IResourceManager {
 
     fun getMaterial(id: String) : Material
 
-    fun getMesh(id: String) : Mesh
+    fun getMesh(id: String) : GLMesh
 
     fun loadTextureFromDisc(id: String, texture: File)
 

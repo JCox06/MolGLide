@@ -1,12 +1,14 @@
 package uk.co.jcox.chemvis.cvengine
 
 import org.lwjgl.opengl.*
+import uk.co.jcox.chemvis.cvengine.CVEngine.Companion.VERTEX_SIZE
+import uk.co.jcox.chemvis.cvengine.CVEngine.Companion.VERTEX_SIZE_BYTES
 import kotlin.math.max
 
 class Batch2D (
 
     //Vertex
-    //[3 float pos] [2 float texture] = 5 floats
+    //[3 float pos] [2 float texture] = 5 floats = (Standard Vertex Set)
     //todo there is an error if during one #addToBatch call it overloads the whole buffer everthing breaks
     //so for the meantime the capacity has been increased
     private val vertexCapacity: Int = 500
@@ -17,11 +19,16 @@ class Batch2D (
 
     private val vertices: MutableList<Float> = mutableListOf()
     private val indices: MutableList<Int> = mutableListOf()
-    private val glVertexArray: Int = GL30.glGenVertexArrays()
-    private val glVertexBuffer: Int = GL15.glGenBuffers()
-    private val glIndexBuffer: Int = GL15.glGenBuffers()
+    private var glVertexArray: Int =0
+    private var glVertexBuffer: Int = 0
+    private var glIndexBuffer: Int = 0
 
-    init {
+    fun setup() {
+
+        glVertexArray = GL30.glGenVertexArrays()
+        glVertexBuffer = GL15.glGenBuffers()
+        glIndexBuffer = GL15.glGenBuffers()
+
         //Setup up OpenGL Objects
         GL30.glBindVertexArray(this.glVertexArray)
 
@@ -37,6 +44,9 @@ class Batch2D (
         GL20.glEnableVertexAttribArray(0)
         GL20.glEnableVertexAttribArray(1)
 
+        GL30.glBindVertexArray(0)
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0)
     }
 
     private var ready = false
@@ -84,15 +94,22 @@ class Batch2D (
             throw RuntimeException("End called twice - Batcher has already finished")
         }
 
+        GL30.glBindVertexArray(glVertexArray)
+        //Apparently the VAO does not store array buffers
+        //So if something came along between batcher setup and the next bit of code
+        //We will generate a bunch of errors
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, glVertexArray)
+
         //Send all the data to the GPU
         val vertexBuff = this.vertices.toFloatArray()
+
         GL15.glBufferSubData(GL15.GL_ARRAY_BUFFER, 0, vertexBuff)
 
         val elementBuff = this.indices.toIntArray()
         GL15.glBufferSubData(GL15.GL_ELEMENT_ARRAY_BUFFER, 0, elementBuff)
 
-
         GL15.glDrawElements(mode.openGlID, this.indices.size, GL11.GL_UNSIGNED_INT, 0)
+
 
 
         //Clear cpu buffers
@@ -101,6 +118,9 @@ class Batch2D (
 
 
         this.ready = false
+
+        GL30.glBindVertexArray(0)
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
 
         return mode
     }
@@ -122,11 +142,5 @@ class Batch2D (
         TRIANGLES(GL11.GL_TRIANGLES),
         FAN(GL11.GL_TRIANGLE_FAN),
         LINE(GL11.GL_LINES),
-    }
-
-    companion object {
-        //[3 float pos] [2 float texture] = 5 floats
-        private val VERTEX_SIZE = 5
-        private val VERTEX_SIZE_BYTES = 5 * Float.SIZE_BYTES
     }
 }

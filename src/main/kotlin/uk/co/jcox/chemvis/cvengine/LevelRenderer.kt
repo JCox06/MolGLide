@@ -4,246 +4,212 @@ import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL30
+import org.lwjgl.opengl.GL33
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
-//todo - this is also such a dodgy class. Instance rendering for everything but text will make unfiorm changes easier (I think?)
 class LevelRenderer (
     private val batcher: Batch2D,
+    private val instancer: InstancedRenderer,
     private val resourceManager: IResourceManager
 ) {
 
-    private val lastFontColour: Vector3f = Vector3f(1.0f, 1.0f, 1.0f)
 
-    private var lastLineThickness = 1.0f;
+//    To render a level:
+//      1) Group entities by their "renderable" components (TextComponent, LineDrawerComponent, ObjComponent)
+//      2) Send these entities off to the methods in this class that renders them
+//      3) Each method renders objects differently depending on if they should be batched or instanced
 
     fun renderLevel(level: EntityLevel, camera2D: Camera2D, viewport: Vector2f) {
-        val texts: MutableList<EntityLevel> = mutableListOf()
-        val objects: MutableList<EntityLevel> = mutableListOf()
-        val lines: MutableList<EntityLevel> = mutableListOf()
-        traverseAndCollect(level, texts, objects, lines)
 
-        var program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
-        program.uniform("uPerspective", camera2D.combined())
-        program.uniform("uModel", Matrix4f())
-        program.uniform("uIgnoreTextures", 1)
-        program.uniform("uLight", Vector3f(0.11f, 0.11f, 0.11f))
+        val textEntities: MutableList<EntityLevel> = mutableListOf()
+        val objectEntities: MutableList<EntityLevel> = mutableListOf()
+        val lineEntities: MutableList<EntityLevel> = mutableListOf()
+        traverseAndCollect(level, textEntities, objectEntities, lineEntities)
 
-        batcher.begin(Batch2D.Mode.FAN)
-        //Render other objects
-        objects.forEach { objectEntity ->
-            renderObject(objectEntity)
+
+
+        //There are so few other objects that at the moment it makes no sense
+        //to either batch them or instance them, so they are each rendered with their own GLDrawArrays function
+        //However the meshes used are setup for instance rendering, so if more are needed, they can easily be changed
+        renderObjects(objectEntities, camera2D)
+
+        //Text objects contain dynamic geometry
+        //The meshes are calculated from the Shaper2D each frame and then sent to OpenGL
+        //Therefore texts are rendered through Batch Rendering
+        renderTexts(textEntities, camera2D)
+
+
+        //Since there might be a lot of lines, and since all lines have fixed geometry
+        //Then they are rendered by the InstancedRenderer
+        renderLines(level, lineEntities, camera2D, viewport)
+
+
+    }
+
+
+    private fun traverseAndCollect(level: EntityLevel, texts: MutableList<EntityLevel>, objects: MutableList<EntityLevel>, lines: MutableList<EntityLevel>) {
+        level.traverseFunc {
+
+            if (!it.hasComponent(TransformComponent::class)) {
+                return@traverseFunc
+            }
+
+            val transform = it.getComponent(TransformComponent::class)
+            if (!transform.visible) {
+                return@traverseFunc
+            }
+
+            if (it.hasComponent(TextComponent::class)) {
+               texts.add(it)
+            }
+
+            if(it.hasComponent(ObjComponent::class)) {
+                objects.add(it)
+            }
+
+            if (it.hasComponent(LineDrawerComponent::class)) {
+                lines.add(it)
+            }
         }
-        batcher.end()
-
-        program.uniform("uIgnoreTextures", 0)
-        program.uniform("uLight", Vector3f(1f, 1f, 1f))
+    }
 
 
-        //Render the text (do this last as text is transparent and this is main thing)
+    private fun renderTexts(entities: MutableList<EntityLevel>, camera2D: Camera2D) {
+
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-
-
-        program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
+        val program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
         program.uniform("uPerspective", camera2D.combined())
-        program.uniform("uModel", Matrix4f())
 
-        batcher.begin(Batch2D.Mode.TRIANGLES)
-        texts.forEach { textEntity ->
-            renderText(textEntity, program)
+        entities.forEach {
+            renderText(it, program)
         }
-        batcher.end()
+
         GL11.glDisable(GL11.GL_BLEND)
-
-
-        program = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_COLOUR)
-        program.uniform("uPerspective", camera2D.combined())
-        program.uniform("u_viewport", viewport)
-        program.uniform("uModel", Matrix4f())
-
-        batcher.begin(Batch2D.Mode.LINE)
-        //Render lines (aka bonds)
-        lines.forEach { lineEntity ->
-            renderLine(level, lineEntity, program)
-        }
-
-        batcher.end()
-
-    }
-
-
-    private fun renderLine(level: EntityLevel, lineEntity: EntityLevel, program: ShaderProgram) {
-        if (!lineEntity.hasComponent(LineDrawerComponent::class) || !lineEntity.hasComponent(TransformComponent::class)) {
-            return
-        }
-
-        val lineComponent = lineEntity.getComponent(LineDrawerComponent::class)
-        val transformComp = lineEntity.getComponent(TransformComponent::class)
-
-
-        if (lineComponent.width != lastLineThickness) {
-            val modeToRestore = batcher.end()
-
-            lastLineThickness = lineComponent.width
-            program.uniform("u_lineThickness", lastLineThickness)
-
-            batcher.begin(modeToRestore)
-
-        }
-
-        if (! transformComp.visible) {
-            return;
-        }
-
-        val entityFrom = level.findByID(lineComponent.fromCompA)?.getAbsolutePosition()
-        val entityTo = level.findByID(lineComponent.toCompB)?.getAbsolutePosition()
-
-        if (entityFrom != null && entityTo != null) {
-            val mesh = Shaper2D.line(entityFrom.x + transformComp.x, entityFrom.y + transformComp.y, entityFrom.z + transformComp.z, entityTo.x + transformComp.x, entityTo.y + transformComp.y, entityTo.z + transformComp.z)
-
-            batcher.addBatch(mesh.pack(), mesh.indices)
-        }
-    }
-
-
-
-    private fun renderObject(objectEntity: EntityLevel) {
-        if (! objectEntity.hasComponent(ObjComponent::class) || !objectEntity.hasComponent(TransformComponent::class)) {
-            return
-        }
-
-        val objectComponent = objectEntity.getComponent(ObjComponent::class)
-        val transformComponent = objectEntity.getComponent(TransformComponent::class)
-
-
-        if (! transformComponent.visible) {
-            return
-        }
-
-        val mesh = resourceManager.getMesh(objectComponent.modelGeomID)
-        val material = resourceManager.getMaterial(objectComponent.materialID)
-
-        val absPos = getAbsPosition(objectEntity)
-
-        val transform = Matrix4f()
-            .translate(absPos.x, absPos.y, absPos.z)
-            .scale(transformComponent.scale)
-
-        val newMesh = mesh.apply(transform)
-        batcher.addBatch(newMesh.pack(), newMesh.indices)
-
-        //todo Something odd is happening so temporarily disabled batching for objects
-        val restore = batcher.end()
-        batcher.begin(restore)
     }
 
 
     private fun renderText(textEntity: EntityLevel, program: ShaderProgram) {
-        if (!textEntity.hasComponent(TextComponent::class) || !textEntity.hasComponent(TransformComponent::class)) {
-            return
-        }
-
         val textComponent = textEntity.getComponent(TextComponent::class)
         val transformComponent = textEntity.getComponent(TransformComponent::class)
 
+        val fontID = textComponent.bitmapFont
+        val fontData = resourceManager.getFont(fontID)
 
-        if (! transformComponent.visible) {
-            return
-        }
-
-        val bitMapFontData = resourceManager.getFont(textComponent.bitmapFont)
-
-
-        //Check if the colour currently being rendered is the same as last time
-        if (textComponent.colourX != lastFontColour.x || textComponent.colourY != lastFontColour.y || textComponent.colourZ != lastFontColour.z) {
-            //Then flush the buffer now
-            val modeToRestore = batcher.end()
-            //Restart the buffer
-            lastFontColour.x = textComponent.colourX
-            lastFontColour.y = textComponent.colourY
-            lastFontColour.z = textComponent.colourZ
-            program.uniform("uLight", lastFontColour)
-            batcher.begin(modeToRestore)
-        }
-
-
-        resourceManager.useTexture(textComponent.bitmapFont, GL30.GL_TEXTURE0)
+        resourceManager.useTexture(fontID, GL30.GL_TEXTURE0)
         program.uniform("uTexture0", 0)
+        program.uniform("uLight", Vector3f(textComponent.colourX, textComponent.colourY, textComponent.colourZ))
 
+        val localCentre = textEntity.getAbsoluteTranslation()
+        localCentre.add(Vector3f())
+        program.uniform("uModel", Matrix4f().translate(localCentre).scale(transformComponent.scale))
+        val position = Vector3f(transformComponent.x, transformComponent.y, transformComponent.z)
 
-        val totalPosition = getAbsPosition(textEntity)
+        //Currently only supports text in the XY plane
+        var renderX = position.x
+        var renderY = position.y
 
-        var renderX = totalPosition.x
-        var renderY = totalPosition.y
-        //(Only support 2D text currently. Text is stuck in the XY plane)
+        batcher.begin(Batch2D.Mode.TRIANGLES)
 
         for (c in textComponent.text) {
-            var toDraw = c
-            if (! bitMapFontData.glyphs.keys.contains(c)) {
-                toDraw = bitMapFontData.glyphs.keys.first()
+            var character = c
+
+            if (! fontData.glyphs.keys.contains(c)) {
+                character = fontData.glyphs.keys.first()
             }
 
-            val glyphData = bitMapFontData.glyphs[toDraw]
+            val glyphMetrics = fontData.glyphs[character]
 
-            if (glyphData == null) {
+            if (glyphMetrics == null) {
                 return
             }
 
-            val mesh = Shaper2D.rectangle(renderX , renderY, glyphData.glyphWidth * textComponent.scale, glyphData.glyphHeight * textComponent.scale,
-                Vector2f(
-                    glyphData.textureUnitAddX + glyphData.textureUnitX,
-                    glyphData.textureUnitAddY - glyphData.textureUnitY
-                ),
-                Vector2f(glyphData.textureUnitAddX + glyphData.textureUnitX, 0.0f - glyphData.textureUnitY),
-                Vector2f(0.0f + glyphData.textureUnitX, 0.0f - glyphData.textureUnitY),
-                Vector2f(0.0f + glyphData.textureUnitX, glyphData.textureUnitAddY - glyphData.textureUnitY)
+            val width = glyphMetrics.glyphWidth * textComponent.scale /2
+            val height = glyphMetrics.glyphHeight * textComponent.scale /2
+
+            //Dont understand how I fixed it but it works
+//            val meshToDraw = Shaper2D.rectangle(renderX + width, renderY + height, width, height, (Text rendering works fine If you use this line instead of the one below) - However then the text is uncentred
+            val meshToDraw = Shaper2D.rectangle(renderX + width / 2, renderY, width, height,
+                Vector2f(glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX, glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY),
+                Vector2f(glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
+                Vector2f(0.0f + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
+                Vector2f(0.0f + glyphMetrics.textureUnitX, glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY)
             )
 
-            batcher.addBatch(mesh.pack(), mesh.indices)
-            renderX += glyphData.glyphWidth * textComponent.scale * 2 //2 because the rectangle is drawn from the centre
+            batcher.addBatch(meshToDraw.pack(), meshToDraw.indices)
+            renderX += width * 2
         }
+
+        batcher.end()
     }
 
-    private fun traverseAndCollect(entity: EntityLevel, texts: MutableList<EntityLevel>, objects: MutableList<EntityLevel>, lines: MutableList<EntityLevel>) {
-        if (entity.hasComponent(TextComponent::class)) {
-            texts.add(entity)
-        }
 
-        if (entity.hasComponent(ObjComponent::class)) {
-            objects.add(entity)
-        }
+    private fun renderLines(level: EntityLevel, entities: MutableList<EntityLevel>, camera2D: Camera2D, viewport: Vector2f) {
+        val lineProgram = resourceManager.useProgram(CVEngine.SHADER_INSTANCED_LINE)
+        lineProgram.uniform("uPerspective", camera2D.combined())
+        lineProgram.uniform("u_viewport", viewport)
+        lineProgram.uniform("uModel", Matrix4f())
 
-        if (entity.hasComponent(LineDrawerComponent::class)) {
-            lines.add(entity)
-        }
+        val glMesh = resourceManager.getMesh(CVEngine.MESH_HOLDER_LINE)
 
-        entity.getChildren().forEach { child ->
-            traverseAndCollect(child, texts, objects, lines)
+        val instanceData = mutableListOf<Float>()
+
+        for (line in entities) {
+            if (!line.hasComponent(LineDrawerComponent::class)) {
+                continue
+            }
+
+            val lineComp = line.getComponent(LineDrawerComponent::class)
+            val trans = line.getComponent(TransformComponent::class)
+
+            val startEntity = level.findByID(lineComp.fromCompA)
+            val endEntity = level.findByID(lineComp.toCompB)
+
+            val startTrans = startEntity?.getAbsolutePosition()
+            val endTrans = endEntity?.getAbsolutePosition()
+
+            if (startTrans == null || endTrans == null) {
+                continue
+            }
+
+            val perInstanceData = listOf(startTrans.x + trans.x, startTrans.y + trans.y, startTrans.z + trans.z, endTrans.x + trans.x, endTrans.y + trans.y, endTrans.z + trans.z, lineComp.width)
+
+            instanceData.addAll(perInstanceData)
         }
+        instancer.drawLines(glMesh, instanceData, instanceData.size / 7 )
     }
 
-    private fun getAbsPosition(entityLevel: EntityLevel): Vector3f {
 
-        val absPosition = Vector3f(0.0f, 0.0f, 0.0f)
-        var currentParent = entityLevel
+    private fun renderObjects(objects: List<EntityLevel>, camera2D: Camera2D) {
 
-        while (true) {
-            if (currentParent.hasComponent(TransformComponent::class)) {
-                val transformComp = currentParent.getComponent(TransformComponent::class)
-                absPosition.x += transformComp.x
-                absPosition.y += transformComp.y
-                absPosition.z += transformComp.z
-            }
-            if (currentParent.parent != null) {
-                currentParent = currentParent.parent
-            } else {
-                return absPosition
-            }
+        val objectProgram = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
+        objectProgram.uniform("uPerspective", camera2D.combined())
+        objectProgram.uniform("uIgnoreTextures", 1)
+
+        for (entity in objects) {
+
+            val objComp = entity.getComponent(ObjComponent::class)
+            val transComp = entity.getComponent(TransformComponent::class)
+
+            val material = resourceManager.getMaterial(objComp.materialID)
+            objectProgram.uniform("uLight", material.colour)
+            objectProgram.uniform("uModel", Matrix4f().translate(entity.getAbsolutePosition()).scale(transComp.scale))
+
+            val mesh = resourceManager.getMesh(objComp.modelGeomID)
+
+//            GL15.glDrawElements(mode.openGlID, this.indices.size, GL11.GL_UNSIGNED_INT, 0)
+
+            GL33.glBindVertexArray(mesh.vertexArray)
+            GL11.glDrawElements(GL11.GL_TRIANGLE_FAN, mesh.vertices, GL11.GL_UNSIGNED_INT, 0)
+            GL33.glBindVertexArray(0)
         }
+
+        objectProgram.uniform("uIgnoreTextures", 0)
     }
 }
