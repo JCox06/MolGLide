@@ -1,7 +1,9 @@
 package uk.co.jcox.chemvis.application.moleditor
 
 import imgui.ImGui
+import imgui.ImGuiViewport
 import imgui.ImVec4
+import imgui.flag.ImGuiBackendFlags
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiWindowFlags
 import uk.co.jcox.chemvis.application.MolGLide
@@ -20,6 +22,7 @@ class ApplicationUI {
     private var showWelcome = true
 
     fun mainMenu(services: ICVServices, workState: WorkState, tool: Tool, formula: String) {
+
         if (ImGui.beginMainMenuBar()) {
 
             renderFile(services)

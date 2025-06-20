@@ -2,7 +2,10 @@ package uk.co.jcox.chemvis.application.moleditor
 
 import org.joml.Vector2f
 import org.joml.minus
+import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
+import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -81,5 +84,22 @@ abstract class Tool (
         val x = circleCentre.x + radius * cos(quantizedAngle)
         val y = circleCentre.y + radius * sin(quantizedAngle)
         return Vector2f(x.toFloat(), y.toFloat())
+    }
+
+    protected fun renderSelectionMarkerOnAtoms(transientUI: EntityLevel) {
+        val currentSelection = context.selectionManager.primarySelection
+        if (currentSelection !is Selection.Active) {
+            return
+        }
+
+        val entitySelected = workingState.level.findByID(currentSelection.id)
+        val position = entitySelected?.getAbsolutePosition()
+        if (position == null) {
+            return
+        }
+
+        val selectionMarker = transientUI.addEntity()
+        selectionMarker.addComponent(TransformComponent(position.x, position.y, position.z, NewOrganicEditorState.SELECTION_MARKER_SIZE))
+        selectionMarker.addComponent(ObjComponent(MolGLide.SELECTION_MARKER_MESH, MolGLide.SELECTION_MARKER_MATERIAL))
     }
 }

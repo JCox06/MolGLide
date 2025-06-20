@@ -95,20 +95,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
 
     override fun renderTransientUI(transientUI: EntityLevel) {
-        val currentSelection = context.selectionManager.primarySelection
-        if (currentSelection !is Selection.Active) {
-            return
-        }
-
-        val entitySelected = workingState.level.findByID(currentSelection.id)
-        val position = entitySelected?.getAbsolutePosition()
-        if (position == null) {
-            return
-        }
-
-        val selectionMarker = transientUI.addEntity()
-        selectionMarker.addComponent(TransformComponent(position.x, position.y, position.z, NewOrganicEditorState.SELECTION_MARKER_SIZE))
-        selectionMarker.addComponent(ObjComponent(MolGLide.SELECTION_MARKER_MESH, MolGLide.SELECTION_MARKER_MATERIAL))
+        renderSelectionMarkerOnAtoms(transientUI)
     }
 
 
@@ -240,7 +227,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
         //todo still not working for the dragging atom?
         val selectingTransform = atomSelect.getComponent(TransformComponent::class)
-        moveGhostGroup(Vector2f(selectingTransform.x, selectingTransform.y), atomDrag)
+//        moveGhostGroup(Vector2f(selectingTransform.x, selectingTransform.y), atomDrag)
     }
 
     private fun moveGhostGroup(oppositeEnd: Vector2f, atom: EntityLevel) {
