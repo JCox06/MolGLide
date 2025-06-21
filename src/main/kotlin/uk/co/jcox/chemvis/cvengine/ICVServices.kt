@@ -5,7 +5,7 @@ import org.joml.Vector2i
 interface ICVServices {
     fun windowMetrics(): Vector2i
 
-    fun setCurrentApplicationState(state: IApplicationState)
+    fun setApplicationState(state: IApplicationState, renderTarget: String? = null)
 
     fun inputs(): InputManager
 

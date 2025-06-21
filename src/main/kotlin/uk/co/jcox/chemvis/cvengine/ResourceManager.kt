@@ -1,6 +1,5 @@
 package uk.co.jcox.chemvis.cvengine
 
-import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
@@ -29,6 +28,7 @@ class ResourceManager : IResourceManager{
     private val fonts: MutableMap<String, BitmapFont> = mutableMapOf()
     private val meshes: MutableMap<String, GLMesh> = mutableMapOf()
     private val materials: MutableMap<String, Material> = mutableMapOf()
+    private val renderTargets: MutableMap<String, RenderTarget> = mutableMapOf()
 
     init {
         STBImage.stbi_set_flip_vertically_on_load(true)
@@ -166,6 +166,11 @@ class ResourceManager : IResourceManager{
 
         meshes.keys.forEach { keysToRemove.add(it) }
         keysToRemove.forEach { destroyMesh(it) }
+        keysToRemove.clear()
+
+
+        renderTargets.keys.forEach { keysToRemove.add(it)}
+        keysToRemove.forEach { destroyRenderTarget(it) }
         keysToRemove.clear()
     }
 
@@ -326,7 +331,7 @@ class ResourceManager : IResourceManager{
         }
     }
 
-    private fun loadTextureToOpenGL(data: ByteBuffer, width: Int, height: Int, minFilter: Int = GL11.GL_LINEAR_MIPMAP_LINEAR, magFilter: Int = GL11.GL_LINEAR, stbLoaded: Boolean = true) : Int {
+    private fun loadTextureToOpenGL(data: ByteBuffer?, width: Int, height: Int, minFilter: Int = GL11.GL_LINEAR_MIPMAP_LINEAR, magFilter: Int = GL11.GL_LINEAR, stbLoaded: Boolean = true) : Int {
         val glTexture = GL11.glGenTextures()
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, glTexture)
         GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data)
@@ -334,7 +339,7 @@ class ResourceManager : IResourceManager{
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, magFilter)
         GL30.glGenerateMipmap(GL11.GL_TEXTURE_2D)
 
-        if (stbLoaded) {
+        if (stbLoaded && data != null) {
             STBImage.stbi_image_free(data)
         }
 
@@ -474,6 +479,66 @@ class ResourceManager : IResourceManager{
         GL30.glBindVertexArray(0)
 
         return gpuSideMesh
-
     }
+
+
+    override fun createRenderTarget(id: String) {
+        Logger.info {"Creating a render target for $id"}
+
+
+        val width: Int = 1
+        val height: Int = 1
+
+        val frameBuffer = GL30.glGenFramebuffers()
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer)
+
+        val colourAttachment = loadTextureToOpenGL(null, width, height, GL11.GL_NEAREST, GL11.GL_NEAREST, false)
+        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, colourAttachment, 0)
+
+        val depthAttachment = GL30.glGenRenderbuffers()
+        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, depthAttachment)
+        GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL30.GL_DEPTH24_STENCIL8, width, height)
+
+        GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_STENCIL_ATTACHMENT, GL30.GL_RENDERBUFFER, depthAttachment)
+
+
+        if (GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER) != GL30.GL_FRAMEBUFFER_COMPLETE) {
+            Logger.error { "Frame buffer for render target $id is not complete" }
+        } else {
+            Logger.info { "Frame buffer for render target $id has been setup successfully!" }
+        }
+
+        val target = RenderTarget(frameBuffer, colourAttachment, depthAttachment, width, height)
+
+
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
+
+        renderTargets[id] = target
+    }
+
+    override fun destroyRenderTarget(id: String) {
+
+        Logger.info { "Destroying render target $id" }
+
+        val target = renderTargets[id]
+
+        if (target == null) {
+            return
+        }
+
+        GL30.glDeleteFramebuffers(target.frameBuffer)
+        GL30.glDeleteTextures(target.colourAttachmentTexture)
+        GL30.glDeleteRenderbuffers(target.depthAttachmentRenderBuffer)
+    }
+
+    override fun getRenderTarget(id: String): RenderTarget {
+        val target = renderTargets[id]
+
+        if (target == null) {
+            throw NullPointerException("Render target could not be found")
+        }
+
+        return target
+    }
+
 }

@@ -12,9 +12,9 @@ import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL30
 import org.lwjgl.opengl.GL43
 import org.lwjgl.opengl.GLDebugMessageCallback
-import org.lwjgl.opengl.GLUtil
 import org.lwjgl.system.Callback
 import org.tinylog.Logger
 import java.io.File
@@ -32,9 +32,13 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private lateinit var resourceManager: IResourceManager
     private lateinit var levelRenderer: LevelRenderer
 
+
+    private val appRenderStates: MutableMap<String?, IApplicationState> = mutableMapOf()
+
+    private val pendingRenderStateChanges = mutableListOf<Pair<String?, IApplicationState>>()
+
     private var callback: GLDebugMessageCallback? = null
 
-    private var currentState: IApplicationState? = null
 
     private val viewport = Vector2f()
 
@@ -171,10 +175,13 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
                 inputManager.blockInput(false)
             }
 
-            if (currentState != null) {
-                currentState!!.update(inputManager, GLFW.glfwGetTime().toFloat())
-                currentState!!.render(viewport)
-            }
+//            if (currentState != null) {
+//                currentState!!.update(inputManager, GLFW.glfwGetTime().toFloat())
+//                currentState!!.render(viewport)
+//            }
+
+
+            renderAndUpdateStates()
 
             ImGui.render()
             openGlImGui.renderDrawData(ImGui.getDrawData())
@@ -196,6 +203,46 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     }
 
 
+    private fun renderAndUpdateStates() {
+        appRenderStates.forEach { targetID, state ->
+            state.update(inputManager, GLFW.glfwGetTime().toFloat())
+
+            if (targetID == null) {
+
+                GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
+            } else {
+                val customTarget = resourceManager.getRenderTarget(targetID)
+                GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, customTarget.frameBuffer)
+            }
+
+            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
+
+            state.render(viewport)
+
+            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
+        }
+
+
+        //Apply pending changes
+
+        pendingRenderStateChanges.forEach { pair ->
+            val currentState = appRenderStates[pair.first]
+
+            if (currentState != null) {
+                if (currentState is IInputSubscriber) {
+                    this.inputManager.unsubscribe(currentState as IInputSubscriber)
+
+                    currentState.cleanup()
+                }
+            }
+            pair.second.init()
+            appRenderStates[pair.first] = pair.second
+        }
+
+        pendingRenderStateChanges.clear()
+    }
+
+
     override fun windowMetrics(): Vector2i {
         val width = IntArray(1)
         val height = IntArray(1)
@@ -204,16 +251,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     }
 
 
-    override fun setCurrentApplicationState(state: IApplicationState) {
-        if (this.currentState != null) {
-            if (currentState is IInputSubscriber) {
-                this.inputManager.unsubscribe(currentState as IInputSubscriber)
-            }
-
-            this.currentState!!.cleanup()
-        }
-        state.init()
-        this.currentState = state
+    override fun setApplicationState(state: IApplicationState, renderTarget: String?) {
+        pendingRenderStateChanges.add(Pair(renderTarget, state))
     }
 
     override fun shutdown() {

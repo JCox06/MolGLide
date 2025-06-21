@@ -38,7 +38,7 @@ class MolGLide : IApplication, IInputSubscriber {
     private fun newState() {
         val state = NewOrganicEditorState(services, camera, services.levelRenderer())
 
-        services.setCurrentApplicationState(state)
+        services.setApplicationState(state, null)
         services.inputs().subscribe(state)
     }
 

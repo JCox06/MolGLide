@@ -133,9 +133,9 @@ class LevelRenderer (
             val width = glyphMetrics.glyphWidth * textComponent.scale /2
             val height = glyphMetrics.glyphHeight * textComponent.scale /2
 
-            //Dont understand how I fixed it but it works
+            //Does not work!
 //            val meshToDraw = Shaper2D.rectangle(renderX + width, renderY + height, width, height, (Text rendering works fine If you use this line instead of the one below) - However then the text is uncentred
-            val meshToDraw = Shaper2D.rectangle(renderX + width / 2, renderY, width, height,
+            val meshToDraw = Shaper2D.rectangle(renderX, renderY, width, height,
                 Vector2f(glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX, glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY),
                 Vector2f(glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
                 Vector2f(0.0f + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),

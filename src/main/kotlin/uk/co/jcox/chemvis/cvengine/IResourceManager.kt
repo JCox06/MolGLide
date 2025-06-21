@@ -34,4 +34,10 @@ interface IResourceManager {
     fun getFont(id: String) : BitmapFont
 
     fun useTexture(id: String, textureUnit: Int): Boolean
+
+    fun createRenderTarget(id: String)
+
+    fun destroyRenderTarget(id: String)
+
+    fun getRenderTarget(id: String) : RenderTarget
 }
