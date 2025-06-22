@@ -19,6 +19,7 @@ import org.lwjgl.system.Callback
 import org.tinylog.Logger
 import java.io.File
 import java.lang.AutoCloseable
+import kotlin.math.max
 
 class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private val lwjglErrorCallback: Callback? = null
@@ -33,9 +34,9 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private lateinit var levelRenderer: LevelRenderer
 
 
-    private val appRenderStates: MutableMap<String?, IApplicationState> = mutableMapOf()
+    private val appRenderStates: MutableMap<String?, ApplicationState> = mutableMapOf()
 
-    private val pendingRenderStateChanges = mutableListOf<Pair<String?, IApplicationState>>()
+    private val pendingRenderStateChanges = mutableListOf<Pair<String?, ApplicationState>>()
 
     private var callback: GLDebugMessageCallback? = null
 
@@ -129,7 +130,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         style.tabBorderSize = 0.0f
         style.frameRounding = 5.0f
         style.scrollbarRounding = 0.0f
-        style.setDisplaySafeAreaPadding(20.0f, 9.0f)
 
         glfwImGui = ImGuiImplGlfw()
         openGlImGui = ImGuiImplGl3()
@@ -169,11 +169,11 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
             application.loop()
 
             //Then check if the current state needs running
-            if (ImGui.getIO().wantCaptureMouse) {
-                inputManager.blockInput(true)
-            } else {
-                inputManager.blockInput(false)
-            }
+//            if (ImGui.getIO().wantCaptureMouse) {
+//                inputManager.blockInput(true)
+//            } else {
+//                inputManager.blockInput(false)
+//            }
 
 //            if (currentState != null) {
 //                currentState!!.update(inputManager, GLFW.glfwGetTime().toFloat())
@@ -205,7 +205,10 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     private fun renderAndUpdateStates() {
         appRenderStates.forEach { targetID, state ->
-            state.update(inputManager, GLFW.glfwGetTime().toFloat())
+
+            if (!state.paused) {
+                state.update(inputManager, GLFW.glfwGetTime().toFloat())
+            }
 
             if (targetID == null) {
 
@@ -214,6 +217,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
                 val customTarget = resourceManager.getRenderTarget(targetID)
                 GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, customTarget.frameBuffer)
             }
+
 
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
 
@@ -236,6 +240,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
                 }
             }
             pair.second.init()
+            pair.second.resume()
             appRenderStates[pair.first] = pair.second
         }
 
@@ -251,7 +256,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     }
 
 
-    override fun setApplicationState(state: IApplicationState, renderTarget: String?) {
+    override fun setApplicationState(state: ApplicationState, renderTarget: String?) {
         pendingRenderStateChanges.add(Pair(renderTarget, state))
     }
 
@@ -304,13 +309,28 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 //        glfwImGui?.shutdown();
         ImGui.destroyContext()
 
-        GLFW.glfwSetErrorCallback(null)!!.free()
+        GLFW.glfwSetErrorCallback(null)?.free()
 
         Callbacks.glfwFreeCallbacks(this.windowHandle)
         GLFW.glfwDestroyWindow(this.windowHandle)
         GLFW.glfwTerminate()
 
         Logger.info{"Shut down successfully"}
+    }
+
+    override fun pauseAppState(stateID: String) {
+        val actualState = appRenderStates[stateID]
+        actualState?.pause()
+    }
+
+    override fun resumeAppState(stateID: String) {
+        val actualState = appRenderStates[stateID]
+        actualState?.resume()
+    }
+
+
+    override fun getAppStateRenderingContext(stateID: String): IRenderTargetContext? {
+        return appRenderStates[stateID]?.renderTargetContext
     }
 
     companion object {

@@ -2,17 +2,21 @@ package uk.co.jcox.chemvis.application
 
 import imgui.ImGui
 import imgui.ImVec2
+import imgui.flag.ImGuiWindowFlags
 import org.joml.Vector2f
 import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
+import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
-import uk.co.jcox.chemvis.cvengine.IApplicationState
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import uk.co.jcox.chemvis.cvengine.InputManager
+import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
+import uk.co.jcox.chemvis.cvengine.ImGuiRenderingContext
 
-class GlobalAppState (val services: ICVServices, val camera2D: Camera2D) : IApplicationState {
+class GlobalAppState (val services: ICVServices, renderTargetContext: IRenderTargetContext) : ApplicationState(renderTargetContext) {
 
 
     val statesToRender = mutableListOf<String>()
+    val camera = Camera2D(services.windowMetrics().x, services.windowMetrics().y)
     var idCount = 0
 
     override fun init() {
@@ -20,7 +24,10 @@ class GlobalAppState (val services: ICVServices, val camera2D: Camera2D) : IAppl
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
+        val wm = services.windowMetrics()
+        camera.update(wm.x, wm.y)
 
+        renderTargetContext.recalculate()
     }
 
     override fun render(viewport: Vector2f) {
@@ -30,7 +37,7 @@ class GlobalAppState (val services: ICVServices, val camera2D: Camera2D) : IAppl
         if (ImGui.beginMenu("File")) {
             if (ImGui.menuItem("New")) {
 
-                val newState = NewOrganicEditorState(services, services.levelRenderer())
+                val newState = NewOrganicEditorState(services, services.levelRenderer(), ImGuiRenderingContext())
                 val idName = "OrganicEditorState#${idCount++}"
 
                 services.resourceManager().createRenderTarget(idName)
@@ -54,9 +61,27 @@ class GlobalAppState (val services: ICVServices, val camera2D: Camera2D) : IAppl
         statesToRender.forEach { stateID ->
             val actualState = services.resourceManager().getRenderTarget(stateID)
 
-            ImGui.begin(stateID)
+            ImGui.begin(stateID, ImGuiWindowFlags.MenuBar)
 
-            ImGui.image(actualState.colourAttachmentTexture.toLong(), ImVec2(500f, 500f))
+            services.getAppStateRenderingContext(stateID)?.recalculate()
+
+            if (ImGui.isWindowHovered()) {
+                services.resumeAppState(stateID)
+            } else {
+                services.pauseAppState(stateID)
+            }
+
+            ImGui.beginMenuBar()
+
+
+            ImGui.endMenuBar()
+
+            val width = ImGui.getWindowWidth()
+            val height = ImGui.getWindowHeight()
+
+            services.resourceManager().resizeRenderTarget(stateID, width, height)
+
+            ImGui.image(actualState.colourAttachmentTexture.toLong(), ImVec2(width, height), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f))
 
             ImGui.end()
         }
@@ -65,4 +90,13 @@ class GlobalAppState (val services: ICVServices, val camera2D: Camera2D) : IAppl
     override fun cleanup() {
 
     }
+
+    override fun onPause() {
+
+    }
+
+    override fun onResume() {
+
+    }
+
 }

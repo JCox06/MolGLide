@@ -34,10 +34,14 @@ class MolGLide : IApplication, IInputSubscriber {
 
 
     private fun newState() {
-        val state = NewOrganicEditorState(services, services.levelRenderer())
+
+        val windowContext = WindowRenderingContext(services)
+
+        val state = GlobalAppState(services, windowContext)
+//        val state = NewOrganicEditorState(services, services.levelRenderer(), windowContext)
 
         services.setApplicationState(state, null)
-        services.inputs().subscribe(state)
+//        services.inputs().subscribe(state)
     }
 
     override fun loop() {
@@ -46,7 +50,6 @@ class MolGLide : IApplication, IInputSubscriber {
         val wm = services.windowMetrics()
         services.setViewport(0, 0, wm.x, wm.y)
         camera.update(wm.x, wm.y)
-
 
     }
 

@@ -40,4 +40,6 @@ interface IResourceManager {
     fun destroyRenderTarget(id: String)
 
     fun getRenderTarget(id: String) : RenderTarget
+
+    fun resizeRenderTarget(id: String, width: Float, height: Float)
 }

@@ -5,7 +5,7 @@ import org.joml.Vector2i
 interface ICVServices {
     fun windowMetrics(): Vector2i
 
-    fun setApplicationState(state: IApplicationState, renderTarget: String? = null)
+    fun setApplicationState(state: ApplicationState, renderTarget: String? = null)
 
     fun inputs(): InputManager
 
@@ -20,4 +20,10 @@ interface ICVServices {
     fun setViewport(a: Int, b: Int, c: Int, d: Int)
 
     fun shutdown()
+
+    fun pauseAppState(stateID: String)
+
+    fun resumeAppState(stateID: String)
+
+    fun getAppStateRenderingContext(stateID: String) : IRenderTargetContext?
 }

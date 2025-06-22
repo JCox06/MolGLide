@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.cvengine
 
+import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL15
 import org.lwjgl.opengl.GL20
@@ -508,12 +509,37 @@ class ResourceManager : IResourceManager{
             Logger.info { "Frame buffer for render target $id has been setup successfully!" }
         }
 
-        val target = RenderTarget(frameBuffer, colourAttachment, depthAttachment, width, height)
+        val target = RenderTarget(frameBuffer, colourAttachment, depthAttachment, width.toFloat(), height.toFloat())
 
 
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
 
         renderTargets[id] = target
+    }
+
+    override fun resizeRenderTarget(id: String, proposedWidth: Float, proposedHeight: Float) {
+        val target = renderTargets[id]
+
+        if (target == null) {
+            return
+        }
+
+        val width = max(proposedWidth, 1.0f)
+        val height = max(proposedHeight, 1.0f)
+
+        val openGLTextureID = target.colourAttachmentTexture
+        val data: ByteBuffer? = null
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.frameBuffer)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, openGLTextureID)
+        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width.toInt(), height.toInt(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data)
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST)
+        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST)
+
+        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, target.colourAttachmentTexture, 0)
+
+        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, target.depthAttachmentRenderBuffer)
+        GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL30.GL_DEPTH24_STENCIL8, width.toInt(), height.toInt())
+        GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_STENCIL_ATTACHMENT, GL30.GL_RENDERBUFFER, target.depthAttachmentRenderBuffer)
     }
 
     override fun destroyRenderTarget(id: String) {
