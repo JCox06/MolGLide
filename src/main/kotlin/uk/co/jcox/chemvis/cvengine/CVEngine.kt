@@ -141,6 +141,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable)
         io.configViewportsNoDecoration = false
         io.configViewportsNoTaskBarIcon = false
+        io.configWindowsMoveFromTitleBarOnly = true
         io.iniFilename = null
 
 

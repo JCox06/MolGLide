@@ -102,4 +102,11 @@ abstract class Tool (
         selectionMarker.addComponent(TransformComponent(position.x, position.y, position.z, NewOrganicEditorState.SELECTION_MARKER_SIZE))
         selectionMarker.addComponent(ObjComponent(MolGLide.SELECTION_MARKER_MESH, MolGLide.SELECTION_MARKER_MATERIAL))
     }
+
+
+    protected fun mouseWorld() : Vector2f {
+        val mousePos = context.renderingContext.getMousePos(context.inputManager)
+
+        return context.camera2D.screenToWorld(mousePos)
+    }
 }

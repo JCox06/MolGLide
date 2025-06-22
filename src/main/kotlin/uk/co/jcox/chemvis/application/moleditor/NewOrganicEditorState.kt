@@ -3,6 +3,7 @@ package uk.co.jcox.chemvis.application.moleditor
 
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
@@ -36,7 +37,7 @@ class NewOrganicEditorState (
     override fun init() {
         workState.init()
 
-        atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), selection, camera))
+        atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
 
         atomBondTool.onCommit {
             workState.makeCheckpoint(it.clone())
@@ -84,6 +85,9 @@ class NewOrganicEditorState (
     }
 
     override fun render(viewport: Vector2f) {
+
+        GL11.glViewport(0, 0, renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
+
         val transientUI = EntityLevel()
 
         atomBondTool.renderTransientUI(transientUI)
@@ -102,7 +106,6 @@ class NewOrganicEditorState (
             levelRenderer.renderLevel(workState.get().level, camera, viewport)
         }
 
-
     }
 
 
@@ -119,7 +122,7 @@ class NewOrganicEditorState (
         }
 
         if (inputManager.mouseClick(RawInput.MOUSE_1)) {
-            val mousePos = camera.screenToWorld(inputManager.mousePos())
+            val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
             atomBondTool.processClick(ClickContext(mousePos.x, mousePos.y, AtomInsert.CARBON))
         }
 
@@ -128,7 +131,7 @@ class NewOrganicEditorState (
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
 
         if (key == RawInput.MOUSE_1) {
-            val mousePos = camera.screenToWorld(inputManager.mousePos())
+            val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
             atomBondTool.processClickRelease(ClickContext(mousePos.x, mousePos.y, AtomInsert.CARBON))
         }
     }
