@@ -2,6 +2,7 @@ package uk.co.jcox.chemvis.application
 
 import imgui.ImGui
 import imgui.ImVec2
+import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiWindowFlags
 import org.joml.Vector2f
 import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
@@ -19,6 +20,8 @@ class GlobalAppState (val services: ICVServices, renderTargetContext: IRenderTar
     val camera = Camera2D(services.windowMetrics().x, services.windowMetrics().y)
     var idCount = 0
 
+    var dockID = 0
+
     override fun init() {
 
     }
@@ -31,6 +34,9 @@ class GlobalAppState (val services: ICVServices, renderTargetContext: IRenderTar
     }
 
     override fun render(viewport: Vector2f) {
+
+        dockID = ImGui.dockSpaceOverViewport()
+
 
         ImGui.beginMainMenuBar()
 
@@ -50,9 +56,6 @@ class GlobalAppState (val services: ICVServices, renderTargetContext: IRenderTar
         ImGui.endMainMenuBar()
 
 
-        ImGui.dockSpaceOverViewport()
-
-
         showStates()
     }
 
@@ -61,9 +64,18 @@ class GlobalAppState (val services: ICVServices, renderTargetContext: IRenderTar
         statesToRender.forEach { stateID ->
             val actualState = services.resourceManager().getRenderTarget(stateID)
 
+            ImGui.setNextWindowDockID(dockID, ImGuiCond.FirstUseEver)
             ImGui.begin(stateID, ImGuiWindowFlags.MenuBar)
 
-            services.getAppStateRenderingContext(stateID)?.recalculate()
+            val renderContext = services.getAppStateRenderingContext(stateID)
+
+
+            val winPos = ImGui.getWindowPos()
+
+
+            val wm = services.windowMetrics()
+            renderContext?.setImGuiWinMetrics(Vector2f(winPos.x, winPos.y))
+
 
             if (ImGui.isWindowHovered()) {
                 services.resumeAppState(stateID)
@@ -76,12 +88,14 @@ class GlobalAppState (val services: ICVServices, renderTargetContext: IRenderTar
 
             ImGui.endMenuBar()
 
-            val width = ImGui.getWindowWidth()
-            val height = ImGui.getWindowHeight()
+            val width = ImGui.getContentRegionAvailX()
+            val height = ImGui.getContentRegionAvailY()
 
             services.resourceManager().resizeRenderTarget(stateID, width, height)
 
             ImGui.image(actualState.colourAttachmentTexture.toLong(), ImVec2(width, height), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f))
+
+            renderContext?.recalculate()
 
             ImGui.end()
         }

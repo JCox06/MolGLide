@@ -24,7 +24,7 @@ class NewOrganicEditorState (
 
     private val workState = WorkState()
     private val selection = SelectionManager()
-    private val  camera = Camera2D(services.windowMetrics().x, services.windowMetrics().y)
+    private val  camera = Camera2D(renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
 
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
@@ -57,9 +57,10 @@ class NewOrganicEditorState (
         camera.update(renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
 
         if (! inputManager.mouseClick(RawInput.MOUSE_1)) {
-            val mousePos = camera.screenToWorld(inputManager.mousePos())
+            val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
             selection.update(workState.get().level, mousePos.x, mousePos.y)
         }
+
 
         atomBondTool.update()
 
