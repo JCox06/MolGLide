@@ -2,33 +2,44 @@ package uk.co.jcox.chemvis.application.moleditor
 
 
 import org.joml.Vector2f
+import org.joml.Vector3f
+import org.lwjgl.opengl.GL11
+import uk.co.jcox.chemvis.application.GuiState
+import uk.co.jcox.chemvis.application.MolGLide
+import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
-import uk.co.jcox.chemvis.cvengine.IApplicationState
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import uk.co.jcox.chemvis.cvengine.IInputSubscriber
 import uk.co.jcox.chemvis.cvengine.InputManager
 import uk.co.jcox.chemvis.cvengine.LevelRenderer
 import uk.co.jcox.chemvis.cvengine.RawInput
+import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
+import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
 class NewOrganicEditorState (
     private val services: ICVServices,
-    private val camera2D: Camera2D,
-    private val levelRenderer: LevelRenderer,
-) : IApplicationState, IInputSubscriber {
+    private val appUIState: GuiState,
+    renderTargetContext: IRenderTargetContext
+) : ApplicationState(renderTargetContext), IInputSubscriber {
 
     private val workState = WorkState()
-    private val ui = ApplicationUI()
     private val selection = SelectionManager()
+    private val  camera = Camera2D(renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
+    private val levelRenderer: LevelRenderer = services.levelRenderer()
 
-    private var moformula = "null"
+    private var lastMouseX: Float = 0.0f
+    private var lastMouseY: Float = 0.0f
+
+    var moformula = "null"
 
     private lateinit var atomBondTool: Tool
 
     override fun init() {
         workState.init()
 
-        atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), selection, camera2D))
+        atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
 
         atomBondTool.onCommit {
             workState.makeCheckpoint(it.clone())
@@ -36,11 +47,23 @@ class NewOrganicEditorState (
 
     }
 
+    override fun onPause() {
+        services.inputs().unsubscribe(this)
+    }
+
+    override fun onResume() {
+        services.inputs().subscribe(this)
+    }
+
     override fun update(inputManager: InputManager, timeElapsed: Float) {
+
+        camera.update(renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
+
         if (! inputManager.mouseClick(RawInput.MOUSE_1)) {
-            val mousePos = camera2D.screenToWorld(inputManager.mousePos())
+            val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
             selection.update(workState.get().level, mousePos.x, mousePos.y)
         }
+
 
         atomBondTool.update()
 
@@ -64,20 +87,25 @@ class NewOrganicEditorState (
     }
 
     override fun render(viewport: Vector2f) {
+
+        GL11.glViewport(0, 0, renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
+
         val transientUI = EntityLevel()
 
         atomBondTool.renderTransientUI(transientUI)
 
-        levelRenderer.renderLevel(transientUI, camera2D, viewport)
+
+        val textEntity = transientUI.addEntity()
+
+        textEntity.addComponent(TransformComponent(0.0f, 20.0f, 0.0f))
+
+        levelRenderer.renderLevel(transientUI, camera, viewport)
 
         if (atomBondTool.actionInProgress) {
-            levelRenderer.renderLevel(atomBondTool.workingState.level, camera2D, viewport)
+            levelRenderer.renderLevel(atomBondTool.workingState.level, camera, viewport)
         } else {
-            levelRenderer.renderLevel(workState.get().level, camera2D, viewport)
+            levelRenderer.renderLevel(workState.get().level, camera, viewport)
         }
-
-        ui.mainMenu(services, workState, atomBondTool, moformula)
-        ui.renderWidgets()
 
     }
 
@@ -95,8 +123,8 @@ class NewOrganicEditorState (
         }
 
         if (inputManager.mouseClick(RawInput.MOUSE_1)) {
-            val mousePos = camera2D.screenToWorld(inputManager.mousePos())
-            atomBondTool.processClick(ClickContext(mousePos.x, mousePos.y, ui.getActiveElement()))
+            val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
+            atomBondTool.processClick(ClickContext(mousePos.x, mousePos.y, appUIState.insert))
         }
 
     }
@@ -104,9 +132,32 @@ class NewOrganicEditorState (
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
 
         if (key == RawInput.MOUSE_1) {
-            val mousePos = camera2D.screenToWorld(inputManager.mousePos())
-            atomBondTool.processClickRelease(ClickContext(mousePos.x, mousePos.y, ui.getActiveElement()))
+            val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
+            atomBondTool.processClickRelease(ClickContext(mousePos.x, mousePos.y, AtomInsert.CARBON))
         }
+    }
+
+    override fun mouseScrollEvent(inputManager: InputManager, xScroll: Double, yScroll: Double) {
+        if (inputManager.keyClick(RawInput.LCTRL)) {
+            this.camera.camWidth -= yScroll.toFloat() * 2;
+        }
+    }
+
+    override fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
+
+        if (inputManager.mouseClick(RawInput.MOUSE_3)) {
+            val deltaX: Float = xPos.toFloat() - lastMouseX
+            val deltaY: Float = yPos.toFloat() - lastMouseY
+            lastMouseX = xPos.toFloat()
+            lastMouseY = yPos.toFloat()
+
+            val scale = 0.5f
+
+            camera.cameraPosition.add(Vector3f(-deltaX * scale, deltaY * scale, 0.0f))
+        }
+
+        lastMouseX = xPos.toFloat()
+        lastMouseY = yPos.toFloat()
     }
 
 

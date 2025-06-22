@@ -73,7 +73,7 @@ class BondOrderAction (
 
         val newBondEntity = level.addEntity()
         newBondEntity.addComponent(TransformComponent(orthVec.x, orthVec.y, orthVec.z))
-        newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id))
+        newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id, NewOrganicEditorState.BOND_WIDTH))
     }
 
 

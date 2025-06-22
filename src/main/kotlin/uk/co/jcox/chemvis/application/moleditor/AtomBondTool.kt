@@ -104,7 +104,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         //So given the mouse position and the atom selected we can figure out if we need to cancel the bond order change
 
         if (actionInProgress && !allowExternalBondFormation) {
-            val mousePos = context.camera2D.screenToWorld(context.inputManager.mousePos())
+            val mousePos = mouseWorld()
 
             val matcher = findMatchingPosition(workingState.level, Vector3f(potentialDraggingPosition, NewOrganicEditorState.XY_PLANE), null)
 
@@ -190,7 +190,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
     private fun updateDraggingPosition() {
 
 
-        val mouseWorld = context.camera2D.screenToWorld(context.inputManager.mousePos())
+        val mouseWorld = mouseWorld()
         potentialDraggingPosition = closestPointToCircleCircumference(Vector2f(dragBase.x, dragBase.y), mouseWorld, NewOrganicEditorState.CONNECTION_DIST)
 
         val atomToDrag = draggingAtom

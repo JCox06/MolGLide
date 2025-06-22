@@ -12,13 +12,14 @@ import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL30
 import org.lwjgl.opengl.GL43
 import org.lwjgl.opengl.GLDebugMessageCallback
-import org.lwjgl.opengl.GLUtil
 import org.lwjgl.system.Callback
 import org.tinylog.Logger
 import java.io.File
 import java.lang.AutoCloseable
+import kotlin.math.max
 
 class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private val lwjglErrorCallback: Callback? = null
@@ -32,9 +33,15 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private lateinit var resourceManager: IResourceManager
     private lateinit var levelRenderer: LevelRenderer
 
+
+    private val appRenderStates: MutableMap<String?, ApplicationState> = mutableMapOf()
+
+    private val pendingRenderStateChanges = mutableListOf<Pair<String?, ApplicationState>>()
+
+    private val pendingRenderStateRemove = mutableListOf<String>()
+
     private var callback: GLDebugMessageCallback? = null
 
-    private var currentState: IApplicationState? = null
 
     private val viewport = Vector2f()
 
@@ -119,24 +126,31 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
         val style = ImGui.getStyle()
         style.windowTitleAlign = ImVec2(0.5f, 0.5f)
-        style.windowBorderSize = 0.0f
-        style.childBorderSize = 0.0f
-        style.frameBorderSize = 0.0f
-        style.tabBorderSize = 0.0f
-        style.frameRounding = 5.0f
-        style.scrollbarRounding = 0.0f
-        style.setDisplaySafeAreaPadding(20.0f, 9.0f)
+//        style.windowBorderSize = 0.0f
+//        style.childBorderSize = 0.0f
+//        style.frameBorderSize = 0.0f
+//        style.tabBorderSize = 0.0f
+//        style.frameRounding = 5.0f
+//        style.scrollbarRounding = 0.0f
 
         glfwImGui = ImGuiImplGlfw()
         openGlImGui = ImGuiImplGl3()
 
         val io = ImGui.getIO()
-        val experience = io.fonts.addFontFromFileTTF("data/integrated/fonts/Roboto-Black.ttf", 18f)
+
+        val x = FloatArray(1)
+        val y = FloatArray(1)
+        GLFW.glfwGetWindowContentScale(this.windowHandle, x, y)
+
+        val scale = x[0] * 18
+
+        val experience = io.fonts.addFontFromFileTTF("data/integrated/fonts/Roboto-Black.ttf", scale)
         io.fontDefault = experience
         io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable)
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable)
         io.configViewportsNoDecoration = false
         io.configViewportsNoTaskBarIcon = false
+        io.configWindowsMoveFromTitleBarOnly = true
         io.iniFilename = null
 
 
@@ -165,16 +179,19 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
             application.loop()
 
             //Then check if the current state needs running
-            if (ImGui.getIO().wantCaptureMouse) {
-                inputManager.blockInput(true)
-            } else {
-                inputManager.blockInput(false)
-            }
+//            if (ImGui.getIO().wantCaptureMouse) {
+//                inputManager.blockInput(true)
+//            } else {
+//                inputManager.blockInput(false)
+//            }
 
-            if (currentState != null) {
-                currentState!!.update(inputManager, GLFW.glfwGetTime().toFloat())
-                currentState!!.render(viewport)
-            }
+//            if (currentState != null) {
+//                currentState!!.update(inputManager, GLFW.glfwGetTime().toFloat())
+//                currentState!!.render(viewport)
+//            }
+
+
+            renderAndUpdateStates()
 
             ImGui.render()
             openGlImGui.renderDrawData(ImGui.getDrawData())
@@ -196,6 +213,72 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     }
 
 
+    private fun renderAndUpdateStates() {
+        appRenderStates.forEach { targetID, state ->
+
+            if (!state.paused) {
+                state.update(inputManager, GLFW.glfwGetTime().toFloat())
+            }
+
+            if (targetID == null) {
+
+                GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
+            } else {
+                val customTarget = resourceManager.getRenderTarget(targetID)
+                GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, customTarget.frameBuffer)
+            }
+
+
+            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
+
+            state.render(viewport)
+
+            GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
+        }
+
+
+        //Apply pending changes for addition
+
+        pendingRenderStateChanges.forEach { pair ->
+            val currentState = appRenderStates[pair.first]
+
+            if (currentState != null) {
+                if (currentState is IInputSubscriber) {
+                    this.inputManager.unsubscribe(currentState as IInputSubscriber)
+
+                    currentState.cleanup()
+                }
+            }
+            pair.second.init()
+            pair.second.resume()
+            appRenderStates[pair.first] = pair.second
+        }
+
+        pendingRenderStateChanges.clear()
+
+
+        //Apply pending changes for removal
+
+        pendingRenderStateRemove.forEach { stateID ->
+            val currentState = appRenderStates[stateID]
+
+            if (currentState == null) {
+                return
+            }
+
+            if (currentState is IInputSubscriber) {
+                this.inputManager.unsubscribe(currentState)
+            }
+
+            appRenderStates.remove(stateID)
+
+            resourceManager.destroyRenderTarget(stateID)
+
+            currentState.cleanup()
+        }
+    }
+
+
     override fun windowMetrics(): Vector2i {
         val width = IntArray(1)
         val height = IntArray(1)
@@ -204,16 +287,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     }
 
 
-    override fun setCurrentApplicationState(state: IApplicationState) {
-        if (this.currentState != null) {
-            if (currentState is IInputSubscriber) {
-                this.inputManager.unsubscribe(currentState as IInputSubscriber)
-            }
-
-            this.currentState!!.cleanup()
-        }
-        state.init()
-        this.currentState = state
+    override fun setApplicationState(state: ApplicationState, renderTarget: String?) {
+        pendingRenderStateChanges.add(Pair(renderTarget, state))
     }
 
     override fun shutdown() {
@@ -265,13 +340,40 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 //        glfwImGui?.shutdown();
         ImGui.destroyContext()
 
-        GLFW.glfwSetErrorCallback(null)!!.free()
+        GLFW.glfwSetErrorCallback(null)?.free()
 
         Callbacks.glfwFreeCallbacks(this.windowHandle)
         GLFW.glfwDestroyWindow(this.windowHandle)
         GLFW.glfwTerminate()
 
         Logger.info{"Shut down successfully"}
+    }
+
+    override fun pauseAppState(stateID: String) {
+        val actualState = appRenderStates[stateID]
+        actualState?.pause()
+    }
+
+    override fun resumeAppState(stateID: String) {
+        val actualState = appRenderStates[stateID]
+        actualState?.resume()
+    }
+
+
+    override fun getAppStateRenderingContext(stateID: String): IRenderTargetContext? {
+        return appRenderStates[stateID]?.renderTargetContext
+    }
+
+
+    override fun destroyAppState(stateID: String) {
+        //State ID cannot be null because that would be destroying the main global state/only state
+
+        pendingRenderStateRemove.add(stateID)
+    }
+
+
+    override fun getState(stateID: String): ApplicationState? {
+        return appRenderStates[stateID]
     }
 
     companion object {
