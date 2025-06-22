@@ -25,5 +25,9 @@ interface ICVServices {
 
     fun resumeAppState(stateID: String)
 
+    fun destroyAppState(stateID: String)
+
     fun getAppStateRenderingContext(stateID: String) : IRenderTargetContext?
+
+    fun getState(stateID: String) : ApplicationState?
 }

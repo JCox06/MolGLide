@@ -38,6 +38,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     private val pendingRenderStateChanges = mutableListOf<Pair<String?, ApplicationState>>()
 
+    private val pendingRenderStateRemove = mutableListOf<String>()
+
     private var callback: GLDebugMessageCallback? = null
 
 
@@ -124,18 +126,25 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
         val style = ImGui.getStyle()
         style.windowTitleAlign = ImVec2(0.5f, 0.5f)
-        style.windowBorderSize = 0.0f
-        style.childBorderSize = 0.0f
-        style.frameBorderSize = 0.0f
-        style.tabBorderSize = 0.0f
-        style.frameRounding = 5.0f
-        style.scrollbarRounding = 0.0f
+//        style.windowBorderSize = 0.0f
+//        style.childBorderSize = 0.0f
+//        style.frameBorderSize = 0.0f
+//        style.tabBorderSize = 0.0f
+//        style.frameRounding = 5.0f
+//        style.scrollbarRounding = 0.0f
 
         glfwImGui = ImGuiImplGlfw()
         openGlImGui = ImGuiImplGl3()
 
         val io = ImGui.getIO()
-        val experience = io.fonts.addFontFromFileTTF("data/integrated/fonts/Roboto-Black.ttf", 18f)
+
+        val x = FloatArray(1)
+        val y = FloatArray(1)
+        GLFW.glfwGetWindowContentScale(this.windowHandle, x, y)
+
+        val scale = x[0] * 18
+
+        val experience = io.fonts.addFontFromFileTTF("data/integrated/fonts/Roboto-Black.ttf", scale)
         io.fontDefault = experience
         io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable)
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable)
@@ -228,7 +237,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         }
 
 
-        //Apply pending changes
+        //Apply pending changes for addition
 
         pendingRenderStateChanges.forEach { pair ->
             val currentState = appRenderStates[pair.first]
@@ -246,6 +255,27 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         }
 
         pendingRenderStateChanges.clear()
+
+
+        //Apply pending changes for removal
+
+        pendingRenderStateRemove.forEach { stateID ->
+            val currentState = appRenderStates[stateID]
+
+            if (currentState == null) {
+                return
+            }
+
+            if (currentState is IInputSubscriber) {
+                this.inputManager.unsubscribe(currentState)
+            }
+
+            appRenderStates.remove(stateID)
+
+            resourceManager.destroyRenderTarget(stateID)
+
+            currentState.cleanup()
+        }
     }
 
 
@@ -332,6 +362,18 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     override fun getAppStateRenderingContext(stateID: String): IRenderTargetContext? {
         return appRenderStates[stateID]?.renderTargetContext
+    }
+
+
+    override fun destroyAppState(stateID: String) {
+        //State ID cannot be null because that would be destroying the main global state/only state
+
+        pendingRenderStateRemove.add(stateID)
+    }
+
+
+    override fun getState(stateID: String): ApplicationState? {
+        return appRenderStates[stateID]
     }
 
     companion object {

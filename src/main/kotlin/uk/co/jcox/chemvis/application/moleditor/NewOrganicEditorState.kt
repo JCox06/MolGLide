@@ -4,6 +4,7 @@ package uk.co.jcox.chemvis.application.moleditor
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
+import uk.co.jcox.chemvis.application.GuiState
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
@@ -19,18 +20,19 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
 class NewOrganicEditorState (
     private val services: ICVServices,
-    private val levelRenderer: LevelRenderer,
+    private val appUIState: GuiState,
     renderTargetContext: IRenderTargetContext
 ) : ApplicationState(renderTargetContext), IInputSubscriber {
 
     private val workState = WorkState()
     private val selection = SelectionManager()
     private val  camera = Camera2D(renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
+    private val levelRenderer: LevelRenderer = services.levelRenderer()
 
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
 
-    private var moformula = "null"
+    var moformula = "null"
 
     private lateinit var atomBondTool: Tool
 
@@ -96,7 +98,6 @@ class NewOrganicEditorState (
         val textEntity = transientUI.addEntity()
 
         textEntity.addComponent(TransformComponent(0.0f, 20.0f, 0.0f))
-        textEntity.addComponent(TextComponent("Hello from the window", MolGLide.FONT, 1.0f, 0.0f, 0.0f, MolGLide.GLOBAL_SCALE))
 
         levelRenderer.renderLevel(transientUI, camera, viewport)
 
@@ -123,7 +124,7 @@ class NewOrganicEditorState (
 
         if (inputManager.mouseClick(RawInput.MOUSE_1)) {
             val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
-            atomBondTool.processClick(ClickContext(mousePos.x, mousePos.y, AtomInsert.CARBON))
+            atomBondTool.processClick(ClickContext(mousePos.x, mousePos.y, appUIState.insert))
         }
 
     }
