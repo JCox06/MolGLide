@@ -2,6 +2,7 @@ package uk.co.jcox.chemvis.application.moleditor
 
 
 import org.joml.Vector2f
+import org.joml.Vector3f
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IApplicationState
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -13,13 +14,16 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 
 class NewOrganicEditorState (
     private val services: ICVServices,
-    private val camera2D: Camera2D,
     private val levelRenderer: LevelRenderer,
 ) : IApplicationState, IInputSubscriber {
 
     private val workState = WorkState()
     private val ui = ApplicationUI()
     private val selection = SelectionManager()
+    private val  camera = Camera2D(services.windowMetrics().x, services.windowMetrics().y)
+
+    private var lastMouseX: Float = 0.0f
+    private var lastMouseY: Float = 0.0f
 
     private var moformula = "null"
 
@@ -28,7 +32,7 @@ class NewOrganicEditorState (
     override fun init() {
         workState.init()
 
-        atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), selection, camera2D))
+        atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), selection, camera))
 
         atomBondTool.onCommit {
             workState.makeCheckpoint(it.clone())
@@ -37,8 +41,11 @@ class NewOrganicEditorState (
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
+
+        camera.update(services.windowMetrics().x, services.windowMetrics().y)
+
         if (! inputManager.mouseClick(RawInput.MOUSE_1)) {
-            val mousePos = camera2D.screenToWorld(inputManager.mousePos())
+            val mousePos = camera.screenToWorld(inputManager.mousePos())
             selection.update(workState.get().level, mousePos.x, mousePos.y)
         }
 
@@ -68,12 +75,12 @@ class NewOrganicEditorState (
 
         atomBondTool.renderTransientUI(transientUI)
 
-        levelRenderer.renderLevel(transientUI, camera2D, viewport)
+        levelRenderer.renderLevel(transientUI, camera, viewport)
 
         if (atomBondTool.actionInProgress) {
-            levelRenderer.renderLevel(atomBondTool.workingState.level, camera2D, viewport)
+            levelRenderer.renderLevel(atomBondTool.workingState.level, camera, viewport)
         } else {
-            levelRenderer.renderLevel(workState.get().level, camera2D, viewport)
+            levelRenderer.renderLevel(workState.get().level, camera, viewport)
         }
 
         ui.mainMenu(services, workState, atomBondTool, moformula)
@@ -95,7 +102,7 @@ class NewOrganicEditorState (
         }
 
         if (inputManager.mouseClick(RawInput.MOUSE_1)) {
-            val mousePos = camera2D.screenToWorld(inputManager.mousePos())
+            val mousePos = camera.screenToWorld(inputManager.mousePos())
             atomBondTool.processClick(ClickContext(mousePos.x, mousePos.y, ui.getActiveElement()))
         }
 
@@ -104,9 +111,32 @@ class NewOrganicEditorState (
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
 
         if (key == RawInput.MOUSE_1) {
-            val mousePos = camera2D.screenToWorld(inputManager.mousePos())
+            val mousePos = camera.screenToWorld(inputManager.mousePos())
             atomBondTool.processClickRelease(ClickContext(mousePos.x, mousePos.y, ui.getActiveElement()))
         }
+    }
+
+    override fun mouseScrollEvent(inputManager: InputManager, xScroll: Double, yScroll: Double) {
+        if (inputManager.keyClick(RawInput.LCTRL)) {
+            this.camera.camWidth -= yScroll.toFloat() * 2;
+        }
+    }
+
+    override fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
+
+        if (inputManager.mouseClick(RawInput.MOUSE_3)) {
+            val deltaX: Float = xPos.toFloat() - lastMouseX
+            val deltaY: Float = yPos.toFloat() - lastMouseY
+            lastMouseX = xPos.toFloat()
+            lastMouseY = yPos.toFloat()
+
+            val scale = 0.5f
+
+            camera.cameraPosition.add(Vector3f(-deltaX * scale, deltaY * scale, 0.0f))
+        }
+
+        lastMouseX = xPos.toFloat()
+        lastMouseY = yPos.toFloat()
     }
 
 

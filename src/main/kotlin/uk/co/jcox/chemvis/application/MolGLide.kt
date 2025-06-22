@@ -13,8 +13,6 @@ class MolGLide : IApplication, IInputSubscriber {
 
     private lateinit var services: ICVServices
 
-    private var lastMouseX: Float = 0.0f
-    private var lastMouseY: Float = 0.0f
 
     override fun init(engineServices: ICVServices) {
 
@@ -36,7 +34,7 @@ class MolGLide : IApplication, IInputSubscriber {
 
 
     private fun newState() {
-        val state = NewOrganicEditorState(services, camera, services.levelRenderer())
+        val state = NewOrganicEditorState(services, services.levelRenderer())
 
         services.setApplicationState(state, null)
         services.inputs().subscribe(state)
@@ -52,28 +50,7 @@ class MolGLide : IApplication, IInputSubscriber {
 
     }
 
-    override fun mouseScrollEvent(inputManager: InputManager, xScroll: Double, yScroll: Double) {
-        if (inputManager.keyClick(RawInput.LCTRL)) {
-            this.camera.camWidth -= yScroll.toFloat() * 2;
-        }
-    }
 
-    override fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
-
-        if (inputManager.mouseClick(RawInput.MOUSE_3)) {
-            val deltaX: Float = xPos.toFloat() - lastMouseX
-            val deltaY: Float = yPos.toFloat() - lastMouseY
-            lastMouseX = xPos.toFloat()
-            lastMouseY = yPos.toFloat()
-
-            val scale = 0.5f
-
-            camera.cameraPosition.add(Vector3f(-deltaX * scale, deltaY * scale, 0.0f))
-        }
-
-        lastMouseX = xPos.toFloat()
-        lastMouseY = yPos.toFloat()
-    }
 
     private fun loadCoreAssets() {
 

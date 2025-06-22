@@ -30,7 +30,7 @@ class GlobalAppState (val services: ICVServices, val camera2D: Camera2D) : IAppl
         if (ImGui.beginMenu("File")) {
             if (ImGui.menuItem("New")) {
 
-                val newState = NewOrganicEditorState(services, camera2D, services.levelRenderer())
+                val newState = NewOrganicEditorState(services, services.levelRenderer())
                 val idName = "OrganicEditorState#${idCount++}"
 
                 services.resourceManager().createRenderTarget(idName)
