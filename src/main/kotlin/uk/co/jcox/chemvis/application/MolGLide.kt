@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application
 
+import org.checkerframework.checker.units.qual.A
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
@@ -7,41 +8,31 @@ import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
 
 class MolGLide : IApplication, IInputSubscriber {
-
-    private lateinit var camera: Camera2D
-
-
     private lateinit var services: ICVServices
 
+    private lateinit var mainState: GlobalAppState
+
+    private lateinit var mainApplicationUI: ApplicationUI
 
     override fun init(engineServices: ICVServices) {
-
         this.services = engineServices
         services.resourceManager().loadFontFromDisc(FONT, File("data/chemvis/fonts/ubuntu.ttf"), CVEngine.STD_CHARACTER_SET, FONT_SIZE)
-        val wm = services.windowMetrics()
-        camera = Camera2D(wm.x, wm.y)
-
 
         GL11.glClearColor(0.22f, 0.22f, 0.26f, 1.0f)
-//        GL11.glClearColor(254/128f, 250/128f, 224/128f, 1.0f)
-
-
         loadCoreAssets()
-
         services.inputs().subscribe(this)
         newState()
     }
 
 
     private fun newState() {
-
         val windowContext = WindowRenderingContext(services)
 
-        val state = GlobalAppState(services, windowContext)
-//        val state = NewOrganicEditorState(services, services.levelRenderer(), windowContext)
+        mainState = GlobalAppState(services, windowContext)
 
-        services.setApplicationState(state, null)
-//        services.inputs().subscribe(state)
+        services.setApplicationState(mainState, null)
+
+        mainApplicationUI = ApplicationUI(mainState, services)
     }
 
     override fun loop() {
@@ -49,14 +40,12 @@ class MolGLide : IApplication, IInputSubscriber {
 
         val wm = services.windowMetrics()
         services.setViewport(0, 0, wm.x, wm.y)
-        camera.update(wm.x, wm.y)
 
+        mainApplicationUI.drawMainMenu()
     }
 
 
-
     private fun loadCoreAssets() {
-
         val instancer = services.instancedRenderer()
 
         val selectionMarkerMesh = Shaper2D.circle(0.0f, 0.0f, 1.0f)

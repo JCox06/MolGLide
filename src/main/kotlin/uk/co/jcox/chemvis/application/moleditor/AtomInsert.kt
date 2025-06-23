@@ -9,12 +9,13 @@ enum class AtomInsert(val symbol: String, val hydrogenable: Boolean) {
     CHLORINE("Cl", false),
     OXYGEN("O", true),
     NITROGEN("N", true),
-    PHOSPHORUS("P", false),
+    PHOSPHORUS("P", true),
     FLUORINE("F", false),
     BROMINE("Br", false),
     IODINE("I", false),
     MAGNESIUM("Mg", false),
     LITHIUM("Li", false),
+    SULPHUR("S", true)
 
     ;
 

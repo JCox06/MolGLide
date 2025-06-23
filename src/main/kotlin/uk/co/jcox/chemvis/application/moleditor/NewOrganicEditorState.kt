@@ -4,7 +4,7 @@ package uk.co.jcox.chemvis.application.moleditor
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
-import uk.co.jcox.chemvis.application.GuiState
+import uk.ac.ebi.beam.Atom
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
@@ -20,19 +20,21 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
 class NewOrganicEditorState (
     private val services: ICVServices,
-    private val appUIState: GuiState,
     renderTargetContext: IRenderTargetContext
 ) : ApplicationState(renderTargetContext), IInputSubscriber {
 
     private val workState = WorkState()
     private val selection = SelectionManager()
-    private val  camera = Camera2D(renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
+    private val camera = Camera2D(renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
     private val levelRenderer: LevelRenderer = services.levelRenderer()
+
+    var atomInsert = AtomInsert.CARBON
 
     private var lastMouseX: Float = 0.0f
     private var lastMouseY: Float = 0.0f
 
     var moformula = "null"
+    private set
 
     private lateinit var atomBondTool: Tool
 
@@ -78,8 +80,7 @@ class NewOrganicEditorState (
                 return
             }
 
-            val formula = workState.get().molManager.getMolecularFormula(molIdComp.molID)
-            moformula = formula
+            moformula = workState.get().molManager.getMolecularFormula(molIdComp.molID)
             return
         }
 
@@ -113,27 +114,37 @@ class NewOrganicEditorState (
     override fun clickEvent(inputManager: InputManager, key: RawInput) {
         if (inputManager.keyClick(RawInput.LCTRL)) {
             if (key == RawInput.KEY_Z) {
-                workState.undo()
-                atomBondTool.refreshWorkingState()
+                undo()
             }
             if (key == RawInput.KEY_Y) {
-                workState.redo()
-                atomBondTool.refreshWorkingState()
+                redo()
             }
         }
 
         if (inputManager.mouseClick(RawInput.MOUSE_1)) {
             val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
-            atomBondTool.processClick(ClickContext(mousePos.x, mousePos.y, appUIState.insert))
+            atomBondTool.processClick(ClickContext(mousePos.x, mousePos.y, atomInsert))
         }
 
+    }
+
+
+    fun undo() {
+        workState.undo()
+        atomBondTool.refreshWorkingState()
+    }
+
+
+    fun redo() {
+        workState.redo()
+        atomBondTool.refreshWorkingState()
     }
 
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
 
         if (key == RawInput.MOUSE_1) {
             val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
-            atomBondTool.processClickRelease(ClickContext(mousePos.x, mousePos.y, AtomInsert.CARBON))
+            atomBondTool.processClickRelease(ClickContext(mousePos.x, mousePos.y, atomInsert))
         }
     }
 
