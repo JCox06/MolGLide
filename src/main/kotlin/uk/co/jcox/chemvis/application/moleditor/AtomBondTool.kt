@@ -79,7 +79,13 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
                 return
             }
 
-            val moleculeLevel = LevelViewUtil.getLvlMolFromLvlAtom(selectedLevel)
+            val moleculeLevelID = LevelViewUtil.getLvlMolFromLvlAtom(selectedLevel)
+
+            if (moleculeLevelID == null) {
+                return
+            }
+
+            val moleculeLevel = workingState.level.findByID(moleculeLevelID)
 
             if (moleculeLevel == null) {
                 return
@@ -165,7 +171,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
             val atomA = workingState.level.findByID(it.id)
             val atomB = workingState.level.findByID(atomSelect.id)
-            val mol = workingState.level.findByID(parent.id)
+            val mol = workingState.level.findByID(parent)
 
             //Make sure the new entities are not null
             if (atomA == null || atomB == null || mol == null) {
@@ -217,9 +223,11 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
             return
         }
 
-        val effectiveParentPos = parent.getAbsolutePosition()
+        val effectiveParentPos = workingState.level.findByID(parent)?.getAbsolutePosition()
 
-
+        if (effectiveParentPos == null) {
+            return
+        }
 
         val entityTransform = draggingAtomlevel.getComponent(TransformComponent::class)
 

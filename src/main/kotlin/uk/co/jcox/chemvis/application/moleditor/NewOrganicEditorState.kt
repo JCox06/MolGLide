@@ -76,7 +76,12 @@ class NewOrganicEditorState (
                 return
             }
 
-            val parent = LevelViewUtil.getLvlMolFromLvlAtom(levelAtom)
+            val parentID = LevelViewUtil.getLvlMolFromLvlAtom(levelAtom)
+            if (parentID  == null) {
+                return
+            }
+
+            val parent = workState.get().level.findByID(parentID)
             val molIdComp = parent?.getComponent(MolIDComponent::class)
 
             if (molIdComp == null) {

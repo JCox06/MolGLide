@@ -47,6 +47,7 @@ class AtomInsertionAction (
         LevelMolLinkUtil.linkObject(structBond, levelBond)
 
         LevelViewUtil.tagAsAtom(levelNewAtom)
+        LevelViewUtil.linkParentLevel(levelNewAtom, levelMolecule)
 
         insertedAtom = levelNewAtom.id
 

@@ -8,6 +8,7 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
+import java.util.UUID
 
 object LevelViewUtil {
 
@@ -48,11 +49,25 @@ object LevelViewUtil {
         }
     }
 
-    fun getLvlMolFromLvlAtom(atom: EntityLevel) : EntityLevel? {
+    fun getLvlMolFromLvlAtom(atom: EntityLevel) : UUID? {
         if (!atom.hasComponent(AtomComponent::class)) {
             return null
         }
-        val parentMol = atom.parent
-        return parentMol
+        if (atom.hasComponent(LevelParentComponent::class)) {
+            val parentID = atom.getComponent(LevelParentComponent::class).levelParentID
+
+            return parentID
+        }
+
+        return null
+    }
+
+    fun linkParentLevel(atom: EntityLevel, parent: EntityLevel) {
+
+        if (!atom.hasComponent(AtomComponent::class)) {
+            return
+        }
+
+        atom.addComponent(LevelParentComponent(parent.id))
     }
 }
