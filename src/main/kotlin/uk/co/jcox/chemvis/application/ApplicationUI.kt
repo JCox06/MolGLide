@@ -47,6 +47,11 @@ class ApplicationUI (
             drawFileMenu()
             drawEditMenu()
             drawHelpMenu()
+
+            if (ImGui.button("Take Screenshot")) {
+                takeScreenshot()
+            }
+
             ImGui.separator()
 
             drawToolsMenu()
@@ -242,5 +247,10 @@ class ApplicationUI (
         ImGui.bulletText("Then select the element you wish to add")
 
         ImGui.end()
+    }
+
+
+    private fun takeScreenshot() {
+
     }
 }

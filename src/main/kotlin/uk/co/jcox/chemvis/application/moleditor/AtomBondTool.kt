@@ -74,7 +74,12 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
             //However, a live preview is required so actionInProgress is set to true
             val selectedID = primarySelection.id
             val selectedLevel = workingState.level.findByID(selectedID)
-            val moleculeLevel = selectedLevel?.parent
+
+            if (selectedLevel == null) {
+                return
+            }
+
+            val moleculeLevel = LevelViewUtil.getLvlMolFromLvlAtom(selectedLevel)
 
             if (moleculeLevel == null) {
                 return
@@ -133,7 +138,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         val draggingPos = atomDrag.getAbsolutePosition()
         val matcher = findMatchingPosition(workingState.level, draggingPos, atomDrag)
 
-        val parent = atomDrag.parent
+        val parent = LevelViewUtil.getLvlMolFromLvlAtom(atomDrag)
 
         if (parent == null) {
             return
@@ -201,7 +206,12 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
         //Make the atom of interest follow the mouse
         val draggingAtomlevel = workingState.level.findByID(atomToDrag)
-        val parent = draggingAtomlevel?.parent
+
+        if (draggingAtomlevel == null) {
+            return
+        }
+
+        val parent = LevelViewUtil.getLvlMolFromLvlAtom(draggingAtomlevel)
 
         if (parent == null) {
             return

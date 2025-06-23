@@ -1,11 +1,10 @@
 package uk.co.jcox.chemvis.application.moleditor
 
 
+import org.apache.jena.vocabulary.OWLTest.level
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
-import uk.ac.ebi.beam.Atom
-import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -15,7 +14,6 @@ import uk.co.jcox.chemvis.cvengine.LevelRenderer
 import uk.co.jcox.chemvis.cvengine.RawInput
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
-import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
 class NewOrganicEditorState (
@@ -71,9 +69,14 @@ class NewOrganicEditorState (
 
         val sel = selection.getPrimary()
         if (sel is Selection.Active) {
-            val mol = sel.id
-            val levelMol = workState.get().level.findByID(mol)
-            val parent = levelMol?.parent
+            val selectedAtom = sel.id
+            val levelAtom = workState.get().level.findByID(selectedAtom)
+
+            if (levelAtom == null){
+                return
+            }
+
+            val parent = LevelViewUtil.getLvlMolFromLvlAtom(levelAtom)
             val molIdComp = parent?.getComponent(MolIDComponent::class)
 
             if (molIdComp == null) {

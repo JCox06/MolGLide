@@ -55,5 +55,4 @@ object LevelViewUtil {
         val parentMol = atom.parent
         return parentMol
     }
-
 }
