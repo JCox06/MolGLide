@@ -5,6 +5,7 @@ import imgui.ImVec2
 import imgui.ImVec4
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
+import imgui.flag.ImGuiStyleVar
 import org.joml.Vector2f
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
@@ -25,6 +26,9 @@ class ApplicationUI (
 
     private var activeState: NewOrganicEditorState? = null
     private var activeStateID: String? = null
+
+    private var showMetricsWindow = false
+    private var showStyleEditor = false
 
     private val renderTargets = mutableListOf<String>()
 
@@ -55,14 +59,17 @@ class ApplicationUI (
             ImGui.endMainMenuBar()
 
             showWelcome(dockID)
+
+            showGeneralWidgets()
         }
     }
 
     private fun drawRenderTargets(dockID: Int) {
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, ImVec2(0.0f, 0.0f))
+
         for (stateID in renderTargets) {
             val renderTarget = services.resourceManager().getRenderTarget(stateID)
             val renderingContext = services.getAppStateRenderingContext(stateID)
-
             ImGui.setNextWindowDockID(dockID, ImGuiCond.FirstUseEver)
             ImGui.begin(stateID)
 
@@ -90,6 +97,7 @@ class ApplicationUI (
             renderingContext?.recalculate()
             ImGui.end()
         }
+        ImGui.popStyleVar()
     }
 
 
@@ -152,6 +160,14 @@ class ApplicationUI (
     private fun drawHelpMenu() {
         if (ImGui.beginMenu("Help")) {
 
+            if (ImGui.menuItem("ImGui Style Editor", showStyleEditor)) {
+                showStyleEditor = !showStyleEditor
+            }
+
+            if ((ImGui.menuItem("ImGui Metrics", showMetricsWindow))) {
+                showMetricsWindow = !showMetricsWindow
+            }
+
             if (ImGui.menuItem("Wiki")) {
                 //Handle logic for Wiki
             }
@@ -200,6 +216,15 @@ class ApplicationUI (
         }
     }
 
+    private fun showGeneralWidgets() {
+        if (showStyleEditor) {
+            ImGui.showStyleEditor()
+        }
+
+        if (showMetricsWindow) {
+            ImGui.showMetricsWindow()
+        }
+    }
 
     private fun drawStateInfo() {
         ImGui.text("Formula ${activeState?.moformula}")
