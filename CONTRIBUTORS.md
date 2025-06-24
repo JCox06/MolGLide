@@ -1,3 +1,3 @@
 # Contributors to MolGLide
 
-- [Jacob Cox](https://github.com/JCox06)
+* Jacob Cox - [GitHub](https://github.com/JCox06)
