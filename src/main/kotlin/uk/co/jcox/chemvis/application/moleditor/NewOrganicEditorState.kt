@@ -114,6 +114,7 @@ class NewOrganicEditorState (
     override fun render(viewport: Vector2f) {
 
         GL11.glViewport(0, 0, renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
+        GL11.glClearColor(backgroundColour.x, backgroundColour.y, backgroundColour.z,  backgroundColour.w)
 
         val transientUI = EntityLevel()
 
@@ -131,9 +132,6 @@ class NewOrganicEditorState (
         } else {
             levelRenderer.renderLevel(workState.get().level, camera, viewport)
         }
-
-        GL11.glClearColor(backgroundColour.x, backgroundColour.y, backgroundColour.z,  backgroundColour.w)
-
     }
 
 

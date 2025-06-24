@@ -8,6 +8,7 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
 import uk.co.jcox.chemvis.application.moleditor.Utils
@@ -40,6 +41,8 @@ class ApplicationUI (
     private val ssBackgroundColour = FloatArray(4)
 
     private val renderTargets = mutableListOf<String>()
+
+    private var stateToScreenshot: NewOrganicEditorState? = null
 
 
     fun drawMainMenu() {
@@ -265,13 +268,16 @@ class ApplicationUI (
     private fun toggleScreenshotMode() {
         showScreenshotWindow = !showScreenshotWindow
 
+        stateToScreenshot = activeState
+
         if (!showScreenshotWindow) {
-            activeState?.readOnly = false
-            activeState?.undo()
+            stateToScreenshot?.readOnly = false
+            stateToScreenshot?.undo()
+            stateToScreenshot = null
             return
         }
 
-        activeState?.let {
+        stateToScreenshot?.let {
             val bond = it.getBondStyle()
             ssBondColour[0] = bond.x
             ssBondColour[1] = bond.y
@@ -289,20 +295,23 @@ class ApplicationUI (
 
     private fun showScreenshotWindow() {
 
-        if (activeState == null || !showScreenshotWindow) {
+        if (stateToScreenshot == null || !showScreenshotWindow) {
             return
         }
 
-        activeState?.readOnly = true
+        stateToScreenshot?.readOnly = true
 
         ImGui.begin("Screenshot Settings")
 
-        ImGui.text("Configuring screenshot for ${activeStateID}")
+        ImGui.text("Configuring screenshot for $stateToScreenshot")
 
         ImGui.colorPicker4("Background Colour", ssBackgroundColour)
         ImGui.colorPicker3("Text Colour", ssTextColour)
         ImGui.colorPicker3("Bond Colour", ssBondColour)
         ImGui.sliderFloat("Bond Width", ssWidth, 0.0f, 5.0f)
+
+        stateToScreenshot?.setThemeStyle(Vector3f(ssTextColour[0], ssTextColour[1], ssTextColour[2]), Vector3f(ssBondColour[0], ssBondColour[1], ssBondColour[2]), ssWidth[0])
+        stateToScreenshot?.setBackgroundColour(ssBackgroundColour[0], ssBackgroundColour[1], ssBackgroundColour[2], ssBackgroundColour[3])
 
         if (ImGui.button("Save Image")) {
             val chooser = JFileChooser()
@@ -318,7 +327,5 @@ class ApplicationUI (
 
         ImGui.end()
 
-        activeState?.setThemeStyle(Vector3f(ssTextColour[0], ssTextColour[1], ssTextColour[2]), Vector3f(ssBondColour[0], ssBondColour[1], ssBondColour[2]), ssWidth[0])
-        activeState?.setBackgroundColour(ssBackgroundColour[0], ssBackgroundColour[1], ssBackgroundColour[2], ssBackgroundColour[3])
     }
 }
