@@ -4,6 +4,7 @@ import io.github.dan2097.jnainchi.inchi.InchiLibrary
 import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.p
 import org.xmlcml.euclid.Vector3
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomCreationAction
@@ -74,7 +75,18 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
             //However, a live preview is required so actionInProgress is set to true
             val selectedID = primarySelection.id
             val selectedLevel = workingState.level.findByID(selectedID)
-            val moleculeLevel = selectedLevel?.parent
+
+            if (selectedLevel == null) {
+                return
+            }
+
+            val moleculeLevelID = LevelViewUtil.getLvlMolFromLvlAtom(selectedLevel)
+
+            if (moleculeLevelID == null) {
+                return
+            }
+
+            val moleculeLevel = workingState.level.findByID(moleculeLevelID)
 
             if (moleculeLevel == null) {
                 return
@@ -133,7 +145,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         val draggingPos = atomDrag.getAbsolutePosition()
         val matcher = findMatchingPosition(workingState.level, draggingPos, atomDrag)
 
-        val parent = atomDrag.parent
+        val parent = LevelViewUtil.getLvlMolFromLvlAtom(atomDrag)
 
         if (parent == null) {
             return
@@ -160,7 +172,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
             val atomA = workingState.level.findByID(it.id)
             val atomB = workingState.level.findByID(atomSelect.id)
-            val mol = workingState.level.findByID(parent.id)
+            val mol = workingState.level.findByID(parent)
 
             //Make sure the new entities are not null
             if (atomA == null || atomB == null || mol == null) {
@@ -191,8 +203,20 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
 
         val mouseWorld = mouseWorld()
+
         potentialDraggingPosition = closestPointToCircleCircumference(Vector2f(dragBase.x, dragBase.y), mouseWorld, NewOrganicEditorState.CONNECTION_DIST)
 
+
+        //Check to see if mouse is close enough to another entity so that snapping can take place
+        workingState.level.traverseFunc {
+            val pos = it.getAbsolutePosition()
+            val pos2 = Vector2f(pos.x, pos.y)
+
+            if (pos2.distance(mouseWorld) <= NewOrganicEditorState.SNAPPING_DISTANCE) {
+                potentialDraggingPosition = pos2
+                return@traverseFunc
+            }
+        }
         val atomToDrag = draggingAtom
 
         if (! actionInProgress || atomToDrag == null) {
@@ -201,15 +225,22 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
         //Make the atom of interest follow the mouse
         val draggingAtomlevel = workingState.level.findByID(atomToDrag)
-        val parent = draggingAtomlevel?.parent
+
+        if (draggingAtomlevel == null) {
+            return
+        }
+
+        val parent = LevelViewUtil.getLvlMolFromLvlAtom(draggingAtomlevel)
 
         if (parent == null) {
             return
         }
 
-        val effectiveParentPos = parent.getAbsolutePosition()
+        val effectiveParentPos = workingState.level.findByID(parent)?.getAbsolutePosition()
 
-
+        if (effectiveParentPos == null) {
+            return
+        }
 
         val entityTransform = draggingAtomlevel.getComponent(TransformComponent::class)
 

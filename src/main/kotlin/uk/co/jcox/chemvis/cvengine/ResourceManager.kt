@@ -527,6 +527,10 @@ class ResourceManager : IResourceManager{
         val width = max(proposedWidth, 1.0f)
         val height = max(proposedHeight, 1.0f)
 
+        if (width == target.width && height == target.height) {
+            return
+        }
+
         val openGLTextureID = target.colourAttachmentTexture
         val data: ByteBuffer? = null
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.frameBuffer)
@@ -540,6 +544,9 @@ class ResourceManager : IResourceManager{
         GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, target.depthAttachmentRenderBuffer)
         GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL30.GL_DEPTH24_STENCIL8, width.toInt(), height.toInt())
         GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_STENCIL_ATTACHMENT, GL30.GL_RENDERBUFFER, target.depthAttachmentRenderBuffer)
+
+        target.width = width
+        target.height = height
     }
 
     override fun destroyRenderTarget(id: String) {

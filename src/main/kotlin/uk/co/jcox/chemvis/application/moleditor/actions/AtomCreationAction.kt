@@ -32,6 +32,7 @@ class AtomCreationAction(
         LevelMolLinkUtil.linkObject(structFirstAtom, levelFirstAtom)
 
         LevelViewUtil.tagAsAtom(levelFirstAtom)
+        LevelViewUtil.linkParentLevel(levelFirstAtom, levelMolecule)
         LevelViewUtil.tagAsExplicit(levelFirstAtom)
 
         //Always add implicit hydrogens

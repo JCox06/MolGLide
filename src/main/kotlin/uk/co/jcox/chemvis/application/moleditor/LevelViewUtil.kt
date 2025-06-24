@@ -8,6 +8,7 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
+import java.util.UUID
 
 object LevelViewUtil {
 
@@ -23,14 +24,14 @@ object LevelViewUtil {
         //1) Create a new entity for the atom/label to sit in from the molecule entity
         val label = molecule.addEntity()
         label.addComponent(TransformComponent(posX, posY, NewOrganicEditorState.XY_PLANE))
-        label.addComponent(TextComponent(text, MolGLide.FONT, 1.0f, 1.0f, 1.0f, scale))
+        label.addComponent(TextComponent(text))
         return label
     }
 
     fun createBond(molecule: EntityLevel, atomA: EntityLevel, atomB: EntityLevel) : EntityLevel {
         val bond = molecule.addEntity()
         bond.addComponent(TransformComponent(0.0f, 0.0f, 0.0f))
-        bond.addComponent(LineDrawerComponent(atomA.id, atomB.id, 2.5f))
+        bond.addComponent(LineDrawerComponent(atomA.id, atomB.id))
         return bond
     }
 
@@ -48,12 +49,25 @@ object LevelViewUtil {
         }
     }
 
-    fun getLvlMolFromLvlAtom(atom: EntityLevel) : EntityLevel? {
+    fun getLvlMolFromLvlAtom(atom: EntityLevel) : UUID? {
         if (!atom.hasComponent(AtomComponent::class)) {
             return null
         }
-        val parentMol = atom.parent
-        return parentMol
+        if (atom.hasComponent(LevelParentComponent::class)) {
+            val parentID = atom.getComponent(LevelParentComponent::class).levelParentID
+
+            return parentID
+        }
+
+        return null
     }
 
+    fun linkParentLevel(atom: EntityLevel, parent: EntityLevel) {
+
+        if (!atom.hasComponent(AtomComponent::class)) {
+            return
+        }
+
+        atom.addComponent(LevelParentComponent(parent.id))
+    }
 }

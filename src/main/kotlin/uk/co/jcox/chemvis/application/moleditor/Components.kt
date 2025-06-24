@@ -11,13 +11,12 @@ class MolIDComponent (
     }
 }
 
-class MolSelectionComponent(
-    val selectionEntity: UUID,
+class LevelParentComponent(
+    val levelParentID: UUID
 ): IComponent {
     override fun clone(): IComponent {
-        return MolSelectionComponent(selectionEntity)
+        return LevelParentComponent(levelParentID)
     }
-
 }
 
 //The remaining classes are used to "tag" entities in the level for quick retrieval/identification

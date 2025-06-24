@@ -24,11 +24,11 @@ class TransformComponent (
 
 class TextComponent (
     var text: String,
-    var bitmapFont: String,
-    var colourX: Float,
-    var colourY: Float,
-    var colourZ: Float,
-    var scale: Float,
+    var bitmapFont: String? =null,
+    var colourX: Float? = null,
+    var colourY: Float? = null,
+    var colourZ: Float? = null,
+    var scale: Float? = null,
 ) : IComponent {
     override fun clone(): IComponent {
         return TextComponent(text, bitmapFont, colourX, colourY, colourZ, scale)
@@ -48,10 +48,13 @@ class ObjComponent (
 class LineDrawerComponent (
     val fromCompA: UUID,
     val toCompB: UUID,
-    val width: Float = 1.0f
+    var width: Float? = null,
+    var colourX: Float? = null,
+    var colourY: Float? = null,
+    var colourZ: Float? = null,
 ) : IComponent {
     override fun clone(): IComponent {
-        return LineDrawerComponent(fromCompA, toCompB, width)
+        return LineDrawerComponent(fromCompA, toCompB, width, colourX, colourY, colourZ)
     }
 }
 
@@ -109,10 +112,11 @@ class EntityLevel (
             val transComp = this.getComponent(TransformComponent::class)
             return Vector3f(transComp.x, transComp.y, transComp.z) + getAbsoluteTranslation()
         }
-
         return getAbsoluteTranslation()
     }
 
+
+    //Returns the position of the entity relative to the root node
     fun getAbsoluteTranslation() : Vector3f {
         var holder = this
 
@@ -131,6 +135,89 @@ class EntityLevel (
                 pos.z += transformComp.z
             }
         }
+    }
+
+    //Returns the text data as a text component.
+    //All properties that were null are resolved in the parent as a cascade
+    fun getAbsoluteText(): TextComponent? {
+
+        if (!this.hasComponent(TextComponent::class)) {
+            return null
+        }
+
+        val ownTextComp = this.getComponent(TextComponent::class)
+
+        val textComp = ownTextComp.clone() as TextComponent
+
+        var holder = this.parent
+
+        while (holder != null) {
+            if (holder.hasComponent(TextComponent::class)) {
+
+                val parentComp = holder.getComponent(TextComponent::class)
+                if (textComp.bitmapFont == null) {
+                   textComp.bitmapFont =  parentComp.bitmapFont
+                }
+
+                if (textComp.colourX == null) {
+                    textComp.colourX =  parentComp.colourX
+                }
+
+                if (textComp.colourY == null) {
+                    textComp.colourY =  parentComp.colourY
+                }
+                if (textComp.colourZ == null) {
+                    textComp.colourZ =  parentComp.colourZ
+                }
+
+                if (textComp.scale == null) {
+                    textComp.scale = parentComp.scale
+                }
+            }
+
+            holder = holder.parent
+        }
+        return textComp
+    }
+
+
+    fun getAbsoluteLineDrawer() : LineDrawerComponent? {
+        if (! this.hasComponent(LineDrawerComponent::class)) {
+            return null
+        }
+
+        val ownLineComp = this.getComponent(LineDrawerComponent::class)
+        val lineComp = ownLineComp.clone() as LineDrawerComponent
+
+        var  holder = this.parent
+
+        while (holder != null) {
+
+            if (holder.hasComponent(LineDrawerComponent::class)) {
+                val parentComp = holder.getComponent(LineDrawerComponent::class)
+
+                if (lineComp.width == null) {
+                    lineComp.width = parentComp.width
+                }
+
+                if (lineComp.colourX == null) {
+                    lineComp.colourX = parentComp.colourX
+                }
+
+                if (lineComp.colourY == null) {
+                    lineComp.colourY = parentComp.colourY
+                }
+
+                if (lineComp.colourZ == null) {
+                    lineComp.colourZ = parentComp.colourZ
+                }
+
+            }
+
+            holder = holder.parent
+        }
+
+        return lineComp
     }
 
     fun clone(copyParent: EntityLevel?) : EntityLevel {
