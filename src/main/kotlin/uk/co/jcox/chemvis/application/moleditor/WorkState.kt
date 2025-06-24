@@ -3,6 +3,8 @@ package uk.co.jcox.chemvis.application.moleditor
 import uk.co.jcox.chemvis.application.chemengine.CDKManager
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
+import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 
 class WorkState {
 
@@ -51,4 +53,12 @@ class WorkState {
         redoStack.clear()
     }
 
+
+    fun setTextTheme(textComponent: TextComponent) {
+        stack.last().level.addComponent(textComponent)
+    }
+
+    fun setLineTheme(lineDrawerComponent: LineDrawerComponent) {
+        stack.last().level.addComponent(lineDrawerComponent)
+    }
 }

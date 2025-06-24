@@ -7,11 +7,14 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import org.joml.Vector2f
+import org.joml.Vector3f
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.Utils
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import java.awt.Desktop
 import java.net.URI
+import javax.swing.JFileChooser
 
 class ApplicationUI (
     private val globalAppState: GlobalAppState,
@@ -30,6 +33,12 @@ class ApplicationUI (
     private var showMetricsWindow = false
     private var showStyleEditor = false
 
+    private var showScreenshotWindow = false
+    private val ssBondColour = FloatArray(3)
+    private val ssWidth = FloatArray(1)
+    private val ssTextColour = FloatArray(3)
+    private val ssBackgroundColour = FloatArray(4)
+
     private val renderTargets = mutableListOf<String>()
 
 
@@ -38,6 +47,13 @@ class ApplicationUI (
         drawMenuBar(dockID)
 
         drawRenderTargets(dockID)
+
+
+        showWelcome(dockID)
+
+        showGeneralWidgets()
+
+        showScreenshotWindow()
     }
 
 
@@ -48,8 +64,8 @@ class ApplicationUI (
             drawEditMenu()
             drawHelpMenu()
 
-            if (ImGui.button("Take Screenshot")) {
-                takeScreenshot()
+            if (ImGui.button("Enter/Exit Screenshot mode")) {
+                toggleScreenshotMode()
             }
 
             ImGui.separator()
@@ -62,10 +78,6 @@ class ApplicationUI (
             drawStateInfo()
 
             ImGui.endMainMenuBar()
-
-            showWelcome(dockID)
-
-            showGeneralWidgets()
         }
     }
 
@@ -250,7 +262,63 @@ class ApplicationUI (
     }
 
 
-    private fun takeScreenshot() {
+    private fun toggleScreenshotMode() {
+        showScreenshotWindow = !showScreenshotWindow
 
+        if (!showScreenshotWindow) {
+            activeState?.readOnly = false
+            activeState?.undo()
+            return
+        }
+
+        activeState?.let {
+            val bond = it.getBondStyle()
+            ssBondColour[0] = bond.x
+            ssBondColour[1] = bond.y
+            ssBondColour[2] = bond.z
+            ssWidth[0] = bond.w
+
+            val text = it.getTextStyle()
+            ssTextColour[0] = text.x
+            ssTextColour[1] = text.y
+            ssTextColour[2] = text.z
+
+            it.makeCheckpoint()
+        }
+    }
+
+    private fun showScreenshotWindow() {
+
+        if (activeState == null || !showScreenshotWindow) {
+            return
+        }
+
+        activeState?.readOnly = true
+
+        ImGui.begin("Screenshot Settings")
+
+        ImGui.text("Configuring screenshot for ${activeStateID}")
+
+        ImGui.colorPicker4("Background Colour", ssBackgroundColour)
+        ImGui.colorPicker3("Text Colour", ssTextColour)
+        ImGui.colorPicker3("Bond Colour", ssBondColour)
+        ImGui.sliderFloat("Bond Width", ssWidth, 0.0f, 5.0f)
+
+        if (ImGui.button("Save Image")) {
+            val chooser = JFileChooser()
+            val result = chooser.showOpenDialog(null)
+            if (result == JFileChooser.APPROVE_OPTION) {
+                val filePath = chooser.selectedFile
+
+                activeStateID?.let {
+                    Utils.saveBufferToImg(services.resourceManager().getRenderTarget(it), filePath)
+                }
+            }
+        }
+
+        ImGui.end()
+
+        activeState?.setThemeStyle(Vector3f(ssTextColour[0], ssTextColour[1], ssTextColour[2]), Vector3f(ssBondColour[0], ssBondColour[1], ssBondColour[2]), ssWidth[0])
+        activeState?.setBackgroundColour(ssBackgroundColour[0], ssBackgroundColour[1], ssBackgroundColour[2], ssBackgroundColour[3])
     }
 }

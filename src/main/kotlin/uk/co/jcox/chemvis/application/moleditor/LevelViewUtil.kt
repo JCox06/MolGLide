@@ -24,14 +24,14 @@ object LevelViewUtil {
         //1) Create a new entity for the atom/label to sit in from the molecule entity
         val label = molecule.addEntity()
         label.addComponent(TransformComponent(posX, posY, NewOrganicEditorState.XY_PLANE))
-        label.addComponent(TextComponent(text, MolGLide.FONT, 1.0f, 1.0f, 1.0f, scale))
+        label.addComponent(TextComponent(text))
         return label
     }
 
     fun createBond(molecule: EntityLevel, atomA: EntityLevel, atomB: EntityLevel) : EntityLevel {
         val bond = molecule.addEntity()
         bond.addComponent(TransformComponent(0.0f, 0.0f, 0.0f))
-        bond.addComponent(LineDrawerComponent(atomA.id, atomB.id, 2.5f))
+        bond.addComponent(LineDrawerComponent(atomA.id, atomB.id))
         return bond
     }
 

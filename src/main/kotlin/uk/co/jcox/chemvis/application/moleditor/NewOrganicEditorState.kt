@@ -4,7 +4,10 @@ package uk.co.jcox.chemvis.application.moleditor
 import org.apache.jena.vocabulary.OWLTest.level
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.joml.Vector4f
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL30
+import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -14,7 +17,10 @@ import uk.co.jcox.chemvis.cvengine.LevelRenderer
 import uk.co.jcox.chemvis.cvengine.RawInput
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
+import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
+import java.util.UUID
 
 class NewOrganicEditorState (
     private val services: ICVServices,
@@ -25,6 +31,11 @@ class NewOrganicEditorState (
     private val selection = SelectionManager()
     private val camera = Camera2D(renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
     private val levelRenderer: LevelRenderer = services.levelRenderer()
+
+    var backgroundColour = Vector4f(0.22f, 0.22f, 0.26f, 1.0f)
+
+
+    var readOnly = false
 
     var atomInsert = AtomInsert.CARBON
 
@@ -38,6 +49,8 @@ class NewOrganicEditorState (
 
     override fun init() {
         workState.init()
+
+        setThemeStyle(Vector3f(1.0f, 1.0f, 1.0f), Vector3f(1.0f, 1.0f, 1.0f), 2.5f)
 
         atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
 
@@ -56,8 +69,11 @@ class NewOrganicEditorState (
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
-
         camera.update(renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
+
+        if (readOnly) {
+            return
+        }
 
         if (! inputManager.mouseClick(RawInput.MOUSE_1)) {
             val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
@@ -116,10 +132,16 @@ class NewOrganicEditorState (
             levelRenderer.renderLevel(workState.get().level, camera, viewport)
         }
 
+        GL11.glClearColor(backgroundColour.x, backgroundColour.y, backgroundColour.z,  backgroundColour.w)
+
     }
 
 
     override fun clickEvent(inputManager: InputManager, key: RawInput) {
+        if (readOnly) {
+            return
+        }
+
         if (inputManager.keyClick(RawInput.LCTRL)) {
             if (key == RawInput.KEY_Z) {
                 undo()
@@ -140,6 +162,7 @@ class NewOrganicEditorState (
     fun undo() {
         workState.undo()
         atomBondTool.refreshWorkingState()
+        backgroundColour = Vector4f(0.22f, 0.22f, 0.26f, 1.0f)
     }
 
 
@@ -149,6 +172,10 @@ class NewOrganicEditorState (
     }
 
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
+
+        if (readOnly) {
+            return
+        }
 
         if (key == RawInput.MOUSE_1) {
             val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
@@ -180,6 +207,51 @@ class NewOrganicEditorState (
     }
 
 
+
+    fun makeCheckpoint() {
+        workState.makeCheckpoint()
+    }
+
+
+    fun setThemeStyle(colourText: Vector3f, colourLine: Vector3f, width: Float) {
+        workState.setTextTheme(TextComponent("", MolGLide.FONT, colourText.x, colourText.y, colourText.z, MolGLide.GLOBAL_SCALE))
+        workState.setLineTheme(LineDrawerComponent(workState.get().level.id, workState.get().level.id, width, colourLine.x , colourLine.y, colourLine.z))
+    }
+
+    fun setBackgroundColour(x: Float, y: Float, z: Float, w: Float) {
+        backgroundColour.x = x
+        backgroundColour.y = y
+        backgroundColour.z = z
+        backgroundColour.w = w
+    }
+
+    fun getBondStyle(): Vector4f {
+        val comp = workState.get().level.getComponent(LineDrawerComponent::class)
+        val cx = comp.colourX
+        val cy = comp.colourY
+        val cz = comp.colourZ
+        val w = comp.width
+
+        if (cx == null || cy == null || cz == null || w  == null) {
+            return Vector4f()
+        }
+        return Vector4f(cx, cy, cz, w)
+    }
+
+
+    fun getTextStyle(): Vector3f {
+        val comp  = workState.get().level.getComponent(TextComponent::class)
+        val cx = comp.colourX
+        val cy = comp.colourY
+        val cz = comp.colourZ
+
+        if (cx == null || cy == null || cz == null) {
+            return Vector3f()
+        }
+
+        return Vector3f(cx, cy, cz)
+    }
+
     override fun cleanup() {
 
     }
@@ -193,5 +265,6 @@ class NewOrganicEditorState (
         const val BOND_WIDTH = 2.5f
         const val CARBON_IMPLICIT_LIMIT = 4
         const val DOUBLE_BOND_DISTANCE = 0.1f
+        const val SNAPPING_DISTANCE = 5.0f
     }
 }

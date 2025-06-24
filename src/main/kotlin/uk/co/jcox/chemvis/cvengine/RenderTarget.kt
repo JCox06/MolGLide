@@ -5,6 +5,6 @@ data class RenderTarget(
     val frameBuffer: Int,
     val colourAttachmentTexture: Int,
     val depthAttachmentRenderBuffer: Int,
-    val width: Float,
-    val height: Float,
+    var width: Float,
+    var height: Float,
 )

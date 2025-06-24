@@ -4,6 +4,7 @@ import io.github.dan2097.jnainchi.inchi.InchiLibrary
 import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.p
 import org.xmlcml.euclid.Vector3
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomCreationAction
@@ -202,8 +203,20 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
 
         val mouseWorld = mouseWorld()
+
         potentialDraggingPosition = closestPointToCircleCircumference(Vector2f(dragBase.x, dragBase.y), mouseWorld, NewOrganicEditorState.CONNECTION_DIST)
 
+
+        //Check to see if mouse is close enough to another entity so that snapping can take place
+        workingState.level.traverseFunc {
+            val pos = it.getAbsolutePosition()
+            val pos2 = Vector2f(pos.x, pos.y)
+
+            if (pos2.distance(mouseWorld) <= NewOrganicEditorState.SNAPPING_DISTANCE) {
+                potentialDraggingPosition = pos2
+                return@traverseFunc
+            }
+        }
         val atomToDrag = draggingAtom
 
         if (! actionInProgress || atomToDrag == null) {

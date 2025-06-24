@@ -96,15 +96,26 @@ class LevelRenderer (
 
 
     private fun renderText(textEntity: EntityLevel, program: ShaderProgram) {
-        val textComponent = textEntity.getComponent(TextComponent::class)
+        val textComponent = textEntity.getAbsoluteText()
         val transformComponent = textEntity.getComponent(TransformComponent::class)
 
-        val fontID = textComponent.bitmapFont
+
+
+        val fontID = textComponent?.bitmapFont
+        val colourX = textComponent?.colourX
+        val colourY = textComponent?.colourY
+        val colourZ = textComponent?.colourZ
+        val scale = textComponent?.scale
+
+        if (fontID == null || colourX == null || colourY == null || colourZ == null || scale == null) {
+            return
+        }
+
         val fontData = resourceManager.getFont(fontID)
 
         resourceManager.useTexture(fontID, GL30.GL_TEXTURE0)
         program.uniform("uTexture0", 0)
-        program.uniform("uLight", Vector3f(textComponent.colourX, textComponent.colourY, textComponent.colourZ))
+        program.uniform("uLight", Vector3f(colourX, colourY, colourZ))
 
         val localCentre = textEntity.getAbsoluteTranslation()
         localCentre.add(Vector3f())
@@ -130,8 +141,8 @@ class LevelRenderer (
                 return
             }
 
-            val width = glyphMetrics.glyphWidth * textComponent.scale /2
-            val height = glyphMetrics.glyphHeight * textComponent.scale /2
+            val width = glyphMetrics.glyphWidth *  scale /2
+            val height = glyphMetrics.glyphHeight * scale /2
 
             //Does not work!
 //            val meshToDraw = Shaper2D.rectangle(renderX + width, renderY + height, width, height, (Text rendering works fine If you use this line instead of the one below) - However then the text is uncentred
@@ -165,8 +176,12 @@ class LevelRenderer (
                 continue
             }
 
-            val lineComp = line.getComponent(LineDrawerComponent::class)
+            val lineComp = line.getAbsoluteLineDrawer()
             val trans = line.getComponent(TransformComponent::class)
+
+            if (lineComp == null) {
+                return
+            }
 
             val startEntity = level.findByID(lineComp.fromCompA)
             val endEntity = level.findByID(lineComp.toCompB)
@@ -178,7 +193,18 @@ class LevelRenderer (
                 continue
             }
 
-            val perInstanceData = listOf(startTrans.x + trans.x, startTrans.y + trans.y, startTrans.z + trans.z, endTrans.x + trans.x, endTrans.y + trans.y, endTrans.z + trans.z, lineComp.width)
+            val width = lineComp.width
+            val colourX = lineComp.colourX
+            val colourY = lineComp.colourY
+            val colourZ = lineComp.colourZ
+
+            if (width == null || colourX == null || colourY == null || colourZ == null) {
+                return
+            }
+
+            lineProgram.uniform("uLight", Vector3f(colourX, colourY, colourZ))
+
+            val perInstanceData = listOf<Float>(startTrans.x + trans.x, startTrans.y + trans.y, startTrans.z + trans.z, endTrans.x + trans.x, endTrans.y + trans.y, endTrans.z + trans.z, width)
 
             instanceData.addAll(perInstanceData)
         }

@@ -216,10 +216,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private fun renderAndUpdateStates() {
         appRenderStates.forEach { targetID, state ->
 
-            if (!state.paused) {
-                state.update(inputManager, GLFW.glfwGetTime().toFloat())
-            }
-
             if (targetID == null) {
 
                 GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
@@ -230,6 +226,11 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
 
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
+
+
+            if (!state.paused) {
+                state.update(inputManager, GLFW.glfwGetTime().toFloat())
+            }
 
             state.render(viewport)
 

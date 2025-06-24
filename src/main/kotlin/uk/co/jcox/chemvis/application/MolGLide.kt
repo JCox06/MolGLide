@@ -16,7 +16,6 @@ class MolGLide : IApplication, IInputSubscriber {
 
     override fun init(engineServices: ICVServices) {
         this.services = engineServices
-        services.resourceManager().loadFontFromDisc(FONT, File("data/chemvis/fonts/ubuntu.ttf"), CVEngine.STD_CHARACTER_SET, FONT_SIZE)
 
         GL11.glClearColor(0.22f, 0.22f, 0.26f, 1.0f)
         loadCoreAssets()
@@ -47,6 +46,8 @@ class MolGLide : IApplication, IInputSubscriber {
 
     private fun loadCoreAssets() {
         val instancer = services.instancedRenderer()
+
+        services.resourceManager().loadFontFromDisc(FONT, File("data/chemvis/fonts/ubuntu.ttf"), CVEngine.STD_CHARACTER_SET, FONT_SIZE)
 
         val selectionMarkerMesh = Shaper2D.circle(0.0f, 0.0f, 1.0f)
         services.resourceManager().manageMesh(SELECTION_MARKER_MESH, selectionMarkerMesh, instancer)
