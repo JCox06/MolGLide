@@ -1,20 +1,14 @@
 package uk.co.jcox.chemvis.application.moleditor
 
-import io.github.dan2097.jnainchi.inchi.InchiLibrary
-import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
-import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.p
-import org.xmlcml.euclid.Vector3
-import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionAction
 import uk.co.jcox.chemvis.application.moleditor.actions.BondOrderAction
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
-import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
-import java.util.UUID
+import java.util.*
 
 
 /**
@@ -45,7 +39,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         val atomSelect = workingState.level.findByID(selection.id)
 
         if (atomSelect != null) {
-            checkForBondOrderCancellations(atomSelect)
+            checkForBondOrderCancellations()
         }
 
         val atomDrag = workingState.level.findByID(atomDragID)
@@ -111,20 +105,18 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
     }
 
 
-    private fun checkForBondOrderCancellations(atomSelect: EntityLevel) {
+    private fun checkForBondOrderCancellations() {
         //At this stage, the dragging atom no longer exists because the state was refreshed
         //So given the mouse position and the atom selected we can figure out if we need to cancel the bond order change
 
         if (actionInProgress && !allowExternalBondFormation) {
-            val mousePos = mouseWorld()
-
             val matcher = findMatchingPosition(workingState.level, Vector3f(potentialDraggingPosition, NewOrganicEditorState.XY_PLANE), null)
 
             val isInsideRegion = matcher != null
 
             allowStateRestore = !(wasInsideRegion && isInsideRegion)
 
-            if (matcher == null && allowStateRestore) {
+            if (matcher == null) {
                 //User no wants to form a double bond
                 //So just restore the old state
                 restoreOnce()
@@ -140,7 +132,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
     private fun checkForBondOrderChanges(atomDrag: EntityLevel, atomSelect: EntityLevel) {
         //To check if a double bond is needed, or a cyclic structure is needed
         //the dragging atom's position is checked to see if hits another atom
-        //if it does, a bond is formed (cylic formation) or a bond order change takes place (double bond formation)
+        //if it does, a bond is formed (cyclic formation) or a bond order change takes place (double bond formation)
 
         val draggingPos = atomDrag.getAbsolutePosition()
         val matcher = findMatchingPosition(workingState.level, draggingPos, atomDrag)
@@ -163,7 +155,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
             //Reverting the AtomInsertionEvent from being commited
             refreshWorkingState(false)
 
-            //This is a multi-step process
+            //This is a multistep process
             //A user might make a double bond, but then move the dragging atom away
             //Before making the new bond, we first tell the Tool to save state
             //Then we can make changes by calling the action on this state
@@ -201,16 +193,30 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
 
     private fun updateDraggingPosition() {
 
-
         val mouseWorld = mouseWorld()
 
         potentialDraggingPosition = closestPointToCircleCircumference(Vector2f(dragBase.x, dragBase.y), mouseWorld, NewOrganicEditorState.CONNECTION_DIST)
 
+        val selection = context.selectionManager.primarySelection
+        if (selection !is Selection.Active) {
+            return
+        }
+
+        val selectionEntity = workingState.level.findByID(selection.id)
 
         //Check to see if mouse is close enough to another entity so that snapping can take place
+        //But remember we also have to make sure it doesn't snap to itself
         workingState.level.traverseFunc {
             val pos = it.getAbsolutePosition()
             val pos2 = Vector2f(pos.x, pos.y)
+
+            if (!it.hasComponent(AtomComponent::class)) {
+                return@traverseFunc
+            }
+
+            if (it == selectionEntity) {
+                return@traverseFunc
+            }
 
             if (pos2.distance(mouseWorld) <= NewOrganicEditorState.SNAPPING_DISTANCE) {
                 potentialDraggingPosition = pos2
@@ -224,13 +230,13 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         }
 
         //Make the atom of interest follow the mouse
-        val draggingAtomlevel = workingState.level.findByID(atomToDrag)
+        val draggingAtomLevel = workingState.level.findByID(atomToDrag)
 
-        if (draggingAtomlevel == null) {
+        if (draggingAtomLevel == null) {
             return
         }
 
-        val parent = LevelViewUtil.getLvlMolFromLvlAtom(draggingAtomlevel)
+        val parent = LevelViewUtil.getLvlMolFromLvlAtom(draggingAtomLevel)
 
         if (parent == null) {
             return
@@ -242,7 +248,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
             return
         }
 
-        val entityTransform = draggingAtomlevel.getComponent(TransformComponent::class)
+        val entityTransform = draggingAtomLevel.getComponent(TransformComponent::class)
 
         entityTransform.x = potentialDraggingPosition.x - effectiveParentPos.x
         entityTransform.y = potentialDraggingPosition.y - effectiveParentPos.y

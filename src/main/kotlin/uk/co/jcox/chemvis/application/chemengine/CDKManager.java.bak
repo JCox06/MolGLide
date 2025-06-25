@@ -47,6 +47,8 @@ public class CDKManager implements IMoleculeManager{
         }
 
         public MoleculeHolder clone() {
+
+
             try {
                 UUID idCopy = id;
                 IAtomContainer molCopy = mol.clone();
@@ -127,6 +129,9 @@ public class CDKManager implements IMoleculeManager{
 
         Bond newBond = new Bond(cdkAtom1, cdkAtom2, IBond.Order.SINGLE);
         UUID bondID = UUID.randomUUID();
+
+
+
 
         molHolder.mol.addBond(newBond);
 

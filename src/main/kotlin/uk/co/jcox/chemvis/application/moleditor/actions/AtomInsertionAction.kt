@@ -25,7 +25,7 @@ class AtomInsertionAction (
 
     override fun execute(molManager: IMoleculeManager, level: EntityLevel): UUID? {
         val levelMolPos = levelMolecule.getAbsolutePosition()
-        val levelLocalMolPos = Vector3f(xPos, yPos, NewOrganicEditorState.Companion.XY_PLANE) - levelMolPos
+        val levelLocalMolPos = Vector3f(xPos, yPos, NewOrganicEditorState.XY_PLANE) - levelMolPos
 
         //1) Add the atom to the molecule struct side
         val structMolecule = levelMolecule.getComponent(MolIDComponent::class)

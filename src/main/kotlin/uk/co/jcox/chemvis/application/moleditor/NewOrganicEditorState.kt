@@ -32,6 +32,9 @@ class NewOrganicEditorState (
     private val camera = Camera2D(renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
     private val levelRenderer: LevelRenderer = services.levelRenderer()
 
+
+    private lateinit var clpCache: ChemLevelPair
+
     var backgroundColour = Vector4f(0.22f, 0.22f, 0.26f, 1.0f)
 
 
@@ -50,12 +53,17 @@ class NewOrganicEditorState (
     override fun init() {
         workState.init()
 
+        refreshStateCache()
+
         setThemeStyle(Vector3f(1.0f, 1.0f, 1.0f), Vector3f(1.0f, 1.0f, 1.0f), 2.5f)
 
         atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
 
         atomBondTool.onCommit {
             workState.makeCheckpoint(it.clone())
+
+            //After each commit action get a copy of the clp so we dont have to clone it every frame
+            refreshStateCache()
         }
 
     }
@@ -77,7 +85,7 @@ class NewOrganicEditorState (
 
         if (! inputManager.mouseClick(RawInput.MOUSE_1)) {
             val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
-            selection.update(workState.get().level, mousePos.x, mousePos.y)
+            selection.update(clpCache.level, mousePos.x, mousePos.y)
         }
 
 
@@ -86,7 +94,7 @@ class NewOrganicEditorState (
         val sel = selection.getPrimary()
         if (sel is Selection.Active) {
             val selectedAtom = sel.id
-            val levelAtom = workState.get().level.findByID(selectedAtom)
+            val levelAtom = clpCache.level.findByID(selectedAtom)
 
             if (levelAtom == null){
                 return
@@ -97,14 +105,14 @@ class NewOrganicEditorState (
                 return
             }
 
-            val parent = workState.get().level.findByID(parentID)
+            val parent = clpCache.level.findByID(parentID)
             val molIdComp = parent?.getComponent(MolIDComponent::class)
 
             if (molIdComp == null) {
                 return
             }
 
-            moformula = workState.get().molManager.getMolecularFormula(molIdComp.molID)
+            moformula = clpCache.molManager.getMolecularFormula(molIdComp.molID)
             return
         }
 
@@ -130,7 +138,7 @@ class NewOrganicEditorState (
         if (atomBondTool.actionInProgress) {
             levelRenderer.renderLevel(atomBondTool.workingState.level, camera, viewport)
         } else {
-            levelRenderer.renderLevel(workState.get().level, camera, viewport)
+            levelRenderer.renderLevel(clpCache.level, camera, viewport)
         }
     }
 
@@ -161,12 +169,14 @@ class NewOrganicEditorState (
         workState.undo()
         atomBondTool.refreshWorkingState()
         backgroundColour = Vector4f(0.22f, 0.22f, 0.26f, 1.0f)
+        refreshStateCache()
     }
 
 
     fun redo() {
         workState.redo()
         atomBondTool.refreshWorkingState()
+        refreshStateCache()
     }
 
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
@@ -213,7 +223,7 @@ class NewOrganicEditorState (
 
     fun setThemeStyle(colourText: Vector3f, colourLine: Vector3f, width: Float) {
         workState.setTextTheme(TextComponent("", MolGLide.FONT, colourText.x, colourText.y, colourText.z, MolGLide.GLOBAL_SCALE))
-        workState.setLineTheme(LineDrawerComponent(workState.get().level.id, workState.get().level.id, width, colourLine.x , colourLine.y, colourLine.z))
+        workState.setLineTheme(LineDrawerComponent(clpCache.level.id, clpCache.level.id, width, colourLine.x , colourLine.y, colourLine.z))
     }
 
     fun setBackgroundColour(x: Float, y: Float, z: Float, w: Float) {
@@ -224,7 +234,7 @@ class NewOrganicEditorState (
     }
 
     fun getBondStyle(): Vector4f {
-        val comp = workState.get().level.getComponent(LineDrawerComponent::class)
+        val comp = clpCache.level.getComponent(LineDrawerComponent::class)
         val cx = comp.colourX
         val cy = comp.colourY
         val cz = comp.colourZ
@@ -238,7 +248,7 @@ class NewOrganicEditorState (
 
 
     fun getTextStyle(): Vector3f {
-        val comp  = workState.get().level.getComponent(TextComponent::class)
+        val comp  = clpCache.level.getComponent(TextComponent::class)
         val cx = comp.colourX
         val cy = comp.colourY
         val cz = comp.colourZ
@@ -248,6 +258,11 @@ class NewOrganicEditorState (
         }
 
         return Vector3f(cx, cy, cz)
+    }
+
+
+    fun refreshStateCache() {
+        this.clpCache = workState.get()
     }
 
     override fun cleanup() {
