@@ -183,7 +183,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         var matcher: EntityLevel? = null
         lvl.traverseFunc {
             //Check for match, but make sure to not select itself
-            if (it.getAbsolutePosition() == posToCheck && it != discard) {
+            if (it.getAbsolutePosition().equals(posToCheck, 1e-3f) && it != discard) {
                 matcher = it
                 return@traverseFunc
             }

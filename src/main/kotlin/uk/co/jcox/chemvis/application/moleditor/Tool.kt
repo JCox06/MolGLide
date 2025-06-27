@@ -11,7 +11,10 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-
+/**
+ * A tool is an object that can "work" on the workstate.
+ * A tool changes the workstate through actions which it runs.
+ */
 abstract class Tool (
     val context: ToolCreationContext,
 ) {

@@ -8,7 +8,6 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import org.joml.Vector2f
 import org.joml.Vector3f
-import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
 import uk.co.jcox.chemvis.application.moleditor.Utils
@@ -94,7 +93,7 @@ class ApplicationUI (
             ImGui.begin(stateID)
 
             val winPos = ImGui.getWindowPos()
-            renderingContext?.setImGuiWinMetrics(Vector2f(winPos.x, winPos.y))
+            renderingContext?.setRelativeWindowPos(Vector2f(winPos.x, winPos.y))
 
             if (ImGui.isWindowHovered()) {
                 services.resumeAppState(stateID)

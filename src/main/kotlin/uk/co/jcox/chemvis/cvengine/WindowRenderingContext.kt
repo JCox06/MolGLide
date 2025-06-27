@@ -27,7 +27,7 @@ class WindowRenderingContext(val services: ICVServices) : IRenderTargetContext {
     }
 
 
-    override fun setImGuiWinMetrics(windowPos: Vector2f) {
+    override fun setRelativeWindowPos(windowPos: Vector2f) {
         TODO("Not yet implemented")
     }
 

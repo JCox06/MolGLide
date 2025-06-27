@@ -224,6 +224,7 @@ class NewOrganicEditorState (
     fun setThemeStyle(colourText: Vector3f, colourLine: Vector3f, width: Float) {
         workState.setTextTheme(TextComponent("", MolGLide.FONT, colourText.x, colourText.y, colourText.z, MolGLide.GLOBAL_SCALE))
         workState.setLineTheme(LineDrawerComponent(clpCache.level.id, clpCache.level.id, width, colourLine.x , colourLine.y, colourLine.z))
+        refreshStateCache()
     }
 
     fun setBackgroundColour(x: Float, y: Float, z: Float, w: Float) {
@@ -231,6 +232,7 @@ class NewOrganicEditorState (
         backgroundColour.y = y
         backgroundColour.z = z
         backgroundColour.w = w
+        refreshStateCache()
     }
 
     fun getBondStyle(): Vector4f {
