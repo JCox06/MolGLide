@@ -16,6 +16,8 @@ import java.awt.Desktop
 import java.net.URI
 import javax.swing.JFileChooser
 
+
+//Todo refactor this into smaller classes and multi-thread screenshot saving
 class ApplicationUI (
     private val globalAppState: GlobalAppState,
     private val services: ICVServices

@@ -41,5 +41,5 @@ interface IResourceManager {
 
     fun getRenderTarget(id: String) : RenderTarget
 
-    fun resizeRenderTarget(id: String, width: Float, height: Float)
+    fun resizeRenderTarget(id: String, proposedWidth: Float, proposedHeight: Float)
 }

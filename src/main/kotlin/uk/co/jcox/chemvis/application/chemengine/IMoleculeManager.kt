@@ -26,4 +26,6 @@ interface IMoleculeManager {
     fun updateBondOrder(molecule: UUID, bond: UUID, newBondOrder: Int)
 
     fun getJoiningBond(molecule: UUID, atomA: UUID, atomB: UUID): UUID?
+
+    fun replace(atom: UUID, element: String)
 }

@@ -1,5 +1,7 @@
 package uk.co.jcox.chemvis.application.chemengine
 
+import org.checkerframework.checker.units.qual.cd
+import org.checkerframework.checker.units.qual.mol
 import org.openscience.cdk.Atom
 import org.openscience.cdk.AtomContainer
 import org.openscience.cdk.Bond
@@ -214,6 +216,16 @@ class CDKotMan (
         }
 
         return CDKotMan(moleculeCloneMap, moleculeBondMap, moleculeAtomMap)
+    }
+
+
+    override fun replace( atom: UUID, element: String) {
+        val cdkAtom = atoms[atom]
+
+        if (cdkAtom == null) {
+            throw NoSuchElementException("Atom is null")
+        }
+        cdkAtom.symbol = element
     }
 
     companion object {
