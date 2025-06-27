@@ -19,9 +19,6 @@ abstract class Tool (
     val context: ToolCreationContext,
 ) {
 
-    var actionInProgress = false
-    protected set
-
     var workingState: ChemLevelPair = context.levelStack.get()
         private set
 
@@ -39,7 +36,6 @@ abstract class Tool (
         if (refreshLocalStack) {
             this.localStack = WorkState()
         }
-        actionInProgress = false
     }
 
     protected fun makeRestorePoint() {
@@ -69,6 +65,8 @@ abstract class Tool (
     abstract fun processClick(clickDetails: ClickContext)
 
     abstract fun processClickRelease(clickDetails: ClickContext)
+
+    abstract fun inProgress() : Boolean
 
     abstract fun update()
 

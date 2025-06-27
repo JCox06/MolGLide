@@ -93,7 +93,7 @@ class CDKotMan (
         return molecule.getConnectedBondsCount(cdkAtom) + cdkAtom.implicitHydrogenCount
     }
 
-    override fun isOfElement(moleculeID: UUID, atom: UUID, element: String): Boolean {
+    override fun isOfElement(atom: UUID, element: String): Boolean {
         val cdkAtom = atoms[atom]
 
         if (cdkAtom == null) {
@@ -138,7 +138,7 @@ class CDKotMan (
         }
     }
 
-    override fun getImplicitHydrogens(molecule: UUID, atom: UUID): Int {
+    override fun getImplicitHydrogens(atom: UUID): Int {
         val cdkAtom = atoms[atom]
 
         val count = cdkAtom?.implicitHydrogenCount

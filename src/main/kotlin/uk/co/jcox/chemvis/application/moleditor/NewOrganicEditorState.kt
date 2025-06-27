@@ -5,6 +5,7 @@ import org.apache.jena.vocabulary.OWLTest.level
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.Vector4f
+import org.joml.times
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.application.MolGLide
@@ -41,9 +42,6 @@ class NewOrganicEditorState (
     var readOnly = false
 
     var atomInsert = AtomInsert.CARBON
-
-    private var lastMouseX: Float = 0.0f
-    private var lastMouseY: Float = 0.0f
 
     var moformula = "null"
     private set
@@ -135,7 +133,7 @@ class NewOrganicEditorState (
 
         levelRenderer.renderLevel(transientUI, camera, viewport)
 
-        if (atomBondTool.actionInProgress) {
+        if (atomBondTool.inProgress()) {
             levelRenderer.renderLevel(atomBondTool.workingState.level, camera, viewport)
         } else {
             levelRenderer.renderLevel(clpCache.level, camera, viewport)
@@ -200,18 +198,12 @@ class NewOrganicEditorState (
     override fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
 
         if (inputManager.mouseClick(RawInput.MOUSE_3)) {
-            val deltaX: Float = xPos.toFloat() - lastMouseX
-            val deltaY: Float = yPos.toFloat() - lastMouseY
-            lastMouseX = xPos.toFloat()
-            lastMouseY = yPos.toFloat()
+            val delta = inputManager.deltaMousePos()
 
-            val scale = 0.5f
+            val scale = 0.05f
 
-            camera.cameraPosition.add(Vector3f(-deltaX * scale, deltaY * scale, 0.0f))
+            camera.cameraPosition.add(Vector3f(-delta.x * scale, delta.y * scale, 0.0f))
         }
-
-        lastMouseX = xPos.toFloat()
-        lastMouseY = yPos.toFloat()
     }
 
 

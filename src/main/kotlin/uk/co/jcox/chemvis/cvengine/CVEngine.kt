@@ -171,6 +171,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
                 shutdown()
             }
 
+            inputManager.update()
             glfwImGui.newFrame()
             openGlImGui.newFrame()
             ImGui.newFrame()

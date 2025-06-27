@@ -18,6 +18,8 @@ abstract class InputManager {
 
     abstract fun deltaMousePos(): Vector2f
 
+    abstract fun update()
+
     abstract fun blockInput(block: Boolean)
 
 

@@ -2,42 +2,54 @@ package uk.co.jcox.chemvis.application.moleditor.actions
 
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
-import uk.co.jcox.chemvis.application.moleditor.LevelMolLinkUtil
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
+import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil.linkObject
+import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil.linkParentLevel
+import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil.tagAsAtom
+import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil.tagAsExplicit
 import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
 
-class AtomCreationAction(
-    private val xPos: Float,
-    private val yPos: Float,
-    private val insert: AtomInsert,
-) : EditorAction() {
-
+class AtomCreationAction (
+    private val placementX: Float,
+    private val placementY: Float,
+    private val insert: AtomInsert
+) : EditorAction(){
 
     override fun execute(molManager: IMoleculeManager, level: EntityLevel): UUID? {
-        //1) Create the new molecule to house this new atom on the struct side
+        //Create chemical struct info
         val structMolecule = molManager.createMolecule()
-        val structFirstAtom = molManager.addAtom(structMolecule, insert.symbol)
+        val structAtom = molManager.addAtom(structMolecule, insert.symbol)
 
-        //2) Update spatial representation on the level side
+
+        //Create level info
         val levelMolecule = level.addEntity()
-        levelMolecule.addComponent(TransformComponent(xPos, yPos, NewOrganicEditorState.Companion.XY_PLANE, 1.0f))
-        LevelMolLinkUtil.linkObject(structMolecule, levelMolecule)
+        levelMolecule.addComponent(TransformComponent(placementX, placementY, NewOrganicEditorState.XY_PLANE, 1.0f))
 
-        val levelFirstAtom = LevelViewUtil.createLabel(levelMolecule, insert.symbol, 0.0f, 0.0f)
-        LevelMolLinkUtil.linkObject(structFirstAtom, levelFirstAtom)
+        val levelAtom = LevelViewUtil.createLabel(levelMolecule, insert.symbol, 0.0f, 0.0f)
 
-        LevelViewUtil.tagAsAtom(levelFirstAtom)
-        LevelViewUtil.linkParentLevel(levelFirstAtom, levelMolecule)
-        LevelViewUtil.tagAsExplicit(levelFirstAtom)
+        linkParentLevel(levelAtom, levelMolecule)
 
-        //Always add implicit hydrogens
+        //Link level object to struct object
+        linkObject(structAtom, levelAtom)
+        linkObject(structMolecule, levelMolecule)
+
+        //Add tags
+        tagAsAtom(levelAtom)
+        tagAsExplicit(levelAtom)
+
+        //Now everything is added calculate the number of hydrogens that are required to make a neutral molecule
         if (insert.hydrogenable) {
             molManager.recalculate(structMolecule)
-            refreshGhostGroups(molManager, levelFirstAtom, structMolecule, structFirstAtom)
+
+            val implicitHydrogens = molManager.getImplicitHydrogens(structAtom)
+
+            insertImplicitHydrogenGroup(levelAtom, implicitHydrogens)
         }
+
         return structMolecule
     }
+
 }

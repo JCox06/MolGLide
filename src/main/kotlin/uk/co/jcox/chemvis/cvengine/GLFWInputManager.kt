@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.cvengine
 
 import org.joml.Vector2f
+import org.joml.minus
 import org.lwjgl.glfw.GLFW
 
 class GLFWInputManager (
@@ -9,6 +10,12 @@ class GLFWInputManager (
 
     private var inputBlock = false
 
+
+    private var lastMouseX = 0.0f
+    private var lastMouseY = 0.0f
+
+    private var deltaX = 0.0f
+    private var deltaY = 0.0f
 
     init {
         GLFW.glfwSetKeyCallback(this.windowHandle) { win, key, scancode, action, mods ->
@@ -48,6 +55,14 @@ class GLFWInputManager (
     }
 
 
+    override fun update() {
+        val currentMousePos = mousePos()
+        deltaX = currentMousePos.x - lastMouseX
+        deltaY = currentMousePos.y - lastMouseY
+        lastMouseX = currentMousePos.x
+        lastMouseY = currentMousePos.y
+    }
+
     override fun keyClick(key: RawInput): Boolean {
         return GLFW.glfwGetKey(this.windowHandle, key.glfwKey) == GLFW.GLFW_PRESS
     }
@@ -82,6 +97,6 @@ class GLFWInputManager (
 
 
     override fun deltaMousePos(): Vector2f {
-        TODO("Implement")
+        return Vector2f(deltaX, deltaY)
     }
 }

@@ -14,14 +14,14 @@ interface IMoleculeManager {
 
     fun getBonds(moleculeID: UUID, atom: UUID): Int
 
-    fun isOfElement(moleculeID: UUID, Atom: UUID, element: String): Boolean
+    fun isOfElement(Atom: UUID, element: String): Boolean
 
 
     fun clone(): IMoleculeManager
 
     fun recalculate(molecule: UUID)
 
-    fun getImplicitHydrogens(molecule: UUID, atom: UUID): Int
+    fun getImplicitHydrogens(atom: UUID): Int
 
     fun updateBondOrder(molecule: UUID, bond: UUID, newBondOrder: Int)
 
