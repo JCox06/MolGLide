@@ -34,8 +34,9 @@ class BondOrderAction (
             updateLevelForBondOrderChange(level)
 
             molManager.recalculate(structMolecule.molID)
-            replaceOldLabels(molManager, structMolecule.molID, structAtomA.molID, levelAtomA)
-            replaceOldLabels(molManager, structMolecule.molID, structAtomB.molID, levelAtomB)
+            refreshGhostGroups(molManager, levelAtomA, structMolecule.molID, structAtomA.molID)
+            refreshGhostGroups(molManager, levelAtomB, structMolecule.molID, structAtomB.molID)
+
 
             return structMolecule.molID
         }
@@ -45,8 +46,8 @@ class BondOrderAction (
         updateLevelForNewBond(levelMolecule, levelAtomA, levelAtomB, newStructBond)
 
         molManager.recalculate(structMolecule.molID)
-        replaceOldLabels(molManager, structMolecule.molID, structAtomA.molID, levelAtomA)
-        replaceOldLabels(molManager, structMolecule.molID, structAtomB.molID, levelAtomB)
+        refreshGhostGroups(molManager, levelAtomA, structMolecule.molID, structAtomA.molID)
+        refreshGhostGroups(molManager, levelAtomB, structMolecule.molID, structAtomB.molID)
 
 
         return structMolecule.molID

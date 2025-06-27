@@ -80,4 +80,8 @@ class GLFWInputManager (
         this.inputBlock = block
     }
 
+
+    override fun deltaMousePos(): Vector2f {
+        TODO("Implement")
+    }
 }

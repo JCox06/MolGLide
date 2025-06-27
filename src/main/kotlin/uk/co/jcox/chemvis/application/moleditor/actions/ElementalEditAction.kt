@@ -46,6 +46,16 @@ class ElementalEditAction (
             if (levelMol != null) {
                 val comp = levelMol.getComponent(MolIDComponent::class)
 
+
+                molManager.recalculate(comp.molID)
+                //Remove/Place implicit hydrogens
+
+                removeGhostGroups(atomLevel)
+
+                if (replacement.hydrogenable) {
+                    refreshGhostGroups(molManager, atomLevel, parentMol, molIDComp.molID)
+                }
+
                 return comp.molID
             }
         }

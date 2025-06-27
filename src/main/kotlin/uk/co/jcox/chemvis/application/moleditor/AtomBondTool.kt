@@ -327,7 +327,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         //Therefore no checkpoint/restore point is needed
         //So just run the action as and then wait for push changes to trigger
         actionInProgress = true
-        val action = AtomCreationAction(clickDetails.xPos, clickDetails.yPos, clickDetails.atomSelected)
+        val action = AtomCreationAction(clickDetails.xPos, clickDetails.yPos, clickDetails.insert)
         action.runAction(workingState.molManager, workingState.level)
     }
 
@@ -337,7 +337,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context) {
         //Everything is ready to start now
         actionInProgress = true
 
-        val action = AtomInsertionAction(clickDetails.xPos, clickDetails.yPos, clickDetails.atomSelected, moleculeLevel, selectedLevel)
+        val action = AtomInsertionAction(clickDetails.xPos, clickDetails.yPos, clickDetails.insert, moleculeLevel, selectedLevel)
         action.runAction(workingState.molManager, workingState.level)
         //This action also returns an ID for the newly created atom, this allows us to "drag" the atom around
         draggingAtom = action.insertedAtom

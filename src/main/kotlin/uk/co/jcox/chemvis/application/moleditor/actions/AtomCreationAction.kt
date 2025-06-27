@@ -1,9 +1,7 @@
 package uk.co.jcox.chemvis.application.moleditor.actions
 
-import org.checkerframework.checker.units.qual.mol
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
-import uk.co.jcox.chemvis.application.moleditor.GhostImplicitHydrogenGroupComponent
 import uk.co.jcox.chemvis.application.moleditor.LevelMolLinkUtil
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
 import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
@@ -38,7 +36,7 @@ class AtomCreationAction(
         //Always add implicit hydrogens
         if (insert.hydrogenable) {
             molManager.recalculate(structMolecule)
-            addGhostGroup(molManager, levelFirstAtom, structMolecule, structFirstAtom)
+            refreshGhostGroups(molManager, levelFirstAtom, structMolecule, structFirstAtom)
         }
         return structMolecule
     }

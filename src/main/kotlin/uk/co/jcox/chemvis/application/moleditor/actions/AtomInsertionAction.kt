@@ -57,12 +57,15 @@ class AtomInsertionAction (
         //5) Recalculate hydrogens
         molManager.recalculate(structMolecule.molID)
 
-        replaceOldLabels(molManager, structMolecule.molID, structOldAtom.molID, levelSelection)
+//        replaceOldLabels(molManager, structMolecule.molID, structOldAtom.molID, levelSelection)
+        refreshGhostGroups(molManager, levelNewAtom, structMolecule.molID, structNewAtom)
+        refreshGhostGroups(molManager, levelSelection, structMolecule.molID, structOldAtom.molID)
+
 
         //Add a label to the added object if required
         if (insert.hydrogenable && !molManager.isOfElement(structMolecule.molID, structNewAtom, "C")) {
             //Only add if it could have hydrogens and is not carbon
-            addGhostGroup(molManager, levelNewAtom, structMolecule.molID, structNewAtom)
+            refreshGhostGroups(molManager, levelNewAtom, structMolecule.molID, structNewAtom)
         }
 
         //Show implicit carbons on the level side

@@ -57,7 +57,7 @@ class NewOrganicEditorState (
 
         setThemeStyle(Vector3f(1.0f, 1.0f, 1.0f), Vector3f(1.0f, 1.0f, 1.0f), 2.5f)
 
-        atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
+        atomBondTool = NewAtomBondTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
 
         atomBondTool.onCommit {
             workState.makeCheckpoint(it.clone())
