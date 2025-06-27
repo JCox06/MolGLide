@@ -20,7 +20,7 @@ class InstancedRenderer : AutoCloseable {
     }
 
 
-    fun drawLines(mesh: GLMesh, instancedData: List<Float>, count: Int) {
+    fun drawLines(mesh: GLMesh, instancedData: MutableList<Float>) {
         GL30.glBindVertexArray(mesh.vertexArray)
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, lineInstancedBuffer)
 
@@ -28,16 +28,17 @@ class InstancedRenderer : AutoCloseable {
         while (true) {
             if (instancedData.size - loopRun * PACKED_DATA > PACKED_DATA) {
                 val splice = instancedData.slice(loopRun * PACKED_DATA..< PACKED_DATA * (1 + loopRun))
-                drawInstancedLine(lineInstancedBuffer, splice.toFloatArray(), mesh.vertices, splice.size)
+                drawInstancedLine(lineInstancedBuffer, splice.toFloatArray(), mesh.vertices, LINE_INSTANCES)
                 loopRun++
             } else {
                 val data = instancedData.slice(loopRun * PACKED_DATA..< instancedData.size)
 
-                drawInstancedLine(lineInstancedBuffer, data.toFloatArray(), mesh.vertices, data.size)
+                //If the count parameter is wrong, it looks like the level view and the struct view get out of the sync
+                //Because I can only assume data is left on the GPU and it just renders the data there
+                drawInstancedLine(lineInstancedBuffer, data.toFloatArray(), mesh.vertices, data.size / LINE_VERTEX_DATA)
                 break
             }
         }
-
     }
 
     private fun drawInstancedLine(bufferObject: Int, splicedData: FloatArray, vertices: Int, count: Int) {

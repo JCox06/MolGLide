@@ -208,7 +208,7 @@ class LevelRenderer (
 
             instanceData.addAll(perInstanceData)
         }
-        instancer.drawLines(glMesh, instanceData, instanceData.size / 7 )
+        instancer.drawLines(glMesh, instanceData)
     }
 
 

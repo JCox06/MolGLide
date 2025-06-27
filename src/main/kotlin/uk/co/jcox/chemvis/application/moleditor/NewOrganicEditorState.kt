@@ -221,6 +221,11 @@ class NewOrganicEditorState (
     }
 
 
+
+    //todo - Styling should not be done in this class. And styling should not be applied to the scene graph
+    //The scene graph really needs to be redesigned, and entities should be able to inherit from other entities
+    //But inheritance should not be on a scene graph relation. AND, custom ThemeStyle classes should be added that are interacted by custom entities to apply the themes
+
     fun setThemeStyle(colourText: Vector3f, colourLine: Vector3f, width: Float) {
         workState.setTextTheme(TextComponent("", MolGLide.FONT, colourText.x, colourText.y, colourText.z, MolGLide.GLOBAL_SCALE))
         workState.setLineTheme(LineDrawerComponent(clpCache.level.id, clpCache.level.id, width, colourLine.x , colourLine.y, colourLine.z))
