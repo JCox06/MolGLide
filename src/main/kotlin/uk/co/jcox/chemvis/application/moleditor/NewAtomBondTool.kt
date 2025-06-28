@@ -3,7 +3,11 @@ package uk.co.jcox.chemvis.application.moleditor
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
+import org.xmlcml.euclid.Vector2
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomCreationAction
+import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionAction
+import uk.co.jcox.chemvis.application.moleditor.actions.BondOrderAction
+import uk.co.jcox.chemvis.application.moleditor.actions.ElementalEditAction
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
@@ -12,9 +16,10 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
     private var toolMode: Mode = Mode.None
 
     override fun update() {
-
         checkSwitchToInsertionMode()
         updateDraggingPosition()
+        checkSwitchToBondJoin()
+        checkRevertBondJoin()
     }
 
 
@@ -45,7 +50,6 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
         if (toolMode !is Mode.None) {
             pushChanges()
         }
-
         resetState()
     }
 
@@ -105,14 +109,14 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
                 return
             }
 
-            val insertedAtom = insertAtom(mouse.x, mouse.y, newInsert, selectedAtom)
+            val insertedAtom = insertAtom(newInsert, newSelectedAtom)
 
             if (insertedAtom == null) {
                 resetState()
                 return
             }
 
-            toolMode = Mode.Dragging(insertedAtom, newSelectedAtom, Vector2f(mouse.x, mouse.y))
+            toolMode = Mode.Dragging(insertedAtom, newSelectedAtom, Vector2f(mouse.x, mouse.y), true, false)
         }
     }
 
@@ -143,8 +147,82 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
     }
 
 
-    //Each mode is associated with an action
-    //The following methods are responsible for creation the appropriate actions
+    private fun checkSwitchToBondJoin() {
+        val tool = toolMode
+
+        if (tool !is Mode.Dragging || !tool.allowBondOrderChange) {
+            return
+        }
+
+        val matcher = findMatchingPosition(workingState.level, tool.proposedDragPos, tool.draggingAtom)
+
+        matcher?.let {
+            //Allow you to cancel this action if you drag away from the position
+            makeRestorePoint()
+
+            //Stop the atom replacement AND atom insertion from being commited
+            refreshWorkingState(false)
+
+            val atomA = workingState.level.findByID(it.id)
+            val atomB = workingState.level.findByID(tool.stationaryAtom.id)
+
+
+            if (atomA == null || atomB == null) {
+                return
+            }
+
+            tool.allowBondOrderChange = false
+
+            insertBondOrderChange(atomA, atomB)
+        }
+    }
+
+    private fun checkRevertBondJoin() {
+        //if the user pulls away after a successful switch to BondJoin, then we need to revert everything
+        val tool = toolMode
+
+        if (tool !is Mode.Dragging || tool.allowBondOrderChange) {
+            return
+        }
+
+        val matcher = findMatchingPosition(workingState.level, tool.proposedDragPos, null)
+
+
+        if (matcher == null) {
+            restoreOnce()
+            updateDraggingPosition()
+            tool.allowBondOrderChange = true
+            tool.allowStateRestore = true
+
+            val newDragging = workingState.level.findByID(tool.draggingAtom.id)
+            val newStationary = workingState.level.findByID(tool.stationaryAtom.id)
+
+            //Restoring invalidates all current references
+            //todo temp measure - Really should check these are available before switching to the previous state
+            if (newDragging == null || newStationary == null) {
+                throw Exception("TEMP ERROR")
+            }
+            toolMode = Mode.Dragging(newDragging, newStationary, Vector2f(), true, true)
+        }
+
+    }
+
+    private fun findMatchingPosition(lvl: EntityLevel, posToCheck: Vector2f, discard: EntityLevel?) : EntityLevel? {
+        var matcher: EntityLevel? = null
+        lvl.traverseFunc {
+            //Check for match, but make sure to not select itself
+
+            val pos3 = it.getAbsolutePosition()
+            val pos = Vector2f(pos3.x, pos3.y)
+
+            if (pos.equals(posToCheck, 0.1f) && it != discard && it.hasComponent(AtomComponent::class)) {
+                matcher = it
+                return@traverseFunc
+            }
+        }
+        return matcher
+    }
+
 
     private fun addMolecule(placement: Mode.Placement) {
         val action = AtomCreationAction(placement.xPos, placement.yPos, placement.insert)
@@ -152,33 +230,25 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
     }
 
     private fun replaceElement(replacement: Mode.Replacement) {
-//        val action = ElementalEditAction(replacement.atom, replacement.replacement)
-//        action.runAction(workingState.molManager, workingState.level)
+        val action = ElementalEditAction(replacement.atom, replacement.replacement)
+        action.runAction(workingState.molManager, workingState.level)
     }
 
 
-    private fun insertAtom(initXPos: Float, initYPos: Float, insert: AtomInsert, levelAtom: EntityLevel) : EntityLevel? {
+    private fun insertAtom(insert: AtomInsert, levelAtom: EntityLevel) : EntityLevel? {
 
-//        val levelMoleculeID = LevelViewUtil.getLvlMolFromLvlAtom(levelAtom)
-//
-//        if (levelMoleculeID == null) {
-//            return null
-//        }
-//
-//        val levelMolecule = workingState.level.findByID(levelMoleculeID)
-//
-//        if (levelMolecule == null) {
-//            return null
-//        }
-//
-//        val action = AtomInsertionAction(initXPos, initYPos, insert, levelMolecule, levelAtom)
-//        action.runAction(workingState.molManager, workingState.level)
-//
-//        val toReturn = action.insertedAtom
-//
-//        return toReturn
+        val action = AtomInsertionAction(insert, levelAtom)
+        action.runAction(workingState.molManager, workingState.level)
 
-        return null
+        val toReturn = action.insertion
+
+        return toReturn
+    }
+
+
+    private fun insertBondOrderChange(atomA: EntityLevel, atomB: EntityLevel) {
+        val action = BondOrderAction(atomA, atomB)
+        action.runAction(workingState.molManager, workingState.level)
     }
 
 
@@ -190,7 +260,7 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
         object None: Mode()
         data class Placement(val xPos: Float, val yPos: Float, val insert: AtomInsert) : Mode()
         data class Replacement(val atom: EntityLevel, val replacement: AtomInsert) : Mode()
-        data class Dragging(val draggingAtom: EntityLevel, val stationaryAtom: EntityLevel, var proposedDragPos: Vector2f) : Mode()
+        data class Dragging(val draggingAtom: EntityLevel, val stationaryAtom: EntityLevel, var proposedDragPos: Vector2f, var allowBondOrderChange: Boolean, var allowStateRestore: Boolean) : Mode()
     }
 
     companion object {

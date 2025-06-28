@@ -33,6 +33,20 @@ abstract class EditorAction {
     }
 
 
+    protected fun removeImplicitHydrogenGroup(levelAtom: EntityLevel) {
+
+        val toRemove = mutableListOf<EntityLevel>()
+
+        levelAtom.getChildren().forEach {
+            if (it.hasComponent(GhostImplicitHydrogenGroupComponent::class)) {
+                toRemove.add(it)
+            }
+        }
+
+        toRemove.forEach {
+            levelAtom.removeEntity(it)
+        }
+    }
 
     protected fun insertImplicitHydrogenGroup(levelAtom: EntityLevel, hydrogenCount: Int) {
         if (hydrogenCount == 0) {

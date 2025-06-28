@@ -20,14 +20,14 @@ object LevelViewUtil {
     fun createLabel(molecule: EntityLevel, text: String, posX: Float, posY: Float, scale: Float = MolGLide.GLOBAL_SCALE) : EntityLevel {
         //1) Create a new entity for the atom/label to sit in from the molecule entity
         val label = molecule.addEntity()
-        label.addComponent(TransformComponent(posX, posY, -10.0f))
+        label.addComponent(TransformComponent(posX, posY, NewOrganicEditorState.XY_PLANE))
         label.addComponent(TextComponent(text))
         return label
     }
 
     fun createBond(molecule: EntityLevel, atomA: EntityLevel, atomB: EntityLevel) : EntityLevel {
         val bond = molecule.addEntity()
-        bond.addComponent(TransformComponent(0.0f, 0.0f, 1.0f))
+        bond.addComponent(TransformComponent(0.0f, 0.0f, -2.0f))
         bond.addComponent(LineDrawerComponent(atomA.id, atomB.id))
         return bond
     }
@@ -60,11 +60,6 @@ object LevelViewUtil {
     }
 
     fun linkParentLevel(atom: EntityLevel, parent: EntityLevel) {
-
-        if (!atom.hasComponent(AtomComponent::class)) {
-            return
-        }
-
         atom.addComponent(LevelParentComponent(parent.id))
     }
 
