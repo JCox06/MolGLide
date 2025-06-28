@@ -6,6 +6,7 @@ import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
 import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
+import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
 
 class ElementalEditAction (
@@ -26,6 +27,8 @@ class ElementalEditAction (
         val textComp = levelAtom.getComponent(TextComponent::class)
         textComp.text = replacement.symbol
 
+        levelAtom.getComponent(TransformComponent::class).visible = true
+
         val parentMolID = LevelViewUtil.getLvlMolFromLvlAtom(levelAtom)
 
         if (parentMolID == null) {
@@ -42,11 +45,11 @@ class ElementalEditAction (
 
         molManager.recalculate(structMol.molID)
 
-        removeImplicitHydrogenGroup(levelAtom)
+        updateGhostGroups(molManager, levelAtom, structAtom.molID)
 
-        val hydrogenCount = molManager.getImplicitHydrogens(structAtom.molID)
-
-        insertImplicitHydrogenGroup(levelAtom, hydrogenCount)
+        if (replacement == AtomInsert.CARBON) {
+            makeCarbonImplicit(molManager, structMol.molID, structAtom.molID, levelAtom)
+        }
 
         return structMol.molID
     }

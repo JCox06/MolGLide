@@ -75,33 +75,4 @@ class AtomInsertionAction (
         LevelViewUtil.linkObject(structBond, levelBond)
     }
 
-
-    private fun updateGhostGroups(molManager: IMoleculeManager, levelAtom: EntityLevel, structAtom: UUID) {
-
-        removeImplicitHydrogenGroup(levelAtom)
-
-        if (!levelAtom.hasComponent(AlwaysExplicit::class) && molManager.isOfElement(structAtom, "C")) {
-            return
-        }
-
-        val newHydrogenCount = molManager.getImplicitHydrogens(structAtom)
-
-        insertImplicitHydrogenGroup(levelAtom, newHydrogenCount)
-    }
-
-
-    private fun makeCarbonImplicit(molManager: IMoleculeManager, structMol: UUID, structCarbon: UUID, levelCarbon: EntityLevel) {
-        //First check if carbon
-        if (! molManager.isOfElement(structCarbon, "C")) {
-            return
-        }
-
-        val bonds = molManager.getBonds(structMol, structCarbon)
-
-        if (bonds >= NewOrganicEditorState.CARBON_IMPLICIT_LIMIT) {
-            //Then hide the text component of the carbon
-            val textComp = levelCarbon.getComponent(TransformComponent::class)
-            textComp.visible = false
-        }
-    }
 }

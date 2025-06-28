@@ -199,6 +199,7 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
 
             //Restoring invalidates all current references
             //todo temp measure - Really should check these are available before switching to the previous state
+            //To fix this, direct workstate access needs to be arranged to query the data in a lower workstate level
             if (newDragging == null || newStationary == null) {
                 throw Exception("TEMP ERROR")
             }
