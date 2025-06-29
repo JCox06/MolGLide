@@ -143,13 +143,24 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
         //Then get the new position
         val mouse = mouseWorld()
         val stationaryPos = tool.stationaryAtom.getAbsolutePosition()
-        val newPos = closestPointToCircleCircumference(Vector2f(stationaryPos.x, stationaryPos.y), mouse, OrganicEditorState.Companion.CONNECTION_DIST)
 
-        tool.proposedDragPos = newPos
+        //To make triangles, diagonal lines need to be shorter. So check if a line is straight (parallel to the coordinate axes)
+
+        val lineDirection = tool.proposedDragPos - Vector2f(stationaryPos.x, stationaryPos.y)
+        lineDirection.normalize().absolute()
+        
+        if (lineDirection.equals(Vector2f(1.0f, 0.0f), 0.001f) || lineDirection.equals(Vector2f(0.0f, 1.0f), 0.001f)) {
+            val newPos = closestPointToCircleCircumference(Vector2f(stationaryPos.x, stationaryPos.y), mouse, OrganicEditorState.Companion.CONNECTION_DIST)
+            tool.proposedDragPos = newPos
+        } else {
+            //Line is not on coordinate axes (needs to be longer)
+            val newPos = closestPointToCircleCircumference(Vector2f(stationaryPos.x, stationaryPos.y), mouse, OrganicEditorState.Companion.CONNECTION_DIST_ANGLE)
+            tool.proposedDragPos = newPos
+        }
 
         //Apply the proposed position
         val draggingTrans = tool.draggingAtom.getAbsoluteTranslation()
-        val localTrans = Vector3f(newPos, OrganicEditorState.Companion.XY_PLANE) - draggingTrans
+        val localTrans = Vector3f(tool.proposedDragPos, OrganicEditorState.Companion.XY_PLANE) - draggingTrans
 
         val transformComp = tool.draggingAtom.getComponent(TransformComponent::class)
         transformComp.x = localTrans.x

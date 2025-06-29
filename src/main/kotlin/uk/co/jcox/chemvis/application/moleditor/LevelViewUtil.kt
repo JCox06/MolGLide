@@ -27,7 +27,7 @@ object LevelViewUtil {
 
     fun createBond(molecule: EntityLevel, atomA: EntityLevel, atomB: EntityLevel) : EntityLevel {
         val bond = molecule.addEntity()
-        bond.addComponent(TransformComponent(0.0f, 0.0f, -2.0f))
+        bond.addComponent(TransformComponent(0.0f, 0.0f, -5.0f))
         bond.addComponent(LineDrawerComponent(atomA.id, atomB.id))
         return bond
     }

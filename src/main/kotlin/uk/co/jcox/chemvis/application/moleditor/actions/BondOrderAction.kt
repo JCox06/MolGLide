@@ -111,7 +111,7 @@ class BondOrderAction (
         val orthVec = Vector3f(directionVec.y, -directionVec.x, OrganicEditorState.XY_PLANE) * OrganicEditorState.DOUBLE_BOND_DISTANCE
 
         val newBondEntity = level.addEntity()
-        newBondEntity.addComponent(TransformComponent(orthVec.x, orthVec.y, orthVec.z))
+        newBondEntity.addComponent(TransformComponent(orthVec.x, orthVec.y, -2.0f))
         newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id, OrganicEditorState.BOND_WIDTH))
     }
 }

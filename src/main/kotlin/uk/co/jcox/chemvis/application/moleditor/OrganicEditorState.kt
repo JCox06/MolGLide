@@ -20,6 +20,8 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class OrganicEditorState (
     private val services: ICVServices,
@@ -272,6 +274,7 @@ class OrganicEditorState (
         const val SELECTION_MARKER_SIZE = 10.0f
         const val INLINE_DIST = 10.0f
         const val CONNECTION_DIST = 35.0f
+        val CONNECTION_DIST_ANGLE = sqrt(2 * ((CONNECTION_DIST / 2).pow(2)))
         const val BOND_WIDTH = 2.5f
         const val CARBON_IMPLICIT_LIMIT = 4
         const val DOUBLE_BOND_DISTANCE = 0.1f

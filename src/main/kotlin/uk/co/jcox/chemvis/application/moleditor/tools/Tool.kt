@@ -2,6 +2,7 @@ package uk.co.jcox.chemvis.application.moleditor.tools
 
 import org.joml.Vector2f
 import org.joml.minus
+import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.ChemLevelPair
 import uk.co.jcox.chemvis.application.moleditor.ClickContext
