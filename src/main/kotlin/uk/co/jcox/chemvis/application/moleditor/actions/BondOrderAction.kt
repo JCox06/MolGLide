@@ -1,7 +1,5 @@
 package uk.co.jcox.chemvis.application.moleditor.actions
 
-import org.apache.jena.vocabulary.OWLTest.level
-import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
@@ -9,7 +7,7 @@ import org.joml.times
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
 import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
-import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
@@ -110,10 +108,10 @@ class BondOrderAction (
         val atomBLocalPos = Vector2f(atomBTrans.x, atomBTrans.y)
 
         val directionVec = atomALocalPos - atomBLocalPos
-        val orthVec = Vector3f(directionVec.y, -directionVec.x, NewOrganicEditorState.XY_PLANE) * NewOrganicEditorState.DOUBLE_BOND_DISTANCE
+        val orthVec = Vector3f(directionVec.y, -directionVec.x, OrganicEditorState.XY_PLANE) * OrganicEditorState.DOUBLE_BOND_DISTANCE
 
         val newBondEntity = level.addEntity()
         newBondEntity.addComponent(TransformComponent(orthVec.x, orthVec.y, orthVec.z))
-        newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id, NewOrganicEditorState.BOND_WIDTH))
+        newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id, OrganicEditorState.BOND_WIDTH))
     }
 }

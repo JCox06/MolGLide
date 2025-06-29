@@ -1,17 +1,26 @@
-package uk.co.jcox.chemvis.application.moleditor
+package uk.co.jcox.chemvis.application.moleditor.tools
 
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
-import org.xmlcml.euclid.Vector2
+import org.joml.plus
+import uk.co.jcox.chemvis.application.MolGLide
+import uk.co.jcox.chemvis.application.moleditor.AtomComponent
+import uk.co.jcox.chemvis.application.moleditor.AtomInsert
+import uk.co.jcox.chemvis.application.moleditor.ClickContext
+import uk.co.jcox.chemvis.application.moleditor.GhostImplicitHydrogenGroupComponent
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.Selection
+import uk.co.jcox.chemvis.application.moleditor.ToolCreationContext
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionAction
 import uk.co.jcox.chemvis.application.moleditor.actions.BondOrderAction
 import uk.co.jcox.chemvis.application.moleditor.actions.ElementalEditAction
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
-class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
+class AtomBondTool(context: ToolCreationContext) : Tool(context){
 
     private var toolMode: Mode = Mode.None
 
@@ -20,6 +29,8 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
         updateDraggingPosition()
         checkSwitchToBondJoin()
         checkRevertBondJoin()
+
+        autoMoveGhostGroups()
     }
 
 
@@ -132,13 +143,13 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
         //Then get the new position
         val mouse = mouseWorld()
         val stationaryPos = tool.stationaryAtom.getAbsolutePosition()
-        val newPos = closestPointToCircleCircumference(Vector2f(stationaryPos.x, stationaryPos.y), mouse, NewOrganicEditorState.CONNECTION_DIST)
+        val newPos = closestPointToCircleCircumference(Vector2f(stationaryPos.x, stationaryPos.y), mouse, OrganicEditorState.Companion.CONNECTION_DIST)
 
         tool.proposedDragPos = newPos
 
         //Apply the proposed position
         val draggingTrans = tool.draggingAtom.getAbsoluteTranslation()
-        val localTrans = Vector3f(newPos, NewOrganicEditorState.XY_PLANE) - draggingTrans
+        val localTrans = Vector3f(newPos, OrganicEditorState.Companion.XY_PLANE) - draggingTrans
 
         val transformComp = tool.draggingAtom.getComponent(TransformComponent::class)
         transformComp.x = localTrans.x
@@ -225,6 +236,82 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
     }
 
 
+    private fun autoMoveGhostGroups() {
+
+        val tool = toolMode
+
+        if (tool !is Mode.Dragging) {
+            return
+        }
+
+        //Move the ghost groups on the dragging atom and the stationary atom
+        var draggingGhostGroup: EntityLevel? = null
+        var stationaryGhostGroup: EntityLevel? = null
+
+        //Find dragging ghost group
+        tool.draggingAtom.traverseFunc {
+            if (it.hasComponent(GhostImplicitHydrogenGroupComponent::class)) {
+                draggingGhostGroup = it
+                return@traverseFunc
+            }
+        }
+
+        //Find Stationary ghost group
+        tool.stationaryAtom.traverseFunc {
+            if (it.hasComponent(GhostImplicitHydrogenGroupComponent::class)) {
+                stationaryGhostGroup = it
+                return@traverseFunc
+            }
+        }
+
+        val dragGhost = draggingGhostGroup
+        val statGhost = stationaryGhostGroup
+
+        if (dragGhost == null || statGhost == null) {
+            return
+        }
+
+        autoMoveGhostGroup(tool.draggingAtom, dragGhost, tool.stationaryAtom)
+        autoMoveGhostGroup(tool.stationaryAtom, statGhost, tool.draggingAtom)
+    }
+
+
+    private fun autoMoveGhostGroup(atom: EntityLevel, ghostGroup: EntityLevel, otherAtom: EntityLevel) {
+        //Get everything in terms of local pos
+        val atomWithGhostPos = atom.getAbsolutePosition()
+        val otherAtomPos = otherAtom.getAbsolutePosition()
+
+        //Find the distance between the different ghost group positions and the other atom position
+        //The largest distance will be the better option, as this will be further away
+
+        val ghostPosTest1 = atomWithGhostPos + GHOST_GROUP_A
+        val ghostPosTest2 = atomWithGhostPos + GHOST_GROUP_B
+
+        val test1 = otherAtomPos.distance(ghostPosTest1)
+        val test2 = otherAtomPos.distance(ghostPosTest2)
+
+        if (test1 == test2) {
+            //If they are the same distance - Then do nothing
+            return
+        }
+
+        //Otherwise move the ghost group to the site that is shorter
+
+        val ghostPosTrans = ghostGroup.getComponent(TransformComponent::class)
+        val ghostText = ghostGroup.getComponent(TextComponent::class)
+
+        if (test1 < test2) {
+            //If test 1 is shorter, then move group to test 2 site
+            //The test two site, starting from the left of the group, needs to take into account the size of the text as well
+            ghostPosTrans.x = -OrganicEditorState.INLINE_DIST - ghostText.text.length * MolGLide.GLOBAL_SCALE * MolGLide.FONT_SIZE *1/3f
+        }
+
+        if (test1 > test2) {
+            //If test 2 is shorter, then move group to test 1 site
+            ghostPosTrans.x = OrganicEditorState.INLINE_DIST
+        }
+    }
+
     private fun addMolecule(placement: Mode.Placement) {
         val action = AtomCreationAction(placement.xPos, placement.yPos, placement.insert)
         action.runAction(workingState.molManager, workingState.level)
@@ -266,5 +353,7 @@ class NewAtomBondTool(context: ToolCreationContext) : Tool(context){
 
     companion object {
         private const val SIG_DELTA = 7.5f
+        private val GHOST_GROUP_A = Vector3f(OrganicEditorState.INLINE_DIST, 0.0f, OrganicEditorState.XY_PLANE)
+        private val GHOST_GROUP_B = Vector3f(-OrganicEditorState.INLINE_DIST, 0.0f, OrganicEditorState.XY_PLANE)
     }
 }

@@ -1,14 +1,10 @@
 package uk.co.jcox.chemvis.application.moleditor.actions
 
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
-import uk.co.jcox.chemvis.application.moleditor.AlwaysExplicit
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
 import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
-import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
-import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
-import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
 
 class AtomInsertionAction (

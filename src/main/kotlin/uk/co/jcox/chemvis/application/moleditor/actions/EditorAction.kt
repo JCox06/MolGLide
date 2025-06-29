@@ -1,19 +1,12 @@
 package uk.co.jcox.chemvis.application.moleditor.actions
 
 
-import nu.xom.Text
-import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.moleditor.AlwaysExplicit
-import uk.co.jcox.chemvis.application.moleditor.AtomComponent
 import uk.co.jcox.chemvis.application.moleditor.GhostImplicitHydrogenGroupComponent
-import uk.co.jcox.chemvis.application.moleditor.LevelParentComponent
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
-import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
-import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
-import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
-import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
 
@@ -58,7 +51,7 @@ abstract class EditorAction {
             label = "H$hydrogenCount"
         }
 
-        val fakeLabel = LevelViewUtil.createLabel(levelAtom, label, NewOrganicEditorState.INLINE_DIST, 0.0f)
+        val fakeLabel = LevelViewUtil.createLabel(levelAtom, label, OrganicEditorState.INLINE_DIST, 0.0f)
         fakeLabel.addComponent(GhostImplicitHydrogenGroupComponent())
     }
 
@@ -85,7 +78,7 @@ abstract class EditorAction {
 
         val bonds = molManager.getBonds(structMol, structCarbon)
 
-        if (bonds >= NewOrganicEditorState.CARBON_IMPLICIT_LIMIT) {
+        if (bonds >= OrganicEditorState.CARBON_IMPLICIT_LIMIT) {
             //Then hide the text component of the carbon
             val textComp = levelCarbon.getComponent(TransformComponent::class)
             textComp.visible = false

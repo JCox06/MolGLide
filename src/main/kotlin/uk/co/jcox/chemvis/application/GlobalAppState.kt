@@ -1,22 +1,13 @@
 package uk.co.jcox.chemvis.application
 
-import imgui.ImGui
-import imgui.ImVec2
-import imgui.ImVec4
-import imgui.flag.ImGuiCol
-import imgui.flag.ImGuiCond
-import imgui.flag.ImGuiWindowFlags
 import org.joml.Vector2f
-import uk.co.jcox.chemvis.application.moleditor.AtomInsert
-import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import uk.co.jcox.chemvis.cvengine.InputManager
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.ImGuiRenderingContext
-import java.awt.Desktop
-import java.net.URI
 
 class GlobalAppState (val services: ICVServices, renderTargetContext: IRenderTargetContext) : ApplicationState(renderTargetContext) {
 
@@ -35,7 +26,7 @@ class GlobalAppState (val services: ICVServices, renderTargetContext: IRenderTar
     }
 
     fun createOrganicEditor() : String {
-        val newState = NewOrganicEditorState(services, ImGuiRenderingContext())
+        val newState = OrganicEditorState(services, ImGuiRenderingContext())
         val renderTargetID = "Editor#${idCount++}"
         services.resourceManager().createRenderTarget(renderTargetID)
         services.setApplicationState(newState, renderTargetID)

@@ -1,14 +1,13 @@
 package uk.co.jcox.chemvis.application.moleditor
 
 
-import org.apache.jena.vocabulary.OWLTest.level
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.Vector4f
-import org.joml.times
 import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.application.MolGLide
+import uk.co.jcox.chemvis.application.moleditor.tools.AtomBondTool
+import uk.co.jcox.chemvis.application.moleditor.tools.Tool
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -21,9 +20,8 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
-import java.util.UUID
 
-class NewOrganicEditorState (
+class OrganicEditorState (
     private val services: ICVServices,
     renderTargetContext: IRenderTargetContext
 ) : ApplicationState(renderTargetContext), IInputSubscriber {
@@ -55,7 +53,7 @@ class NewOrganicEditorState (
 
         setThemeStyle(Vector3f(1.0f, 1.0f, 1.0f), Vector3f(1.0f, 1.0f, 1.0f), 2.5f)
 
-        atomBondTool = NewAtomBondTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
+        atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
 
         atomBondTool.onCommit {
             workState.makeCheckpoint(it.clone())

@@ -7,7 +7,7 @@ import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil.linkObject
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil.linkParentLevel
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil.tagAsAtom
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil.tagAsExplicit
-import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
@@ -26,7 +26,7 @@ class AtomCreationAction (
 
         //Create level info
         val levelMolecule = level.addEntity()
-        levelMolecule.addComponent(TransformComponent(placementX, placementY, NewOrganicEditorState.XY_PLANE, 1.0f))
+        levelMolecule.addComponent(TransformComponent(placementX, placementY, OrganicEditorState.XY_PLANE, 1.0f))
 
         val levelAtom = LevelViewUtil.createLabel(levelMolecule, insert.symbol, 0.0f, 0.0f)
 

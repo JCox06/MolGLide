@@ -20,7 +20,7 @@ object LevelViewUtil {
     fun createLabel(molecule: EntityLevel, text: String, posX: Float, posY: Float, scale: Float = MolGLide.GLOBAL_SCALE) : EntityLevel {
         //1) Create a new entity for the atom/label to sit in from the molecule entity
         val label = molecule.addEntity()
-        label.addComponent(TransformComponent(posX, posY, NewOrganicEditorState.XY_PLANE))
+        label.addComponent(TransformComponent(posX, posY, OrganicEditorState.XY_PLANE))
         label.addComponent(TextComponent(text))
         return label
     }

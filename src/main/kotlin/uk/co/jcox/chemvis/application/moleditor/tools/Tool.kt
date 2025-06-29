@@ -1,8 +1,14 @@
-package uk.co.jcox.chemvis.application.moleditor
+package uk.co.jcox.chemvis.application.moleditor.tools
 
 import org.joml.Vector2f
 import org.joml.minus
 import uk.co.jcox.chemvis.application.MolGLide
+import uk.co.jcox.chemvis.application.moleditor.ChemLevelPair
+import uk.co.jcox.chemvis.application.moleditor.ClickContext
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.Selection
+import uk.co.jcox.chemvis.application.moleditor.ToolCreationContext
+import uk.co.jcox.chemvis.application.moleditor.WorkState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
@@ -100,7 +106,7 @@ abstract class Tool (
         }
 
         val selectionMarker = transientUI.addEntity()
-        selectionMarker.addComponent(TransformComponent(position.x, position.y, position.z, NewOrganicEditorState.SELECTION_MARKER_SIZE))
+        selectionMarker.addComponent(TransformComponent(position.x, position.y, position.z, OrganicEditorState.Companion.SELECTION_MARKER_SIZE))
         selectionMarker.addComponent(ObjComponent(MolGLide.SELECTION_MARKER_MESH, MolGLide.SELECTION_MARKER_MATERIAL))
     }
 
