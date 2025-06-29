@@ -5,7 +5,7 @@ ___
 > [!CAUTION]
 > MolGLide currently exists as a prototype. It just about draws extremely simple molecules and is highly unstable.
 
-[Download the latest version](https://github.com/JCox06/MolGLide/releases/download/v0.0.1/MolGLide-UNIVERSAL-0.0.1.zip)
+[Download version 0.0.2](https://github.com/JCox06/MolGLide/releases/download/v0.0.2/MolGLide-0.0.2-UNIVERAL.zip) or alternatively [view the latest releases](https://github.com/JCox06/MolGLide/releases) 
 
 MolGLide is a project I am writing to allow you to build organic molecules in a 2D editor.
 
