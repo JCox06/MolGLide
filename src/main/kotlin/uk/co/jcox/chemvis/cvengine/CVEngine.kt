@@ -138,6 +138,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
         val io = ImGui.getIO()
 
+        io.fonts.setFreeTypeRenderer(true)
+
         val x = FloatArray(1)
         val y = FloatArray(1)
         GLFW.glfwGetWindowContentScale(this.windowHandle, x, y)

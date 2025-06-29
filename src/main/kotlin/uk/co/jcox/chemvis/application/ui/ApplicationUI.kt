@@ -1,4 +1,4 @@
-package uk.co.jcox.chemvis.application
+package uk.co.jcox.chemvis.application.ui
 
 import imgui.ImGui
 import imgui.ImVec2
@@ -8,6 +8,7 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import org.joml.Vector2f
 import org.joml.Vector3f
+import uk.co.jcox.chemvis.application.GlobalAppState
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditor.Utils
@@ -15,7 +16,6 @@ import uk.co.jcox.chemvis.cvengine.ICVServices
 import java.awt.Desktop
 import java.net.URI
 import javax.swing.JFileChooser
-
 
 //Todo refactor this into smaller classes and multi-thread screenshot saving
 class ApplicationUI (
@@ -231,7 +231,7 @@ class ApplicationUI (
             } else {
                 if (ImGui.button(string, 30.0f, 25.0f)) {
                     activeElement = index
-                    activeState?.atomInsert = AtomInsert.fromSymbol(string)
+                    activeState?.atomInsert = AtomInsert.Companion.fromSymbol(string)
                 }
             }
         }
