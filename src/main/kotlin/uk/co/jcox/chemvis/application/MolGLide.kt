@@ -1,9 +1,7 @@
 package uk.co.jcox.chemvis.application
 
-import org.checkerframework.checker.units.qual.A
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
-import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
 

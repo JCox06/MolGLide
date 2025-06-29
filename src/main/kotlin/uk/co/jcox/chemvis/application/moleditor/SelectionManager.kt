@@ -1,11 +1,8 @@
 package uk.co.jcox.chemvis.application.moleditor
 
-import org.apache.jena.vocabulary.OWLTest.level
 import org.joml.Vector3f
 import org.joml.minus
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
-import java.util.UUID
-import kotlin.math.abs
 
 class SelectionManager {
 
@@ -13,7 +10,7 @@ class SelectionManager {
 
 
     fun update(level: EntityLevel, xPos: Float, yPos: Float) {
-        primarySelection = findPrimarySelection(level, Vector3f(xPos, yPos, NewOrganicEditorState.XY_PLANE))
+        primarySelection = findPrimarySelection(level, Vector3f(xPos, yPos, OrganicEditorState.XY_PLANE))
     }
 
 

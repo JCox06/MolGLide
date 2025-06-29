@@ -1,7 +1,6 @@
 package uk.co.jcox.chemvis.application.moleditor
 
-import uk.co.jcox.chemvis.application.chemengine.CDKManager
-import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
+import uk.co.jcox.chemvis.application.chemengine.CDKotMan
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
@@ -16,7 +15,7 @@ class WorkState {
     }
 
     fun init() {
-        stack.add(ChemLevelPair(EntityLevel(), CDKManager()))
+        stack.add(ChemLevelPair(EntityLevel(), CDKotMan()))
     }
 
     fun makeCheckpoint(clp: ChemLevelPair) {

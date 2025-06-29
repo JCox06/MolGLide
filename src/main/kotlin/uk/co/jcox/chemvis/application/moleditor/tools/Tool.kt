@@ -1,8 +1,15 @@
-package uk.co.jcox.chemvis.application.moleditor
+package uk.co.jcox.chemvis.application.moleditor.tools
 
 import org.joml.Vector2f
 import org.joml.minus
+import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
 import uk.co.jcox.chemvis.application.MolGLide
+import uk.co.jcox.chemvis.application.moleditor.ChemLevelPair
+import uk.co.jcox.chemvis.application.moleditor.ClickContext
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.Selection
+import uk.co.jcox.chemvis.application.moleditor.ToolCreationContext
+import uk.co.jcox.chemvis.application.moleditor.WorkState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
@@ -11,13 +18,13 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-
+/**
+ * A tool is an object that can "work" on the workstate.
+ * A tool changes the workstate through actions which it runs.
+ */
 abstract class Tool (
     val context: ToolCreationContext,
 ) {
-
-    var actionInProgress = false
-    protected set
 
     var workingState: ChemLevelPair = context.levelStack.get()
         private set
@@ -36,7 +43,6 @@ abstract class Tool (
         if (refreshLocalStack) {
             this.localStack = WorkState()
         }
-        actionInProgress = false
     }
 
     protected fun makeRestorePoint() {
@@ -66,6 +72,8 @@ abstract class Tool (
     abstract fun processClick(clickDetails: ClickContext)
 
     abstract fun processClickRelease(clickDetails: ClickContext)
+
+    abstract fun inProgress() : Boolean
 
     abstract fun update()
 
@@ -99,7 +107,7 @@ abstract class Tool (
         }
 
         val selectionMarker = transientUI.addEntity()
-        selectionMarker.addComponent(TransformComponent(position.x, position.y, position.z, NewOrganicEditorState.SELECTION_MARKER_SIZE))
+        selectionMarker.addComponent(TransformComponent(position.x, position.y, position.z, OrganicEditorState.Companion.SELECTION_MARKER_SIZE))
         selectionMarker.addComponent(ObjComponent(MolGLide.SELECTION_MARKER_MESH, MolGLide.SELECTION_MARKER_MATERIAL))
     }
 

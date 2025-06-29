@@ -8,15 +8,16 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import org.joml.Vector2f
 import org.joml.Vector3f
-import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
-import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditor.Utils
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import java.awt.Desktop
 import java.net.URI
 import javax.swing.JFileChooser
 
+
+//Todo refactor this into smaller classes and multi-thread screenshot saving
 class ApplicationUI (
     private val globalAppState: GlobalAppState,
     private val services: ICVServices
@@ -28,7 +29,7 @@ class ApplicationUI (
 
     private var activeElement = 0
 
-    private var activeState: NewOrganicEditorState? = null
+    private var activeState: OrganicEditorState? = null
     private var activeStateID: String? = null
 
     private var showMetricsWindow = false
@@ -42,7 +43,7 @@ class ApplicationUI (
 
     private val renderTargets = mutableListOf<String>()
 
-    private var stateToScreenshot: NewOrganicEditorState? = null
+    private var stateToScreenshot: OrganicEditorState? = null
 
 
     fun drawMainMenu() {
@@ -94,12 +95,12 @@ class ApplicationUI (
             ImGui.begin(stateID)
 
             val winPos = ImGui.getWindowPos()
-            renderingContext?.setImGuiWinMetrics(Vector2f(winPos.x, winPos.y))
+            renderingContext?.setRelativeWindowPos(Vector2f(winPos.x, winPos.y))
 
             if (ImGui.isWindowHovered()) {
                 services.resumeAppState(stateID)
                 val state = services.getState(stateID)
-                if (state is NewOrganicEditorState) {
+                if (state is OrganicEditorState) {
                     activeState = state
                     activeStateID = stateID
                 }

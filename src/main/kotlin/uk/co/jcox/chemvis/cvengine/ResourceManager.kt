@@ -1,11 +1,6 @@
 package uk.co.jcox.chemvis.cvengine
 
-import org.lwjgl.opengl.GL
-import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL15
-import org.lwjgl.opengl.GL20
-import org.lwjgl.opengl.GL30
-import org.lwjgl.opengl.GL33
+import org.lwjgl.opengl.*
 import org.lwjgl.stb.STBImage
 import org.lwjgl.system.MemoryStack
 import org.tinylog.Logger
@@ -67,7 +62,7 @@ class ResourceManager : IResourceManager{
             program.bind()
             return program
         }
-        throw RuntimeException("No such program found with ID ${programID}")
+        throw RuntimeException("No such program found with ID $programID")
     }
 
     override fun destroyProgram(programID: String) {
@@ -103,7 +98,7 @@ class ResourceManager : IResourceManager{
     override fun getMesh(id: String): GLMesh {
         val mesh = meshes[id]
         if (mesh == null) {
-            throw NullPointerException("No such model exists ${id}")
+            throw NullPointerException("No such model exists $id")
         }
 
         return mesh
@@ -182,14 +177,14 @@ class ResourceManager : IResourceManager{
 
 
         //Get the font metrics so we can get glyph size, etc
-        val font = Font(font.getPath(), Font.PLAIN, size)
+        val font = Font(font.path, Font.PLAIN, size)
         val fontMetrics: FontMetrics = getFontMetrics(font)
 
 
         //Each char has a different width, but same height
         //To avoid a runtime error, assume they are all the largest size
         var maxCharWidth = 0 //need to calculate
-        val charHeight = (fontMetrics.getHeight()) //They have the same height
+        val charHeight = (fontMetrics.height) //They have the same height
 
         for (c in glyphs.toCharArray()) {
             maxCharWidth = max(maxCharWidth, fontMetrics.charWidth(c))
@@ -200,18 +195,16 @@ class ResourceManager : IResourceManager{
         val textureUnit = sqrt(glyphs.length.toDouble()).toInt() + 1
         val proposedWidth = textureUnit * maxCharWidth
 
-        val charHeightPadding: Int = charHeight + size
-
         val proposedHeight = textureUnit * charHeight
         val squareTextureSize = max(proposedHeight, proposedWidth)
 
 
         //Create the actual image
-        val fontAtlas: MutableMap<Char, GlyphData> = HashMap<Char, GlyphData>()
+        val fontAtlas: MutableMap<Char, GlyphData> = HashMap()
         val atlasImage = BufferedImage(squareTextureSize, squareTextureSize, BufferedImage.TYPE_INT_ARGB)
         val g2d = atlasImage.createGraphics()
-        g2d.setFont(font)
-        g2d.setColor(Color.WHITE)
+        g2d.font = font
+        g2d.color = Color.WHITE
 
         var glyphXPlacement = 0
         var glyphYPlacement = charHeight
@@ -228,7 +221,7 @@ class ResourceManager : IResourceManager{
                 fontMetrics.charWidth(c).toFloat(),
                 charHeight.toFloat(),
                 glyphXPlacement.toFloat() / squareTextureSize,
-                (glyphYPlacement + (0.30f * size)) as Float / squareTextureSize,
+                (glyphYPlacement + (0.30f * size)) / squareTextureSize,
                 fontMetrics.charWidth(c).toFloat() / squareTextureSize,
                 charHeight.toFloat() / squareTextureSize
             )
@@ -244,7 +237,7 @@ class ResourceManager : IResourceManager{
 
         //Now load this as an image into OpenGL
         val textureData: ByteBuffer = convertImageData(atlasImage)
-        val glTextureObject: Int = loadTextureToOpenGL(textureData, squareTextureSize, squareTextureSize, GL11.GL_LINEAR_MIPMAP_LINEAR, GL11.GL_LINEAR, false)
+        val glTextureObject: Int = loadTextureToOpenGL(textureData, squareTextureSize, squareTextureSize, GL11.GL_NEAREST, GL11.GL_NEAREST, false)
 
         textures[id] = glTextureObject
 
@@ -349,12 +342,12 @@ class ResourceManager : IResourceManager{
     }
 
     private fun convertImageData(image: BufferedImage): ByteBuffer {
-        val pixelDataInt = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth())
-        val buffer = ByteBuffer.allocateDirect(image.getWidth() * image.getHeight() * 4)
+        val pixelDataInt = image.getRGB(0, 0, image.width, image.height, null, 0, image.width)
+        val buffer = ByteBuffer.allocateDirect(image.width * image.height * 4)
 
-        for (y in image.getHeight() - 1 downTo 0) {
-            for (x in 0..<image.getWidth()) {
-                val pixel = pixelDataInt[image.getWidth() * y + x]
+        for (y in image.height - 1 downTo 0) {
+            for (x in 0..<image.width) {
+                val pixel = pixelDataInt[image.width * y + x]
                 buffer.put(((pixel shr 16) and 0xFF).toByte())
                 buffer.put(((pixel shr 8) and 0xFF).toByte())
                 buffer.put((pixel and 0xFF).toByte())
@@ -373,16 +366,16 @@ class ResourceManager : IResourceManager{
         try {
             ImageIO.write(bufferedImage, "png", outputFile)
         } catch (e: IOException) {
-            throw java.lang.RuntimeException()
+            Logger.error("Error when saving image {}", e)
         }
     }
 
     private fun getFontMetrics(font: Font?): FontMetrics {
         val tempImage = BufferedImage(1, 1, BufferedImage.TYPE_4BYTE_ABGR)
         val g2d: Graphics = tempImage.createGraphics()
-        g2d.setFont(font)
-        g2d.setColor(Color.WHITE)
-        val metrics = g2d.getFontMetrics()
+        g2d.font = font
+        g2d.color = Color.WHITE
+        val metrics = g2d.fontMetrics
         g2d.dispose()
         return metrics
     }
@@ -487,8 +480,8 @@ class ResourceManager : IResourceManager{
         Logger.info {"Creating a render target for $id"}
 
 
-        val width: Int = 1
-        val height: Int = 1
+        val width = 1
+        val height = 1
 
         val frameBuffer = GL30.glGenFramebuffers()
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer)

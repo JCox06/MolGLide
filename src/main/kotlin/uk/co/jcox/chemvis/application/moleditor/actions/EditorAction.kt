@@ -1,16 +1,17 @@
 package uk.co.jcox.chemvis.application.moleditor.actions
 
+
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
+import uk.co.jcox.chemvis.application.moleditor.AlwaysExplicit
 import uk.co.jcox.chemvis.application.moleditor.GhostImplicitHydrogenGroupComponent
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
-import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
-import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
+import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
 
 
 abstract class EditorAction {
-
 
     /**
      * @return (optionally) the UUID of the molecule that has changed, to allow for internal recalculations (CDK Types)
@@ -25,53 +26,64 @@ abstract class EditorAction {
     }
 
 
-    protected fun addGhostGroup(molManager: IMoleculeManager, levelNewAtom: EntityLevel, structMolecule: UUID, structNewAtom: UUID) {
-        val getImplicitHydrogens = molManager.getImplicitHydrogens(structMolecule, structNewAtom)
+    protected fun removeImplicitHydrogenGroup(levelAtom: EntityLevel) {
 
-        if (getImplicitHydrogens == 1) {
-            val fakeH = LevelViewUtil.createLabel(levelNewAtom, "H", NewOrganicEditorState.INLINE_DIST, 0.0f)
-            fakeH.addComponent(GhostImplicitHydrogenGroupComponent())
-        } else {
-            val fakeH = LevelViewUtil.createLabel(levelNewAtom, "H$getImplicitHydrogens", NewOrganicEditorState.INLINE_DIST, 0.0f)
-            fakeH.addComponent(GhostImplicitHydrogenGroupComponent())
-        }
-    }
-
-
-    protected fun replaceOldLabels(molManager: IMoleculeManager, structMolecule: UUID, structOldAtom: UUID, levelSelection: EntityLevel) {
-        //Remove old implicit labels and replace them
-        //This works by changing the labels on the atom that was existing prior to this action be fired
         val toRemove = mutableListOf<EntityLevel>()
 
-        for (entityLevel in levelSelection.getChildren()) {
-
-
-            if (entityLevel.hasComponent(GhostImplicitHydrogenGroupComponent::class))  {
-
-                //If a carbon gets a bond, remove all the implicit labels on it
-                if (molManager.isOfElement(structMolecule, structOldAtom, "C")) {
-                    toRemove.add(entityLevel)
-                } else {
-                    //Any element other than carbon should just have the labels updated to refelct the actual number of hydrogens
-                    val textComp = entityLevel.getComponent(TextComponent::class)
-                    val newInsertedImplicit = molManager.getImplicitHydrogens(structMolecule, structOldAtom)
-                    if (newInsertedImplicit <= 0) {
-                        toRemove.add(entityLevel)
-                    }
-                    else if (newInsertedImplicit == 1) {
-                        textComp.text = "H"
-                    } else {
-                        textComp.text = "H$newInsertedImplicit"
-                    }
-
-                }
+        levelAtom.getChildren().forEach {
+            if (it.hasComponent(GhostImplicitHydrogenGroupComponent::class)) {
+                toRemove.add(it)
             }
         }
+
         toRemove.forEach {
-            levelSelection.removeEntity(it)
+            levelAtom.removeEntity(it)
         }
     }
 
+    protected fun insertImplicitHydrogenGroup(levelAtom: EntityLevel, hydrogenCount: Int) {
+        if (hydrogenCount == 0) {
+            return
+        }
+
+        var label = "H"
+        if (hydrogenCount > 1) {
+            label = "H$hydrogenCount"
+        }
+
+        val fakeLabel = LevelViewUtil.createLabel(levelAtom, label, OrganicEditorState.INLINE_DIST, 0.0f)
+        fakeLabel.addComponent(GhostImplicitHydrogenGroupComponent())
+    }
+
+
+    protected fun updateGhostGroups(molManager: IMoleculeManager, levelAtom: EntityLevel, structAtom: UUID) {
+
+        removeImplicitHydrogenGroup(levelAtom)
+
+        if (!levelAtom.hasComponent(AlwaysExplicit::class) && molManager.isOfElement(structAtom, "C")) {
+            return
+        }
+
+        val newHydrogenCount = molManager.getImplicitHydrogens(structAtom)
+
+        insertImplicitHydrogenGroup(levelAtom, newHydrogenCount)
+    }
+
+
+    protected fun makeCarbonImplicit(molManager: IMoleculeManager, structMol: UUID, structCarbon: UUID, levelCarbon: EntityLevel) {
+        //First check if carbon
+        if (! molManager.isOfElement(structCarbon, "C")) {
+            return
+        }
+
+        val bonds = molManager.getBonds(structMol, structCarbon)
+
+        if (bonds >= OrganicEditorState.CARBON_IMPLICIT_LIMIT) {
+            //Then hide the text component of the carbon
+            val textComp = levelCarbon.getComponent(TransformComponent::class)
+            textComp.visible = false
+        }
+    }
 }
 
 

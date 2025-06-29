@@ -25,7 +25,7 @@ class ImGuiRenderingContext : IRenderTargetContext{
     }
 
 
-    override fun setImGuiWinMetrics(windowPos: Vector2f) {
+    override fun setRelativeWindowPos(windowPos: Vector2f) {
         this.imGuiPos = windowPos
     }
 

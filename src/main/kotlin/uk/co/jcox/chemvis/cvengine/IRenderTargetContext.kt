@@ -10,5 +10,5 @@ interface IRenderTargetContext {
     fun recalculate()
 
     fun getMousePos(inputManager: InputManager) : Vector2f
-    fun setImGuiWinMetrics(windowPos: Vector2f)
+    fun setRelativeWindowPos(windowPos: Vector2f)
 }

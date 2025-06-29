@@ -5,17 +5,15 @@ import org.joml.Vector3f
 import org.joml.minus
 import org.joml.times
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
-import uk.co.jcox.chemvis.application.moleditor.LevelMolLinkUtil
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
 import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
-import uk.co.jcox.chemvis.application.moleditor.NewOrganicEditorState
+import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
 
 class BondOrderAction (
-    val levelMolecule: EntityLevel,
     val levelAtomA: EntityLevel,
     val levelAtomB: EntityLevel,
 )
@@ -23,42 +21,83 @@ class BondOrderAction (
 
 
     override fun execute(molManager: IMoleculeManager, level: EntityLevel): UUID? {
-        val structMolecule = levelMolecule.getComponent(MolIDComponent::class)
+
+        val levelParent = getParentMolecule(level)
+
+        if (levelParent == null) {
+            throw IllegalArgumentException("The two atoms are from different molecules, this action is not supported at the moment")
+        }
+
+        val structMolecule = levelParent.getComponent(MolIDComponent::class)
         val structAtomA = levelAtomA.getComponent(MolIDComponent::class)
         val structAtomB = levelAtomB.getComponent(MolIDComponent::class)
 
         val structBond = molManager.getJoiningBond(structMolecule.molID, structAtomA.molID, structAtomB.molID)
 
         if (structBond != null) {
-            updateStructForBondOrderChange(molManager, structMolecule.molID, structBond)
-            updateLevelForBondOrderChange(level)
-
-            molManager.recalculate(structMolecule.molID)
-            replaceOldLabels(molManager, structMolecule.molID, structAtomA.molID, levelAtomA)
-            replaceOldLabels(molManager, structMolecule.molID, structAtomB.molID, levelAtomB)
-
-            return structMolecule.molID
+            //There is already a bond between these two molecules, so make it a double bond
+            increaseBondOrder(molManager, structMolecule.molID, structAtomA.molID, structAtomB.molID, structBond, level)
+        } else {
+            //There is no bond between these molecules, so make a new bond and join them together
+            formCyclisation(molManager, structMolecule.molID, structAtomA.molID, structAtomB.molID, levelParent)
         }
 
-        //Then the struct bond is null so we can just form a normal bond between the two atoms
-        val newStructBond = updateStructForNewBond(molManager, structMolecule.molID, structAtomA.molID, structAtomB.molID)
-        updateLevelForNewBond(levelMolecule, levelAtomA, levelAtomB, newStructBond)
-
         molManager.recalculate(structMolecule.molID)
-        replaceOldLabels(molManager, structMolecule.molID, structAtomA.molID, levelAtomA)
-        replaceOldLabels(molManager, structMolecule.molID, structAtomB.molID, levelAtomB)
 
+        removeImplicitHydrogenGroup(levelAtomA)
+        removeImplicitHydrogenGroup(levelAtomB)
 
+        val atomAImplicitH = molManager.getImplicitHydrogens(structAtomA.molID)
+        val atomBImplicitH = molManager.getImplicitHydrogens(structAtomB.molID)
+
+        if (!molManager.isOfElement(structAtomA.molID, "C")) {
+            insertImplicitHydrogenGroup(levelAtomA, atomAImplicitH)
+
+        }
+
+        if (!molManager.isOfElement(structAtomB.molID, "C")) {
+            insertImplicitHydrogenGroup(levelAtomB, atomBImplicitH)
+
+        }
         return structMolecule.molID
     }
 
 
+    private fun getParentMolecule(level: EntityLevel) : EntityLevel? {
+        //Currently, this action is only supported if the atoms are from the same parent
 
-    private fun updateStructForBondOrderChange(molManager: IMoleculeManager, structMolecule: UUID, structBond: UUID) {
-        molManager.updateBondOrder(structMolecule, structBond, 2)
+        val atomAParentID = LevelViewUtil.getLvlMolFromLvlAtom(levelAtomA)
+        val atomBParentID = LevelViewUtil.getLvlMolFromLvlAtom(levelAtomB)
+
+        if (atomAParentID != atomBParentID) {
+            return null
+        }
+
+        if (atomAParentID == null) {
+            return null
+        }
+
+        val levelParent = level.findByID(atomAParentID)
+
+        if (levelParent == null) {
+            return null
+        }
+
+        return levelParent
     }
 
-    private fun updateLevelForBondOrderChange(level: EntityLevel) {
+
+    private fun formCyclisation(molManager: IMoleculeManager, structMolecule: UUID, structAtomA: UUID, structAtomB: UUID, levelMolecule: EntityLevel, ) {
+        val newBond = molManager.formBond(structMolecule, structAtomA, structAtomB, 1)
+
+        val bond = LevelViewUtil.createBond(levelMolecule, levelAtomA, levelAtomB)
+        LevelViewUtil.linkObject(newBond, bond)
+    }
+
+
+    private fun increaseBondOrder(molManager: IMoleculeManager, structMolecule: UUID, structAtomA: UUID, structAtomB: UUID, structBond: UUID, level: EntityLevel) {
+        molManager.updateBondOrder(structMolecule, structBond, 2)
+
         //We need to add another bond that is just a small distance perpendicular to the bond direction
 
         //1) Get the bond direction
@@ -69,21 +108,10 @@ class BondOrderAction (
         val atomBLocalPos = Vector2f(atomBTrans.x, atomBTrans.y)
 
         val directionVec = atomALocalPos - atomBLocalPos
-        val orthVec = Vector3f(directionVec.y, -directionVec.x, NewOrganicEditorState.XY_PLANE) * NewOrganicEditorState.DOUBLE_BOND_DISTANCE
+        val orthVec = Vector3f(directionVec.y, -directionVec.x, OrganicEditorState.XY_PLANE) * OrganicEditorState.DOUBLE_BOND_DISTANCE
 
         val newBondEntity = level.addEntity()
-        newBondEntity.addComponent(TransformComponent(orthVec.x, orthVec.y, orthVec.z))
-        newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id, NewOrganicEditorState.BOND_WIDTH))
-    }
-
-
-    private fun updateStructForNewBond(molManager: IMoleculeManager, structMolecule: UUID, atomA: UUID, atomB: UUID) : UUID {
-        val newBond = molManager.formBond(structMolecule, atomA, atomB, 1)
-        return newBond
-    }
-
-    private fun updateLevelForNewBond(mol: EntityLevel, atomA: EntityLevel, atomB: EntityLevel, structLink: UUID) {
-        val bond = LevelViewUtil.createBond(mol, atomA, atomB)
-        LevelMolLinkUtil.linkObject(structLink, bond)
+        newBondEntity.addComponent(TransformComponent(orthVec.x, orthVec.y, -2.0f))
+        newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id, OrganicEditorState.BOND_WIDTH))
     }
 }

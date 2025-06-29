@@ -16,6 +16,10 @@ abstract class InputManager {
     abstract fun mouseClick(key: String) : Boolean
     abstract fun mousePos() : Vector2f
 
+    abstract fun deltaMousePos(): Vector2f
+
+    abstract fun update()
+
     abstract fun blockInput(block: Boolean)
 
 
