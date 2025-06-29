@@ -151,7 +151,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         io.configViewportsNoDecoration = false
         io.configViewportsNoTaskBarIcon = false
         io.configWindowsMoveFromTitleBarOnly = true
-        io.iniFilename = null
 
 
         glfwImGui.init(this.windowHandle, true)
