@@ -1,7 +1,9 @@
 package uk.co.jcox.chemvis.cvengine
 
+import imgui.ImFontConfig
 import imgui.ImGui
 import imgui.ImVec2
+import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiConfigFlags
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
@@ -126,34 +128,35 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
         val style = ImGui.getStyle()
         style.windowTitleAlign = ImVec2(0.5f, 0.5f)
-//        style.windowBorderSize = 0.0f
-//        style.childBorderSize = 0.0f
-//        style.frameBorderSize = 0.0f
-//        style.tabBorderSize = 0.0f
-//        style.frameRounding = 5.0f
-//        style.scrollbarRounding = 0.0f
+        style.windowBorderSize = 1.0f
+        style.childBorderSize = 1.0f
+        style.frameBorderSize = 1.0f
+        style.tabBorderSize = 1.0f
+        style.frameRounding = 2.0f
+        style.scrollbarRounding = 0.0f
+        style.tabRounding = 0.0f
+        style.windowRounding = 5.0f
 
         glfwImGui = ImGuiImplGlfw()
         openGlImGui = ImGuiImplGl3()
 
         val io = ImGui.getIO()
-
         io.fonts.setFreeTypeRenderer(true)
 
         val x = FloatArray(1)
         val y = FloatArray(1)
         GLFW.glfwGetWindowContentScale(this.windowHandle, x, y)
-
         val scale = x[0] * 18
 
-        val experience = io.fonts.addFontFromFileTTF("data/integrated/fonts/Roboto-Black.ttf", scale)
-        io.fontDefault = experience
-        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable)
+
+//        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable)
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable)
         io.configViewportsNoDecoration = false
         io.configViewportsNoTaskBarIcon = false
         io.configWindowsMoveFromTitleBarOnly = true
 
+        val experience = io.fonts.addFontFromFileTTF("data/integrated/fonts/Roboto-Black.ttf", scale)
+        io.fontDefault = experience
 
         glfwImGui.init(this.windowHandle, true)
         openGlImGui.init()
