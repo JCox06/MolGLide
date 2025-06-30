@@ -7,6 +7,8 @@ import org.lwjgl.opengl.GL30
 import org.tinylog.Logger
 import uk.co.jcox.chemvis.cvengine.RenderTarget
 import java.awt.Desktop
+import java.awt.Image
+import java.awt.Toolkit
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.IOException
