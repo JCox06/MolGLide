@@ -2,6 +2,7 @@ package uk.co.jcox.chemvis.application
 
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
+import uk.co.jcox.chemvis.application.ui.ApplicationUI
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
 
@@ -30,6 +31,7 @@ class MolGLide : IApplication, IInputSubscriber {
         services.setApplicationState(mainState, null)
 
         mainApplicationUI = ApplicationUI(mainState, services)
+        mainApplicationUI.setup()
     }
 
     override fun loop() {
@@ -38,7 +40,7 @@ class MolGLide : IApplication, IInputSubscriber {
         val wm = services.windowMetrics()
         services.setViewport(0, 0, wm.x, wm.y)
 
-        mainApplicationUI.drawMainMenu()
+        mainApplicationUI.drawApplicationUI()
     }
 
 
@@ -64,6 +66,7 @@ class MolGLide : IApplication, IInputSubscriber {
         const val GLOBAL_SCALE: Float = 0.1f
         const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER_MESH"
         const val SELECTION_MARKER_MATERIAL: String = "SELECTION_MARKER_MATERIAL"
-        const val VERSION = "v0.0.1"
+        const val VERSION = "v0.0.2"
+        const val WEBSITE = "https://github.com/JCox06/MolGLide/tree/master"
     }
 }

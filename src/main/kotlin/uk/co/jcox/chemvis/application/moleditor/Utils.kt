@@ -10,19 +10,14 @@ import java.awt.Desktop
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.IOException
+import java.nio.IntBuffer
 import javax.imageio.ImageIO
 import kotlin.experimental.and
 
 object Utils {
 
-    fun saveBufferToImg(renderTarget: RenderTarget, file: File) {
-        //Bind Target
-        val width = renderTarget.width.toInt()
-        val height = renderTarget.height.toInt()
+    fun saveBufferToImg(file: File, imgBuff: IntBuffer, width: Int, height: Int) {
 
-        val imgBuff = BufferUtils.createIntBuffer(4 * width * height)
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, renderTarget.frameBuffer)
-        GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_INT, imgBuff)
 
         val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
         for (y in 0..<height) {
