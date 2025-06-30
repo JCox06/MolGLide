@@ -6,11 +6,11 @@ import uk.co.jcox.chemvis.cvengine.RawInput.NULL
 enum class AtomInsert(val symbol: String, val hydrogenable: Boolean) {
     CARBON("C", true),
     HYDROGEN("H", false),
-    CHLORINE("Cl", false),
     OXYGEN("O", true),
     NITROGEN("N", true),
     PHOSPHORUS("P", true),
     FLUORINE("F", false),
+    CHLORINE("Cl", false),
     BROMINE("Br", false),
     IODINE("I", false),
     MAGNESIUM("Mg", false),

@@ -555,6 +555,8 @@ class ResourceManager : IResourceManager{
         GL30.glDeleteFramebuffers(target.frameBuffer)
         GL30.glDeleteTextures(target.colourAttachmentTexture)
         GL30.glDeleteRenderbuffers(target.depthAttachmentRenderBuffer)
+
+        renderTargets.remove(id)
     }
 
     override fun getRenderTarget(id: String): RenderTarget {

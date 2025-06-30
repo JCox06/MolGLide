@@ -64,6 +64,7 @@ class OrganicEditorState (
             refreshStateCache()
         }
 
+        services.inputs().subscribe(this)
     }
 
     override fun onPause() {
