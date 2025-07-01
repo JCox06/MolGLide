@@ -28,4 +28,8 @@ interface IMoleculeManager {
     fun getJoiningBond(molecule: UUID, atomA: UUID, atomB: UUID): UUID?
 
     fun replace(atom: UUID, element: String)
+
+    fun getSymbol(atom: UUID) : String
+
+    fun getBondOrder(bond: UUID) : Int
 }

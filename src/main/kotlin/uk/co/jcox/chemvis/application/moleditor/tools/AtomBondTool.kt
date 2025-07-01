@@ -1,14 +1,18 @@
 package uk.co.jcox.chemvis.application.moleditor.tools
 
+import org.apache.jena.sparql.pfunction.library.str
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
 import org.joml.plus
+import org.xmlcml.euclid.Vector2
+import org.xmlcml.euclid.Vector3
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.AtomComponent
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.moleditor.ClickContext
 import uk.co.jcox.chemvis.application.moleditor.GhostImplicitHydrogenGroupComponent
+import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
 import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditor.Selection
 import uk.co.jcox.chemvis.application.moleditor.ToolCreationContext
@@ -17,6 +21,7 @@ import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionAction
 import uk.co.jcox.chemvis.application.moleditor.actions.BondOrderAction
 import uk.co.jcox.chemvis.application.moleditor.actions.ElementalEditAction
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
@@ -326,6 +331,34 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
             //If test 2 is shorter, then move group to test 1 site
             ghostPosTrans.x = OrganicEditorState.INLINE_DIST
         }
+    }
+
+
+
+    private fun checkIsHeteroBond(tool: Mode.Dragging): Boolean {
+        val levelStationary = tool.stationaryAtom
+        val levelDragging = tool.draggingAtom
+
+        val structStationary  = levelStationary.getComponent(MolIDComponent::class)
+        val structDragging = levelDragging.getComponent(MolIDComponent::class)
+
+        val stationarySymbol = workingState.molManager.getSymbol(structStationary.molID)
+        val draggingSymbol = workingState.molManager.getSymbol(structDragging.molID)
+
+        return stationarySymbol != draggingSymbol
+    }
+
+
+    private fun sumOfVectorDirectionsFromAtom(atom: EntityLevel) : Vector3f {
+        val atomComp = atom.getComponent(AtomComponent::class)
+
+        val vectorSum = Vector3f()
+
+        for (entityID in atomComp.connectedEntities) {
+            val entity = workingState.level.findByID(entityID)
+            entity?.let { vectorSum.add(it.getAbsolutePosition() - atom.getAbsolutePosition()) }
+        }
+        return vectorSum
     }
 
     private fun addMolecule(placement: Mode.Placement) {
