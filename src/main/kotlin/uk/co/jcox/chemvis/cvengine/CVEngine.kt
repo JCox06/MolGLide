@@ -2,8 +2,8 @@ package uk.co.jcox.chemvis.cvengine
 
 import imgui.ImFontConfig
 import imgui.ImGui
+import imgui.ImGuiIO
 import imgui.ImVec2
-import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiConfigFlags
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
@@ -18,10 +18,11 @@ import org.lwjgl.opengl.GL30
 import org.lwjgl.opengl.GL43
 import org.lwjgl.opengl.GLDebugMessageCallback
 import org.lwjgl.system.Callback
+import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
 import org.tinylog.Logger
 import java.io.File
 import java.lang.AutoCloseable
-import kotlin.math.max
+import kotlin.math.exp
 
 class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private val lwjglErrorCallback: Callback? = null
@@ -140,26 +141,40 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         glfwImGui = ImGuiImplGlfw()
         openGlImGui = ImGuiImplGl3()
 
-        val io = ImGui.getIO()
-        io.fonts.setFreeTypeRenderer(true)
+        val imGuiIO = ImGui.getIO()
+        setupImGuiIO(imGuiIO)
 
-        val x = FloatArray(1)
-        val y = FloatArray(1)
-        GLFW.glfwGetWindowContentScale(this.windowHandle, x, y)
-        val scale = x[0] * 18
+        glfwImGui.init(this.windowHandle, true)
+        openGlImGui.init()
+    }
 
 
-//        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable)
+    private fun setupImGuiIO(io: ImGuiIO) {
         io.addConfigFlags(ImGuiConfigFlags.DockingEnable)
         io.configViewportsNoDecoration = false
         io.configViewportsNoTaskBarIcon = false
         io.configWindowsMoveFromTitleBarOnly = true
 
-        val experience = io.fonts.addFontFromFileTTF("data/integrated/fonts/Roboto-Black.ttf", scale)
-        io.fontDefault = experience
 
-        glfwImGui.init(this.windowHandle, true)
-        openGlImGui.init()
+        val xDPIScale = FloatArray(1)
+        val yDPIScale = FloatArray(1)
+        GLFW.glfwGetWindowContentScale(this.windowHandle, xDPIScale, yDPIScale)
+        val standardFontScale = 18
+        val scale = xDPIScale[0] * standardFontScale
+
+
+        io.fonts.addFontFromFileTTF("data/integrated/fonts/Roboto-Black.ttf", scale)
+
+        val fontRange = listOf<Short>(0x2329, 0xf8ff.toShort(), 0).toShortArray()
+
+        val conf = ImFontConfig()
+        conf.mergeMode = true
+        conf.pixelSnapH = true
+        val experience = io.fonts.addFontFromFileTTF("data/integrated/fonts/fa-solid-900.ttf", scale, conf, fontRange)
+
+        io.fonts.build()
+
+        io.fontDefault = experience
     }
 
     fun run(application: IApplication) {

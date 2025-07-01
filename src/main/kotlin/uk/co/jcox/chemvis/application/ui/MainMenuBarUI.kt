@@ -4,6 +4,13 @@ import imgui.ImGui
 import imgui.ImVec4
 import imgui.flag.ImGuiCol
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
+import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.CLOSE_ICON
+import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.CLOSE_WINDOW_ICON
+import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.EDIT_ICON
+import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.FILE_ICON
+import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.NEW_ICON
+import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.REDO_ICON
+import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.UNDO_ICON
 
 class MainMenuBarUI {
 
@@ -74,12 +81,12 @@ class MainMenuBarUI {
 
 
     private fun drawMenuLists() {
-        if (ImGui.beginMenu("File")) {
+        if (ImGui.beginMenu("$FILE_ICON File")) {
             drawFileMenu()
             ImGui.endMenu()
         }
 
-        if (ImGui.beginMenu("Edit")) {
+        if (ImGui.beginMenu("$EDIT_ICON Edit")) {
             drawEditMenu()
             ImGui.endMenu()
         }
@@ -87,25 +94,25 @@ class MainMenuBarUI {
     }
 
     private fun drawFileMenu() {
-        if (ImGui.menuItem("New")) {
+        if (ImGui.menuItem("$NEW_ICON New")) {
             newOrganicEditor?.invoke()
         }
 
-        if (ImGui.menuItem("Close Window")) {
+        if (ImGui.menuItem("$CLOSE_WINDOW_ICON Close Window")) {
             closeCurrentWindow?.invoke()
         }
 
-        if (ImGui.menuItem("Quit MolGLide")) {
+        if (ImGui.menuItem("$CLOSE_ICON Quit MolGLide")) {
             quitApplication?.invoke()
         }
     }
 
     private fun drawEditMenu() {
-        if (ImGui.menuItem("Undo")) {
+        if (ImGui.menuItem("$UNDO_ICON Undo")) {
             undo?.invoke()
         }
 
-        if (ImGui.menuItem("Redo")) {
+        if (ImGui.menuItem("$REDO_ICON Redo")) {
             redo?.invoke()
         }
     }
@@ -131,4 +138,5 @@ class MainMenuBarUI {
             }
         }
     }
+
 }

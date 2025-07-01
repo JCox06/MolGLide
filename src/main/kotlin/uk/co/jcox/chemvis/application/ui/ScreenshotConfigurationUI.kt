@@ -50,7 +50,7 @@ class ScreenshotConfigurationUI (
         renderTarget.clearColour.w = backgroundColour[3]
 
 
-        if (ImGui.button("Save Image")) {
+        if (ImGui.button("${ApplicationUI.SAVE_IMAGE_ICON} Save Image")) {
 
             showExplorer()
         }

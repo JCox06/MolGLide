@@ -148,4 +148,16 @@ class ApplicationUI (
         renderTarget.clearColour.z = 0.226f
         renderTarget.clearColour.w = 1.0f
     }
+
+
+    companion object {
+        const val FILE_ICON = "\uf07c"
+        const val EDIT_ICON = "\uf304"
+        const val NEW_ICON = "\uf15b"
+        const val CLOSE_ICON = "\uf2d3"
+        const val UNDO_ICON = "\uf2ea"
+        const val REDO_ICON = "\uf2f9"
+        const val SAVE_IMAGE_ICON ="\uf0c7"
+        const val CLOSE_WINDOW_ICON = "\uf04d"
+    }
 }
