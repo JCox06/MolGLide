@@ -1,6 +1,5 @@
 package uk.co.jcox.chemvis.application.moleditor
 
-import org.apache.jena.sparql.function.library.bnode
 import uk.co.jcox.chemvis.cvengine.scenegraph.IComponent
 import java.util.UUID
 
@@ -23,11 +22,12 @@ class LevelParentComponent(
 
 class AtomComponent(
 
-    val bondsTo: MutableList<UUID> = mutableListOf()
+    //Essentially the entities this atom is connected by through bonds
+    val connectedEntities: MutableList<UUID> = mutableListOf()
 
 ) : IComponent {
     override fun clone(): IComponent {
-        return AtomComponent(ArrayList(bondsTo))
+        return AtomComponent(ArrayList(connectedEntities))
     }
 }
 

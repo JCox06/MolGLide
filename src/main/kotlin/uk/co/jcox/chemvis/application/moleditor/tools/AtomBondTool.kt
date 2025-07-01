@@ -4,6 +4,8 @@ import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
 import org.joml.plus
+import org.xmlcml.euclid.Vector2
+import org.xmlcml.euclid.Vector3
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.AtomComponent
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
@@ -336,6 +338,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
     //To account for this the following options need to be checked first:
     //A) Are the two atoms different ?
     //B) Are the sum of the vector directions of all bonds on the stationary atom equal to the negative vector of the dragging bond (=1)
+    //However, the vector sum will not equal zero in this case, that will only be true for pure trigonal planar, but people don't tend to draw them like that
     private fun centreHeteroDoubleBonds() {
         val mode = toolMode
         if (mode !is Mode.Dragging) {
@@ -343,6 +346,12 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
         }
 
         val isHetero = checkIsHeteroBond(mode)
+        val vectorSum = sumOfVectorDirectionsFromAtom(mode.stationaryAtom)
+
+        if (vectorSum.x == 0f && isHetero) {
+            mode.placeDoubleCentredBonds = true
+        }
+        mode.placeDoubleCentredBonds = false
     }
 
     private fun checkIsHeteroBond(tool: Mode.Dragging): Boolean {
@@ -359,8 +368,16 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
     }
 
 
-    private fun sumOfVectorDirectionsFromAtom(atom: EntityLevel) {
+    private fun sumOfVectorDirectionsFromAtom(atom: EntityLevel) : Vector3f {
+        val atomComp = atom.getComponent(AtomComponent::class)
 
+        val vectorSum = Vector3f()
+
+        for (entityID in atomComp.connectedEntities) {
+            val entity = workingState.level.findByID(entityID)
+            entity?.let { vectorSum.add(it.getAbsolutePosition() - atom.getAbsolutePosition()) }
+        }
+        return vectorSum
     }
 
     private fun addMolecule(placement: Mode.Placement) {
@@ -399,7 +416,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
         object None: Mode()
         data class Placement(val xPos: Float, val yPos: Float, val insert: AtomInsert) : Mode()
         data class Replacement(val atom: EntityLevel, val replacement: AtomInsert) : Mode()
-        data class Dragging(val draggingAtom: EntityLevel, val stationaryAtom: EntityLevel, var proposedDragPos: Vector2f, var allowBondOrderChange: Boolean, var allowStateRestore: Boolean) : Mode()
+        data class Dragging(val draggingAtom: EntityLevel, val stationaryAtom: EntityLevel, var proposedDragPos: Vector2f, var allowBondOrderChange: Boolean, var allowStateRestore: Boolean, var placeDoubleCentredBonds: Boolean = false) : Mode()
     }
 
     companion object {

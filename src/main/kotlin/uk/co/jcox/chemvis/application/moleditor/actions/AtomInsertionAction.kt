@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application.moleditor.actions
 
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
+import uk.co.jcox.chemvis.application.moleditor.AtomComponent
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
 import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
@@ -44,6 +45,7 @@ class AtomInsertionAction (
         makeCarbonImplicit(molManager, structMol.molID, structOldAtom.molID, levelOldAtom)
         makeCarbonImplicit(molManager, structMol.molID, levelNewAtom.second, levelNewAtom.first)
 
+        joinConnectedAtoms(levelOldAtom, levelNewAtom.first)
 
         return structMol.molID
     }
@@ -71,4 +73,12 @@ class AtomInsertionAction (
         LevelViewUtil.linkObject(structBond, levelBond)
     }
 
+
+    private fun joinConnectedAtoms(oldAtom: EntityLevel, newAtom: EntityLevel) {
+        val oldAtomComp = oldAtom.getComponent(AtomComponent::class)
+        val newAtomComp = newAtom.getComponent(AtomComponent::class)
+
+        newAtomComp.connectedEntities.add(oldAtom.id)
+        oldAtomComp.connectedEntities.add(newAtom.id)
+    }
 }
