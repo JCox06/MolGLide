@@ -35,6 +35,7 @@ class ApplicationUI (
         menuBar.onNewOrganicEditor {
             val renderStateID = mainState.createOrganicEditor()
             renderStateIDs.add(renderStateID)
+            restoreColour(services.resourceManager().getRenderTarget(renderStateID))
         }
 
         menuBar.onCloseCurrentWindow {
@@ -62,7 +63,7 @@ class ApplicationUI (
                 }
             } else {
                 activeState?.let {
-                    destroyScreenshotUI(it.second)
+                    destroyScreenshotUI(it.second, services.resourceManager().getRenderTarget(it.first))
                 }
             }
         }
@@ -101,7 +102,7 @@ class ApplicationUI (
 
                     if (screenShotUI != null && activeState?.first != stateID) {
                         //Screenshot mode active in other state
-                        destroyScreenshotUI(state)
+                        destroyScreenshotUI(state, renderTarget)
                     }
                     activeState = Pair(stateID, state)
 
@@ -132,9 +133,19 @@ class ApplicationUI (
         screenShotUI = ScreenshotConfigurationUI(stateID, state, target)
     }
 
-    private fun destroyScreenshotUI(state: OrganicEditorState) {
+    private fun destroyScreenshotUI(state: OrganicEditorState, renderTarget: RenderTarget) {
         screenShotUI = null
         state.readOnly = false
+
+        restoreColour(renderTarget)
+
         state.undo()
+    }
+
+    private fun restoreColour(renderTarget: RenderTarget) {
+        renderTarget.clearColour.x = 0.22f
+        renderTarget.clearColour.y = 0.22f
+        renderTarget.clearColour.z = 0.226f
+        renderTarget.clearColour.w = 1.0f
     }
 }
