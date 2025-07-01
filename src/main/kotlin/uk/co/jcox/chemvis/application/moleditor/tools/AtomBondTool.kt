@@ -9,6 +9,7 @@ import uk.co.jcox.chemvis.application.moleditor.AtomComponent
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.moleditor.ClickContext
 import uk.co.jcox.chemvis.application.moleditor.GhostImplicitHydrogenGroupComponent
+import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
 import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditor.Selection
 import uk.co.jcox.chemvis.application.moleditor.ToolCreationContext
@@ -31,6 +32,8 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
         checkRevertBondJoin()
 
         autoMoveGhostGroups()
+
+        centreHeteroDoubleBonds()
     }
 
 
@@ -326,6 +329,38 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
             //If test 2 is shorter, then move group to test 1 site
             ghostPosTrans.x = OrganicEditorState.INLINE_DIST
         }
+    }
+
+
+    //When we have Carbonyls or Imines or any other double bond to a heteroatom, in some cases, this bond should be centred.
+    //To account for this the following options need to be checked first:
+    //A) Are the two atoms different ?
+    //B) Are the sum of the vector directions of all bonds on the stationary atom equal to the negative vector of the dragging bond (=1)
+    private fun centreHeteroDoubleBonds() {
+        val mode = toolMode
+        if (mode !is Mode.Dragging) {
+            return
+        }
+
+        val isHetero = checkIsHeteroBond(mode)
+    }
+
+    private fun checkIsHeteroBond(tool: Mode.Dragging): Boolean {
+        val levelStationary = tool.stationaryAtom
+        val levelDragging = tool.draggingAtom
+
+        val structStationary  = levelStationary.getComponent(MolIDComponent::class)
+        val structDragging = levelDragging.getComponent(MolIDComponent::class)
+
+        val stationarySymbol = workingState.molManager.getSymbol(structStationary.molID)
+        val draggingSymbol = workingState.molManager.getSymbol(structDragging.molID)
+
+        return stationarySymbol != draggingSymbol
+    }
+
+
+    private fun sumOfVectorDirectionsFromAtom(atom: EntityLevel) {
+
     }
 
     private fun addMolecule(placement: Mode.Placement) {

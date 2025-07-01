@@ -36,7 +36,7 @@ class BondOrderAction (
 
         if (structBond != null) {
             //There is already a bond between these two molecules, so make it a double bond
-            increaseBondOrder(molManager, structMolecule.molID, structAtomA.molID, structAtomB.molID, structBond, level)
+            increaseBondOrder(molManager, structMolecule.molID, structAtomA.molID, structAtomB.molID, structBond, levelParent)
         } else {
             //There is no bond between these molecules, so make a new bond and join them together
             formCyclisation(molManager, structMolecule.molID, structAtomA.molID, structAtomB.molID, levelParent)
@@ -95,7 +95,7 @@ class BondOrderAction (
     }
 
 
-    private fun increaseBondOrder(molManager: IMoleculeManager, structMolecule: UUID, structAtomA: UUID, structAtomB: UUID, structBond: UUID, level: EntityLevel) {
+    private fun increaseBondOrder(molManager: IMoleculeManager, structMolecule: UUID, structAtomA: UUID, structAtomB: UUID, structBond: UUID, moleculeLevel: EntityLevel) {
         molManager.updateBondOrder(structMolecule, structBond, 2)
 
         //We need to add another bond that is just a small distance perpendicular to the bond direction
@@ -110,7 +110,7 @@ class BondOrderAction (
         val directionVec = atomALocalPos - atomBLocalPos
         val orthVec = Vector3f(directionVec.y, -directionVec.x, OrganicEditorState.XY_PLANE) * OrganicEditorState.DOUBLE_BOND_DISTANCE
 
-        val newBondEntity = level.addEntity()
+        val newBondEntity = moleculeLevel.addEntity()
         newBondEntity.addComponent(TransformComponent(orthVec.x, orthVec.y, -2.0f))
         newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id, OrganicEditorState.BOND_WIDTH))
     }

@@ -219,7 +219,16 @@ class CDKotMan (
     }
 
 
-    override fun replace( atom: UUID, element: String) {
+    override fun getSymbol(atom: UUID): String {
+        val cdkAtom = atoms[atom]
+
+        if (cdkAtom == null) {
+            return ""
+        }
+        return cdkAtom.symbol
+    }
+
+    override fun replace(atom: UUID, element: String) {
         val cdkAtom = atoms[atom]
 
         if (cdkAtom == null) {
