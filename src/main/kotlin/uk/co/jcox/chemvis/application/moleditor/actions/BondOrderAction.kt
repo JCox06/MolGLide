@@ -1,10 +1,12 @@
 package uk.co.jcox.chemvis.application.moleditor.actions
 
+import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
 import org.joml.times
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
+
 import uk.co.jcox.chemvis.application.moleditor.LevelViewUtil
 import uk.co.jcox.chemvis.application.moleditor.MolIDComponent
 import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
@@ -110,8 +112,17 @@ class BondOrderAction (
         val directionVec = atomALocalPos - atomBLocalPos
         val orthVec = Vector3f(directionVec.y, -directionVec.x, OrganicEditorState.XY_PLANE) * OrganicEditorState.DOUBLE_BOND_DISTANCE
 
+        insertLevelDoubleBond(moleculeLevel, orthVec, structBond, true)
+
+    }
+
+
+    private fun insertLevelDoubleBond(moleculeLevel: EntityLevel, orthVec: Vector3f, structBond: UUID, makeCentre: Boolean) {
+
+
         val newBondEntity = moleculeLevel.addEntity()
         newBondEntity.addComponent(TransformComponent(orthVec.x, orthVec.y, -2.0f))
         newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id, OrganicEditorState.BOND_WIDTH))
+        LevelViewUtil.linkObject(structBond, newBondEntity)
     }
 }

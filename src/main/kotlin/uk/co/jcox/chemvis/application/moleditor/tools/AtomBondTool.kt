@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application.moleditor.tools
 
+import org.apache.jena.sparql.pfunction.library.str
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
@@ -20,6 +21,7 @@ import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionAction
 import uk.co.jcox.chemvis.application.moleditor.actions.BondOrderAction
 import uk.co.jcox.chemvis.application.moleditor.actions.ElementalEditAction
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
+import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
@@ -34,8 +36,6 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
         checkRevertBondJoin()
 
         autoMoveGhostGroups()
-
-        centreHeteroDoubleBonds()
     }
 
 
@@ -334,25 +334,6 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
     }
 
 
-    //When we have Carbonyls or Imines or any other double bond to a heteroatom, in some cases, this bond should be centred.
-    //To account for this the following options need to be checked first:
-    //A) Are the two atoms different ?
-    //B) Are the sum of the vector directions of all bonds on the stationary atom equal to the negative vector of the dragging bond (=1)
-    //However, the vector sum will not equal zero in this case, that will only be true for pure trigonal planar, but people don't tend to draw them like that
-    private fun centreHeteroDoubleBonds() {
-        val mode = toolMode
-        if (mode !is Mode.Dragging) {
-            return
-        }
-
-        val isHetero = checkIsHeteroBond(mode)
-        val vectorSum = sumOfVectorDirectionsFromAtom(mode.stationaryAtom)
-
-        if (vectorSum.x == 0f && isHetero) {
-            mode.placeDoubleCentredBonds = true
-        }
-        mode.placeDoubleCentredBonds = false
-    }
 
     private fun checkIsHeteroBond(tool: Mode.Dragging): Boolean {
         val levelStationary = tool.stationaryAtom
@@ -416,7 +397,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
         object None: Mode()
         data class Placement(val xPos: Float, val yPos: Float, val insert: AtomInsert) : Mode()
         data class Replacement(val atom: EntityLevel, val replacement: AtomInsert) : Mode()
-        data class Dragging(val draggingAtom: EntityLevel, val stationaryAtom: EntityLevel, var proposedDragPos: Vector2f, var allowBondOrderChange: Boolean, var allowStateRestore: Boolean, var placeDoubleCentredBonds: Boolean = false) : Mode()
+        data class Dragging(val draggingAtom: EntityLevel, val stationaryAtom: EntityLevel, var proposedDragPos: Vector2f, var allowBondOrderChange: Boolean, var allowStateRestore: Boolean) : Mode()
     }
 
     companion object {

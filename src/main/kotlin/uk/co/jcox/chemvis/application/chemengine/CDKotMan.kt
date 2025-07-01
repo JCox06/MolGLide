@@ -11,6 +11,7 @@ import org.openscience.cdk.interfaces.IAtom
 import org.openscience.cdk.interfaces.IAtomContainer
 import org.openscience.cdk.interfaces.IBond
 import org.openscience.cdk.tools.CDKHydrogenAdder
+import org.openscience.cdk.tools.IDeduceBondOrderTool
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator
 import org.tinylog.Logger
@@ -235,6 +236,24 @@ class CDKotMan (
             throw NoSuchElementException("Atom is null")
         }
         cdkAtom.symbol = element
+    }
+
+    override fun getBondOrder(bond: UUID): Int {
+        val bond = bonds[bond]
+
+        if (bond == null) {
+            throw NoSuchElementException("Bond is null")
+        }
+
+        if (bond.order == IBond.Order.SINGLE) {
+            return 1
+        }
+
+        if (bond.order == IBond.Order.DOUBLE) {
+            return 2
+        }
+
+        return -1
     }
 
     companion object {

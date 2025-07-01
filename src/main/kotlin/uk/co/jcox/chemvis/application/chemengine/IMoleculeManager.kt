@@ -30,4 +30,6 @@ interface IMoleculeManager {
     fun replace(atom: UUID, element: String)
 
     fun getSymbol(atom: UUID) : String
+
+    fun getBondOrder(bond: UUID) : Int
 }
