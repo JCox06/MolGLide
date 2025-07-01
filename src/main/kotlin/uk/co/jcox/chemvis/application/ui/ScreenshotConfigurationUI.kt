@@ -44,7 +44,10 @@ class ScreenshotConfigurationUI (
             width = thickness[0]
         )
 
-        state.setBackgroundColour(backgroundColour[0], backgroundColour[1], backgroundColour[2], backgroundColour[3])
+        renderTarget.clearColour.x = backgroundColour[0]
+        renderTarget.clearColour.y = backgroundColour[1]
+        renderTarget.clearColour.z = backgroundColour[2]
+        renderTarget.clearColour.w = backgroundColour[3]
 
 
         if (ImGui.button("Save Image")) {

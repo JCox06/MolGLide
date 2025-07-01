@@ -36,9 +36,6 @@ class OrganicEditorState (
 
     private lateinit var clpCache: ChemLevelPair
 
-    var backgroundColour = Vector4f(0.22f, 0.22f, 0.26f, 1.0f)
-
-
     var readOnly = false
 
     var atomInsert = AtomInsert.CARBON
@@ -121,7 +118,6 @@ class OrganicEditorState (
     override fun render(viewport: Vector2f) {
 
         GL11.glViewport(0, 0, renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
-        GL11.glClearColor(backgroundColour.x, backgroundColour.y, backgroundColour.z,  backgroundColour.w)
 
         val transientUI = EntityLevel()
 
@@ -167,7 +163,6 @@ class OrganicEditorState (
     fun undo() {
         workState.undo()
         atomBondTool.refreshWorkingState()
-        backgroundColour = Vector4f(0.22f, 0.22f, 0.26f, 1.0f)
         refreshStateCache()
     }
 
@@ -225,13 +220,6 @@ class OrganicEditorState (
         refreshStateCache()
     }
 
-    fun setBackgroundColour(x: Float, y: Float, z: Float, w: Float) {
-        backgroundColour.x = x
-        backgroundColour.y = y
-        backgroundColour.z = z
-        backgroundColour.w = w
-        refreshStateCache()
-    }
 
     fun getBondStyle(): Vector4f {
         val comp = clpCache.level.getComponent(LineDrawerComponent::class)

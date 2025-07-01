@@ -226,9 +226,9 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
                 GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
             } else {
                 val customTarget = resourceManager.getRenderTarget(targetID)
+                GL11.glClearColor(customTarget.clearColour.x, customTarget.clearColour.y, customTarget.clearColour.z, customTarget.clearColour.w)
                 GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, customTarget.frameBuffer)
             }
-
 
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
 
