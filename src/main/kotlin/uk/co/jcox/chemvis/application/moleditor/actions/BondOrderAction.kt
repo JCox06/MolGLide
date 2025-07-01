@@ -1,5 +1,7 @@
 package uk.co.jcox.chemvis.application.moleditor.actions
 
+import org.apache.jena.sparql.pfunction.library.str
+import org.checkerframework.checker.lock.qual.NewObject
 import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
@@ -112,16 +114,65 @@ class BondOrderAction (
         val directionVec = atomALocalPos - atomBLocalPos
         val orthVec = Vector3f(directionVec.y, -directionVec.x, OrganicEditorState.XY_PLANE) * OrganicEditorState.DOUBLE_BOND_DISTANCE
 
-        insertLevelDoubleBond(moleculeLevel, orthVec, structBond, true)
+
+        val shouldCentre = checkShouldCentre(molManager, structAtomA, structAtomB)
+
+
+        insertLevelDoubleBond(moleculeLevel, orthVec, structBond, shouldCentre)
 
     }
 
 
+    private fun checkShouldCentre(molManager: IMoleculeManager, structA: UUID, structB: UUID) : Boolean {
+        //To check for carbonyl/imine groups either struct A is carbon and Struct B is oxygen/nitrogen
+
+        val carbonylCheck = identifyBondMember(molManager, structA, structB, "C", "O")
+        val imineCheck = identifyBondMember(molManager, structA, structB, "C", "N")
+
+        return carbonylCheck || imineCheck
+    }
+
+
+    private fun identifyBondMember(molManager: IMoleculeManager, structA: UUID, structB: UUID, member1: String, member2: String) : Boolean {
+
+        if (molManager.isOfElement(structA, member1) && molManager.isOfElement(structB, member2)) {
+            return true
+        }
+
+        if (molManager.isOfElement(structA, member2) && molManager.isOfElement(structB, member1)) {
+            return true
+        }
+
+        return false
+    }
+
     private fun insertLevelDoubleBond(moleculeLevel: EntityLevel, orthVec: Vector3f, structBond: UUID, makeCentre: Boolean) {
 
 
+        var offset = Vector3f()
+
+        if (makeCentre) {
+
+            offset = orthVec.div(-2.0f, Vector3f())
+            offset.y -= 2.0f
+
+            moleculeLevel.traverseFunc {
+                if (it.hasComponent(LineDrawerComponent::class) && it.hasComponent(MolIDComponent::class)) {
+                    val molComp = it.getComponent(MolIDComponent::class)
+                    if (molComp.molID == structBond) {
+                        if (it.hasComponent(TransformComponent::class)) {
+                            val transComp = it.getComponent(TransformComponent::class)
+                            transComp.x+= offset.x
+                            transComp.y+= offset.y
+                            println("HELLO")
+                        }
+                    }
+                }
+            }
+        }
+
         val newBondEntity = moleculeLevel.addEntity()
-        newBondEntity.addComponent(TransformComponent(orthVec.x, orthVec.y, -2.0f))
+        newBondEntity.addComponent(TransformComponent(orthVec.x + offset.x, orthVec.y + offset.y, -2.0f))
         newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id, OrganicEditorState.BOND_WIDTH))
         LevelViewUtil.linkObject(structBond, newBondEntity)
     }
