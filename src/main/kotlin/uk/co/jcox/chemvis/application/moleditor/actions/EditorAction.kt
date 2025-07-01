@@ -11,6 +11,10 @@ import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 import java.util.UUID
 
 
+/**
+ * An editor action represents a small event to the workstate (main EntityLevel + IMoleculeManager)
+ * Each action is meant to run to completion
+ */
 abstract class EditorAction {
 
     /**
@@ -26,6 +30,11 @@ abstract class EditorAction {
     }
 
 
+    /**
+     * If given an atom from the level, this method will delete all child groups with the GhostImplicitHydrogenGroupComponent class
+     * @param levelAtom the level component to perform this action
+     *
+     */
     protected fun removeImplicitHydrogenGroup(levelAtom: EntityLevel) {
 
         val toRemove = mutableListOf<EntityLevel>()
@@ -41,6 +50,11 @@ abstract class EditorAction {
         }
     }
 
+    /**
+     * This method will add a hydrogen implicit group given the number of hydrogens to add
+     * @param levelAtom The atom to perfom this action on
+     * @param hydrogenCount the number of hydrogen atoms to count
+     */
     protected fun insertImplicitHydrogenGroup(levelAtom: EntityLevel, hydrogenCount: Int) {
         if (hydrogenCount == 0) {
             return

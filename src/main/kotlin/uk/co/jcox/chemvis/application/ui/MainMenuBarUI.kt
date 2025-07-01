@@ -127,12 +127,15 @@ class MainMenuBarUI {
     private fun renderButtons(elements: List<AtomInsert>) {
 
         for ((index, insert) in elements.withIndex()) {
+
+            val standardButtonSize = ImGui.getFrameHeight()
+
             if (index == activeInsert) {
                 ImGui.pushStyleColor(ImGuiCol.Button, ImVec4(0.0f, 100.0f, 0.0f, 255.0f))
-                ImGui.button(insert.symbol, 40.0f, 25.0f)
+                ImGui.button(insert.symbol, standardButtonSize * 2, standardButtonSize)
                 ImGui.popStyleColor()
             } else {
-                if (ImGui.button(insert.symbol, 30.0f, 25.0f)) {
+                if (ImGui.button(insert.symbol, standardButtonSize * 1.5f, standardButtonSize)) {
                     activeInsert = index
                 }
             }

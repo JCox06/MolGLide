@@ -21,22 +21,49 @@ import kotlin.math.sin
 /**
  * A tool is an object that can "work" on the workstate.
  * A tool changes the workstate through actions which it runs.
+ *
+ *
+ * Each tool upon initialisation or refresh will fetch the latest copy of the ChemLevelPair form the main workstate
+ * and store it in the workingState variable
+ *
+ * The tool modifies this internal state, creating restore points in the localStack workState object.
+ *
+ * After a commit via pushChanges, the localStack workstate is cleared, and the workingState object is refreshed.
+ *
+ * Subclass the Tool class to create custom tools.
  */
 abstract class Tool (
     val context: ToolCreationContext,
 ) {
 
+    /**
+     * Does not represent the current working state like in OrganicEditorState, but rather just stores
+     * the restore points.
+     *
+     * The reason for this, is because, this class needs direct ChemLevelPair access, and the workstate
+     * will create a hard copy instead.
+     */
     var workingState: ChemLevelPair = context.levelStack.get()
         private set
 
+    /**
+     * Represents the state that this tool is working on
+     */
     private var localStack: WorkState = WorkState()
 
+    /**
+     * After a tool has finished working. It can alert someone with the new ChemLevelPair object via  this callback
+     */
     private var commit: ((ChemLevelPair) -> Unit)? = null
 
     init {
         refreshWorkingState()
     }
 
+    /**
+     * Fetch a new version of the working state
+     * @param refreshLocalStack optionally clear restore points (clear local stack too?)
+     */
     fun refreshWorkingState(refreshLocalStack: Boolean = true) {
         this.workingState = context.levelStack.get()
 
@@ -67,14 +94,31 @@ abstract class Tool (
         refreshWorkingState()
     }
 
+    /**
+     * Allows a tool to render something that isn't actually in the level
+     * Like a selection marker
+     *
+     * @param transientUI a temp level object that is created each frame to show transient UI
+     */
     abstract fun renderTransientUI(transientUI: EntityLevel)
 
     abstract fun processClick(clickDetails: ClickContext)
 
     abstract fun processClickRelease(clickDetails: ClickContext)
 
+    /**
+     * If the tool is in the process of modifying the current state but is not finished,
+     * then this should return true.
+     *
+     * In the case of OrganicEditorState, if this is true (the tool is working) then
+     * instead of rendering the main level, OrganicEditorState will render the level copy in the tool, for
+     * live UI changes.
+     */
     abstract fun inProgress() : Boolean
 
+    /**
+     * Should be called every frame
+     */
     abstract fun update()
 
 
@@ -94,6 +138,11 @@ abstract class Tool (
         return Vector2f(x.toFloat(), y.toFloat())
     }
 
+
+    /**
+     * Uses transient object (or any LeveLObject) and the selectionManager to put a circle around atoms the
+     * mouse is close to
+     */
     protected fun renderSelectionMarkerOnAtoms(transientUI: EntityLevel) {
         val currentSelection = context.selectionManager.primarySelection
         if (currentSelection !is Selection.Active) {
@@ -112,6 +161,10 @@ abstract class Tool (
     }
 
 
+    /**
+     * Returns the position of the mouse in worldspace from the RenderingTargetContext
+     * This should be as it takes into account the position of the RenderingTarget position
+     */
     protected fun mouseWorld() : Vector2f {
         val mousePos = context.renderingContext.getMousePos(context.inputManager)
 
