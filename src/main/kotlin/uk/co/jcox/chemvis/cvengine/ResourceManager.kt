@@ -476,39 +476,46 @@ class ResourceManager : IResourceManager{
     }
 
 
-    override fun createRenderTarget(id: String) {
-        Logger.info {"Creating a render target for $id"}
+    override fun createMultiSampledRenderTarget(id: String, samples: Int) {
 
-
-        val width = 1
-        val height = 1
-
-        val frameBuffer = GL30.glGenFramebuffers()
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer)
-
-        val colourAttachment = loadTextureToOpenGL(null, width, height, GL11.GL_NEAREST, GL11.GL_NEAREST, false)
-        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, colourAttachment, 0)
-
-        val depthAttachment = GL30.glGenRenderbuffers()
-        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, depthAttachment)
-        GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL30.GL_DEPTH24_STENCIL8, width, height)
-
-        GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_STENCIL_ATTACHMENT, GL30.GL_RENDERBUFFER, depthAttachment)
-
-
-        if (GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER) != GL30.GL_FRAMEBUFFER_COMPLETE) {
-            Logger.error { "Frame buffer for render target $id is not complete" }
-        } else {
-            Logger.info { "Frame buffer for render target $id has been setup successfully!" }
+        if (samples <= 1) {
+            throw IllegalArgumentException("Cannot use 1 sample for a multi sample frame buffer")
         }
 
-        val target = RenderTarget(frameBuffer, colourAttachment, depthAttachment, width.toFloat(), height.toFloat())
+        //Create the sampled frame buffer:
+        Logger.info { "Creating a multi sampled render target for $id with $samples samples" }
+        val initialWidth = 1
+        val initialHeight = 1
+
+        val sampledFrameBuffer = GL30.glGenFramebuffers()
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, sampledFrameBuffer)
+
+        val sampledColour = GL11.glGenTextures()
+        GL11.glBindTexture(GL32.GL_TEXTURE_2D_MULTISAMPLE, sampledColour)
+        GL32.glTexImage2DMultisample(GL32.GL_TEXTURE_2D_MULTISAMPLE, samples, GL11.GL_RGBA, initialWidth, initialHeight, true)
+        GL32.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL32.GL_TEXTURE_2D_MULTISAMPLE, sampledColour, 0)
+
+        val sampledDepth = GL30.glGenRenderbuffers()
+        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, sampledDepth)
+        GL30.glRenderbufferStorageMultisample(GL30.GL_RENDERBUFFER, samples, GL30.GL_DEPTH24_STENCIL8, initialWidth, initialHeight)
+        GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_STENCIL_ATTACHMENT, GL30.GL_RENDERBUFFER, sampledDepth)
+
+        logFrameBufferStatus(sampledFrameBuffer, id, "SAMPLED")
 
 
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
+        //Create the resolved frame buffer:
+        val resolvedFrameBuffer = GL30.glGenFramebuffers()
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, resolvedFrameBuffer)
 
+        val resolvedColour = loadTextureToOpenGL(null, initialWidth, initialHeight, GL11.GL_NEAREST, GL11.GL_NEAREST, false)
+        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, resolvedColour, 0)
+
+        logFrameBufferStatus(sampledFrameBuffer, id, "RESOLVED")
+
+        val target: RenderTarget = ResolvedRenderTarget(sampledFrameBuffer, sampledColour, sampledDepth, initialWidth.toFloat(), initialHeight.toFloat(), resolvedFrameBuffer, resolvedColour, samples)
         renderTargets[id] = target
     }
+
 
     override fun resizeRenderTarget(id: String, proposedWidth: Float, proposedHeight: Float) {
         val target = renderTargets[id]
@@ -524,22 +531,38 @@ class ResourceManager : IResourceManager{
             return
         }
 
-        val openGLTextureID = target.colourAttachmentTexture
-        val data: ByteBuffer? = null
+        if (target !is ResolvedRenderTarget) {
+            return
+        }
+
+        //Resize Sampled Frame Attachments:
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.frameBuffer)
-        GL11.glBindTexture(GL11.GL_TEXTURE_2D, openGLTextureID)
-        GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width.toInt(), height.toInt(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data)
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST)
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST)
 
-        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, target.colourAttachmentTexture, 0)
+        val sampledTexture = target.colourAttachmentTexture
+        GL11.glBindTexture(GL33.GL_TEXTURE_2D_MULTISAMPLE, sampledTexture)
+        GL32.glTexImage2DMultisample(GL32.GL_TEXTURE_2D_MULTISAMPLE, target.samples, GL11.GL_RGBA, width.toInt(), height.toInt(), true)
 
-        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, target.depthAttachmentRenderBuffer)
-        GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL30.GL_DEPTH24_STENCIL8, width.toInt(), height.toInt())
-        GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_STENCIL_ATTACHMENT, GL30.GL_RENDERBUFFER, target.depthAttachmentRenderBuffer)
+        val sampledDepth = target.depthAttachmentRenderBuffer
+        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, sampledDepth)
+        GL30.glRenderbufferStorageMultisample(GL30.GL_RENDERBUFFER, target.samples, GL30.GL_DEPTH24_STENCIL8, width.toInt(), height.toInt())
+
+        //Resize the resolved texture
+        val reserve: ByteBuffer? = null
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.resolvedBuffer)
+        GL11.glBindTexture(GL33.GL_TEXTURE_2D, target.resolvedColour)
+        GL30.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width.toInt(), height.toInt(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, reserve)
 
         target.width = width
         target.height = height
+    }
+
+    private fun logFrameBufferStatus(frameBuffer: Int, id: String, type: String) {
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer)
+        if (GL30.glCheckFramebufferStatus(GL30.GL_FRAMEBUFFER) != GL30.GL_FRAMEBUFFER_COMPLETE) {
+            Logger.error {"Frame Buffer setup failed for render target $id of type $type"}
+        } else {
+            Logger.info { "Frame buffer setup successful for render target $id of type $type" }
+        }
     }
 
     override fun destroyRenderTarget(id: String) {
