@@ -65,7 +65,7 @@ class ScreenshotConfigurationUI (
         val height = renderTarget.height.toInt()
 
         val imgBuff = BufferUtils.createIntBuffer(4 * width * height)
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, renderTarget.frameBuffer)
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, renderTarget.getSamplableFrameBuffer())
         GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_INT, imgBuff)
 
         val saveImgThread = Runnable {

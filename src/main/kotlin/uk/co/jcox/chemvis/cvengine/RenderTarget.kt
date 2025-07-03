@@ -16,4 +16,8 @@ open class RenderTarget (
     open fun getSamplableTextureAttachment() : Int {
         return colourAttachmentTexture
     }
+
+    open fun getSamplableFrameBuffer() : Int {
+        return frameBuffer
+    }
 }

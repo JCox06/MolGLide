@@ -17,4 +17,8 @@ class ResolvedRenderTarget(
     override fun getSamplableTextureAttachment(): Int {
         return resolvedColour
     }
+
+    override fun getSamplableFrameBuffer(): Int {
+        return resolvedBuffer
+    }
 }
