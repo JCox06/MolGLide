@@ -173,7 +173,7 @@ class BondOrderAction (
 
         val newBondEntity = moleculeLevel.addEntity()
         newBondEntity.addComponent(TransformComponent(orthVec.x + offset.x, orthVec.y + offset.y, -2.0f))
-        newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id, OrganicEditorState.BOND_WIDTH))
+        newBondEntity.addComponent(LineDrawerComponent(levelAtomA.id, levelAtomB.id))
         LevelViewUtil.linkObject(structBond, newBondEntity)
     }
 }
