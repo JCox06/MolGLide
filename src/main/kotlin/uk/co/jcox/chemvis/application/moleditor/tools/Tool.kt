@@ -122,7 +122,7 @@ abstract class Tool (
     abstract fun update()
 
 
-    protected fun closestPointToCircleCircumference(circleCentre: Vector2f, randomPoint: Vector2f, radius: Float, quantize: Int = 16) : Vector2f {
+    protected fun closestPointToCircleCircumference(circleCentre: Vector2f, randomPoint: Vector2f, radius: Float, quantize: Int = 32) : Vector2f {
         val angleStep = (Math.PI * 2) / quantize
 
         val direction = randomPoint - circleCentre //Direction to point in space

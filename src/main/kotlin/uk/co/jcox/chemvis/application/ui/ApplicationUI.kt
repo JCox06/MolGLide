@@ -117,7 +117,7 @@ class ApplicationUI (
 
             services.resourceManager().resizeRenderTarget(stateID, width, height)
 
-            ImGui.image(renderTarget.colourAttachmentTexture.toLong(), ImVec2(width, height), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f))
+            ImGui.image(renderTarget.getSamplableTextureAttachment().toLong(), ImVec2(width, height), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f))
 
             renderingContext?.recalculate()
             ImGui.end()

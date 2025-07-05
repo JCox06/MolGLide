@@ -72,7 +72,7 @@ interface IResourceManager {
      * By default the main window has a frame buffer id of null
      * @param id The ID you wish to use for this render target
      */
-    fun createRenderTarget(id: String)
+    fun createMultiSampledRenderTarget(id: String, samples: Int = 4)
 
     fun destroyRenderTarget(id: String)
 
