@@ -5,7 +5,7 @@ ___
 > [!CAUTION]
 > MolGLide currently exists as a prototype. It just about draws extremely simple molecules and is highly unstable.
 
-[Download version 0.0.2](https://github.com/JCox06/MolGLide/releases/download/v0.0.2/MolGLide-0.0.2-UNIVERAL.zip) or alternatively [view the latest releases](https://github.com/JCox06/MolGLide/releases) 
+[Download the latest version here](https://github.com/JCox06/MolGLide/releases) 
 
 MolGLide is a simple 2D molecular editor that I am working on.
 
