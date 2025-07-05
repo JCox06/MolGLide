@@ -15,15 +15,12 @@ import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
-import org.lwjgl.opengl.GL32
 import org.lwjgl.opengl.GL43
 import org.lwjgl.opengl.GLDebugMessageCallback
 import org.lwjgl.system.Callback
-import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
 import org.tinylog.Logger
 import java.io.File
 import java.lang.AutoCloseable
-import kotlin.math.exp
 
 class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private val lwjglErrorCallback: Callback? = null
@@ -240,21 +237,11 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     }
 
     private fun renderToCustomTarget(state: ApplicationState, renderTarget: RenderTarget) {
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, renderTarget.frameBuffer)
+        renderTarget.bindForDrawing()
         GL30.glClearColor(renderTarget.clearColour.x, renderTarget.clearColour.y, renderTarget.clearColour.z, renderTarget.clearColour.w)
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
-
         state.render(viewport)
-
-        if (renderTarget is ResolvedRenderTarget) {
-            GL32.glBindFramebuffer(GL32.GL_READ_FRAMEBUFFER, renderTarget.frameBuffer)
-            GL32.glBindFramebuffer(GL32.GL_DRAW_FRAMEBUFFER, renderTarget.resolvedBuffer)
-
-            val width = renderTarget.width.toInt()
-            val height = renderTarget.height.toInt()
-
-            GL32.glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST)
-        }
+        renderTarget.postDraw()
     }
 
     private fun renderAndUpdateStates() {

@@ -510,9 +510,15 @@ class ResourceManager : IResourceManager{
         val resolvedColour = loadTextureToOpenGL(null, initialWidth, initialHeight, GL11.GL_NEAREST, GL11.GL_NEAREST, false)
         GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, resolvedColour, 0)
 
+
+        val resolvedDepth = GL30.glGenRenderbuffers()
+        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, resolvedDepth)
+        GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL30.GL_DEPTH24_STENCIL8, initialWidth.toInt(), initialHeight.toInt())
+        GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_STENCIL_ATTACHMENT, GL30.GL_RENDERBUFFER, resolvedDepth)
+
         logFrameBufferStatus(sampledFrameBuffer, id, "RESOLVED")
 
-        val target: RenderTarget = ResolvedRenderTarget(sampledFrameBuffer, sampledColour, sampledDepth, initialWidth.toFloat(), initialHeight.toFloat(), resolvedFrameBuffer, resolvedColour, samples)
+        val target: RenderTarget = SampledRenderTarget(resolvedFrameBuffer, resolvedColour, resolvedDepth, initialWidth.toFloat(), initialHeight.toFloat(), sampledFrameBuffer, sampledColour, sampledDepth, samples)
         renderTargets[id] = target
     }
 
@@ -524,36 +530,7 @@ class ResourceManager : IResourceManager{
             return
         }
 
-        val width = max(proposedWidth, 1.0f)
-        val height = max(proposedHeight, 1.0f)
-
-        if (width == target.width && height == target.height) {
-            return
-        }
-
-        if (target !is ResolvedRenderTarget) {
-            return
-        }
-
-        //Resize Sampled Frame Attachments:
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.frameBuffer)
-
-        val sampledTexture = target.colourAttachmentTexture
-        GL11.glBindTexture(GL33.GL_TEXTURE_2D_MULTISAMPLE, sampledTexture)
-        GL32.glTexImage2DMultisample(GL32.GL_TEXTURE_2D_MULTISAMPLE, target.samples, GL11.GL_RGBA, width.toInt(), height.toInt(), true)
-
-        val sampledDepth = target.depthAttachmentRenderBuffer
-        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, sampledDepth)
-        GL30.glRenderbufferStorageMultisample(GL30.GL_RENDERBUFFER, target.samples, GL30.GL_DEPTH24_STENCIL8, width.toInt(), height.toInt())
-
-        //Resize the resolved texture
-        val reserve: ByteBuffer? = null
-        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, target.resolvedBuffer)
-        GL11.glBindTexture(GL33.GL_TEXTURE_2D, target.resolvedColour)
-        GL30.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width.toInt(), height.toInt(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, reserve)
-
-        target.width = width
-        target.height = height
+        target.resize(proposedWidth, proposedHeight)
     }
 
     private fun logFrameBufferStatus(frameBuffer: Int, id: String, type: String) {
@@ -575,9 +552,7 @@ class ResourceManager : IResourceManager{
             return
         }
 
-        GL30.glDeleteFramebuffers(target.frameBuffer)
-        GL30.glDeleteTextures(target.colourAttachmentTexture)
-        GL30.glDeleteRenderbuffers(target.depthAttachmentRenderBuffer)
+        target.close()
 
         renderTargets.remove(id)
     }
