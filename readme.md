@@ -7,21 +7,20 @@ ___
 
 [Download version 0.0.2](https://github.com/JCox06/MolGLide/releases/download/v0.0.2/MolGLide-0.0.2-UNIVERAL.zip) or alternatively [view the latest releases](https://github.com/JCox06/MolGLide/releases) 
 
-MolGLide is a project I am writing to allow you to build organic molecules in a 2D editor.
+MolGLide is a simple 2D molecular editor that I am working on.
 
 It's currently a work in progress, and it will get things wrong. There will be bugs and weird errors.
 
-It is built in Java and Kotlin (although I want to move from Java) using many utilities provided by the LWJGL. 
 
 Chemical structure details are stored using CDK, and the 2D diagrams are stored using a custom scene graph. Rendering is provided by OpenGL.
 
 This project uses the Ubuntu font, see data/chemvis/fonts/ for the full licence.
 
 Screen shot mode:
-![Screenshot](screenshots/v0.0.1/screenshot_mode.png)
+![Screenshot](screenshots/v0.0.3/Screenshot-Config.png)
 
-## Building
-All the building issues have now been fixed. Maven should now import the project and be able to build it. 
+## Building and Running
+All the building issues have now been fixed. Maven should now import the project and be able to build it. To run the project make sure you have Java 21 installed.
 
 ## Todo
 - Rewrite the scene graph and component system. I still need to decide how the new system should be designed and how it should work. But the current system needs an urgent rewrite
@@ -29,8 +28,5 @@ All the building issues have now been fixed. Maven should now import the project
 - Refactor code and make it clearer to read because right now the code is terrible!
 
 ## More screenshots
-The following is a screenshot I have taken using screenshot mode. There are also options to remove the background
-![Screenshot](screenshots/v0.0.1/photo_1.png)
-
-The editor
-![Screenshot](screenshots/v0.0.1/editor.png)
+The following is a screenshot I have taken using screenshot mode, saved with the background removed (Alpha channel set to 0):
+![Screenshot](screenshots/v0.0.3/Screenshot.png)
