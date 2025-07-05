@@ -148,13 +148,11 @@ class BondOrderAction (
 
     private fun insertLevelDoubleBond(moleculeLevel: EntityLevel, orthVec: Vector3f, structBond: UUID, makeCentre: Boolean) {
 
-
         var offset = Vector3f()
 
         if (makeCentre) {
-
             offset = orthVec.div(-2.0f, Vector3f())
-            offset.y -= 2.0f
+            offset.y -= 1.0f
 
             moleculeLevel.traverseFunc {
                 if (it.hasComponent(LineDrawerComponent::class) && it.hasComponent(MolIDComponent::class)) {
@@ -164,7 +162,6 @@ class BondOrderAction (
                             val transComp = it.getComponent(TransformComponent::class)
                             transComp.x+= offset.x
                             transComp.y+= offset.y
-                            println("HELLO")
                         }
                     }
                 }
