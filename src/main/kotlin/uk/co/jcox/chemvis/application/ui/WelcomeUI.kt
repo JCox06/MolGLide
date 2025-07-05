@@ -6,6 +6,8 @@ import org.lwjgl.Version.getVersion
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL30
+import org.lwjgl.opengl.GL32
 import org.lwjgl.opengl.GLUtil
 import org.lwjgl.system.Platform
 import org.openscience.cdk.CDK
@@ -19,6 +21,7 @@ class WelcomeUI {
     private var showImGuiMetrics = false
     private var showImGuiStyleEditor = false
     private var showAbout = false
+    private var extendedOpenGL = false
 
     fun draw(dockID: Int) {
 
@@ -72,14 +75,24 @@ class WelcomeUI {
 
         if (ImGui.beginTable("Version Table", 2)) {
 
-            versionIndex("MolGLide", MolGLide.VERSION)
-            versionIndex("OpenGL", GL11.glGetString(GL11.GL_VERSION))
-            versionIndex("LWJGL", getVersion())
-            versionIndex("GLFW", GLFW.glfwGetVersionString())
-            versionIndex("Dear ImGui", ImGui.getVersion())
-            versionIndex("CDK", CDK.getVersion())
-            versionIndex("JRE", Runtime.version().toString())
+            versionIndex("MolGLide version", MolGLide.VERSION)
+            versionIndex("OpenGL version", GL11.glGetString(GL11.GL_VERSION))
+            versionIndex("LWJGL version", getVersion())
+            versionIndex("GLFW version", GLFW.glfwGetVersionString())
+            versionIndex("Dear ImGui version", ImGui.getVersion())
+            versionIndex("CDK version", CDK.getVersion())
+            versionIndex("JRE version", Runtime.version().toString())
             versionIndex("Platform", "${Platform.get()} ${Platform.getArchitecture()}")
+
+            if (extendedOpenGL) {
+                versionIndex("GLSL version", GL11.glGetString(GL30.GL_SHADING_LANGUAGE_VERSION))
+                versionIndex("OpenGL Vendor", GL11.glGetString(GL11.GL_VENDOR))
+                versionIndex("OpenGL Renderer", GL11.glGetString(GL11.GL_RENDERER))
+                versionIndex("Max Texture Samples", "${GL11.glGetInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES)}")
+                versionIndex("Max Depth Samples", "${GL11.glGetInteger(GL32.GL_MAX_DEPTH_TEXTURE_SAMPLES)}")
+                versionIndex("Max Texture Samples", "${GL11.glGetInteger(GL32.GL_MAX_TEXTURE_UNITS)}")
+                versionIndex("Max Geometry vertices outputs", "${GL11.glGetInteger(GL32.GL_MAX_GEOMETRY_OUTPUT_VERTICES)}")
+            }
             ImGui.endTable()
         }
 
@@ -95,6 +108,11 @@ class WelcomeUI {
             showAbout = false
         }
 
+
+        if (ImGui.checkbox("More OpenGL Info", extendedOpenGL)) {
+            extendedOpenGL = !extendedOpenGL
+        }
+
         ImGui.end()
 
     }
@@ -103,7 +121,7 @@ class WelcomeUI {
     private fun versionIndex(component: String, version: String?) {
         ImGui.tableNextRow()
         ImGui.tableNextColumn()
-        ImGui.text("$component version")
+        ImGui.text(component)
         ImGui.tableNextColumn()
         ImGui.text(version)
     }
