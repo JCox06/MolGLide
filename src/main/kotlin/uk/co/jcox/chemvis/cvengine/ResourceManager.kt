@@ -518,7 +518,7 @@ class ResourceManager : IResourceManager{
 
         logFrameBufferStatus(sampledFrameBuffer, id, "RESOLVED")
 
-        val target: RenderTarget = SampledRenderTarget(resolvedFrameBuffer, resolvedColour, resolvedDepth, initialWidth.toFloat(), initialHeight.toFloat(), sampledFrameBuffer, sampledColour, sampledDepth, samples)
+        val target: RenderTarget = MultiSampledRenderTarget(resolvedFrameBuffer, resolvedColour, resolvedDepth, initialWidth.toFloat(), initialHeight.toFloat(), sampledFrameBuffer, sampledColour, sampledDepth, samples)
         renderTargets[id] = target
     }
 

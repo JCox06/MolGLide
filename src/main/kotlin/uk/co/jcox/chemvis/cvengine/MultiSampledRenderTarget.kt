@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL32
  * Represents a custom render target with antialiasing abilities
  * Drawing is done to the frame buffers below, and then blitted to the frame buffers in the superclass on postDraw
  */
-class SampledRenderTarget(
+class MultiSampledRenderTarget(
     frameBuffer: Int,
     colourAttachmentTexture: Int,
     depthAttachmentRenderBuffer: Int,
