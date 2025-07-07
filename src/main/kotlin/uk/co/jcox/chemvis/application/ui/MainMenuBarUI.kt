@@ -3,6 +3,7 @@ package uk.co.jcox.chemvis.application.ui
 import imgui.ImGui
 import imgui.ImVec4
 import imgui.flag.ImGuiCol
+import imgui.type.ImInt
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.CLOSE_ICON
 import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.CLOSE_WINDOW_ICON
@@ -21,7 +22,11 @@ class MainMenuBarUI {
     private var redo: (() -> Unit)? = null
     private var screenshot: (() -> Unit)? = null
 
-    private var activeInsert = 0
+
+    private var activeTool = 0
+
+    private val activeInsert: ImInt = ImInt(0)
+    private val activeTemplate: ImInt = ImInt(0)
 
     var inspectedFormula = "Waiting For Data"
 
@@ -51,7 +56,7 @@ class MainMenuBarUI {
 
 
     fun getSelectedInsert() : AtomInsert {
-        return AtomInsert.entries[activeInsert]
+        return AtomInsert.entries[activeInsert.get()]
     }
 
 
@@ -67,13 +72,16 @@ class MainMenuBarUI {
                 screenshot?.invoke()
             }
 
+            if (ImGui.beginMenu("${ApplicationUI.TOOLS_ICON} Tools")) {
+                drawTools()
+                ImGui.endMenu()
+            }
+
+            drawToolOptions()
+
             ImGui.separator()
 
-            drawAvailableInserts()
-
-            ImGui.separator()
-
-            ImGui.text("Formula $inspectedFormula")
+            ImGui.text("Formula: $inspectedFormula")
 
             ImGui.endMainMenuBar()
         }
@@ -118,28 +126,59 @@ class MainMenuBarUI {
     }
 
 
-    private fun drawAvailableInserts() {
-        val inserts = AtomInsert.entries
-        renderButtons(inserts)
+    private fun drawTools() {
+        if (ImGui.menuItem("${ApplicationUI.ATOM_BOND_TOOL_ICON} Atom Bond Tool", activeTool == 0)) {
+            activeTool = 0
+        }
+        if (ImGui.menuItem("${ApplicationUI.TEMPLATE_TOOL_ICON} Template Tool", activeTool == 1)) {
+            activeTool = 1
+        }
+    }
+
+    private fun drawToolOptions() {
+        //Tool = 0 is the AtomBondTool
+        if (activeTool == 0) {
+            val inserts = AtomInsert.entries
+            renderButtons(inserts.map { it.symbol }, activeInsert, true)
+        }
+
+        //Tool 1 is the Template Tool
+        if (activeTool == 1) {
+            renderButtons(listOf("Benzene", "CycloPentane", "CycloPropane"), activeTemplate, false)
+        }
     }
 
 
-    private fun renderButtons(elements: List<AtomInsert>) {
+    private fun renderButtons(elements: List<String>, activeOption: ImInt, uniformSize: Boolean) {
 
         for ((index, insert) in elements.withIndex()) {
 
             val standardButtonSize = ImGui.getFrameHeight()
 
-            if (index == activeInsert) {
+            if (index == activeOption.get()) {
                 ImGui.pushStyleColor(ImGuiCol.Button, ImVec4(0.0f, 100.0f, 0.0f, 255.0f))
-                ImGui.button(insert.symbol, standardButtonSize * 2, standardButtonSize)
+                if (uniformSize) {
+                    ImGui.button(insert, standardButtonSize * 2, standardButtonSize)
+                } else {
+                    ImGui.button(insert)
+                }
                 ImGui.popStyleColor()
             } else {
-                if (ImGui.button(insert.symbol, standardButtonSize * 1.5f, standardButtonSize)) {
-                    activeInsert = index
+                if (uniformSize) {
+                    if (ImGui.button(insert, standardButtonSize * 1.5f, standardButtonSize)) {
+                        activeOption.set(index)
+                    }
+                } else {
+                    if (ImGui.button(insert)) {
+                        activeOption.set(index)
+                    }
                 }
+
             }
         }
     }
+
+
+
 
 }

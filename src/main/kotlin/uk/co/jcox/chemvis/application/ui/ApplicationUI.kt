@@ -159,5 +159,8 @@ class ApplicationUI (
         const val REDO_ICON = "\uf2f9"
         const val SAVE_IMAGE_ICON ="\uf0c7"
         const val CLOSE_WINDOW_ICON = "\uf04d"
+        const val ATOM_BOND_TOOL_ICON = "\uf0fe"
+        const val TEMPLATE_TOOL_ICON ="\uf1b2"
+        const val TOOLS_ICON ="\uf6e3"
     }
 }
