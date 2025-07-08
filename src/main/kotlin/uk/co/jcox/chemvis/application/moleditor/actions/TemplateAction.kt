@@ -9,7 +9,7 @@ import java.util.UUID
 
 /**
  * This class is designed to add a  ring to the CLP as a new molecule
- * The FuzeTemplate refers to adding a ring to another molecule through a common bond
+ * The FuzeTemplateAction class (yet to be created) instead refers to adding a ring to another molecule through a common bond
  * As usual this class requires a CLP to work on
  *
  *  Note that the coordinates below represent the centre of the benzene ring.

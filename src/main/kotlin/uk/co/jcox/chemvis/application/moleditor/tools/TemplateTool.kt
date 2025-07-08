@@ -5,6 +5,7 @@ import uk.co.jcox.chemvis.application.moleditor.ClickContext
 import uk.co.jcox.chemvis.application.moleditor.CompoundInsert
 import uk.co.jcox.chemvis.application.moleditor.Selection
 import uk.co.jcox.chemvis.application.moleditor.ToolCreationContext
+import uk.co.jcox.chemvis.application.moleditor.actions.CyclobutaneRingAction
 import uk.co.jcox.chemvis.application.moleditor.actions.CyclohexaneRingAction
 import uk.co.jcox.chemvis.application.moleditor.actions.CyclopentaneRingAction
 import uk.co.jcox.chemvis.application.moleditor.actions.CyclopropaneRingAction
@@ -40,6 +41,7 @@ class TemplateTool(context: ToolCreationContext) : Tool(context) {
                 CompoundInsert.CYLCOHEXANE -> createNewCyclohexane(false)
                 CompoundInsert.CYCLOPENATNE -> createNewCyclopentane()
                 CompoundInsert.CYCLOPROPANE -> createNewCyclopropane()
+                CompoundInsert.CYCLOBUTANE -> createNewCyclobutane()
             }
         }
 
@@ -66,7 +68,7 @@ class TemplateTool(context: ToolCreationContext) : Tool(context) {
 
     private fun applyRotations(rootMoleculeNode: EntityLevel) {
         val angleOfRotationToAdd = context.inputManager.deltaMousePos()
-        //TODO - Apply these rotations
+        //TODO - Apply these rotations once the new scenegraph is in place
     }
 
     private fun createNewCyclohexane(benzene: Boolean) {
@@ -87,6 +89,13 @@ class TemplateTool(context: ToolCreationContext) : Tool(context) {
     private fun createNewCyclopropane() {
         val mouseWorld = mouseWorld()
         val action = CyclopropaneRingAction(mouseWorld.x, mouseWorld.y)
+        action.runAction(workingState.molManager, workingState.level)
+        mode = Mode.Dragging(action.rootMolecule)
+    }
+
+    private fun createNewCyclobutane() {
+        val mouseWorld = mouseWorld()
+        val action = CyclobutaneRingAction(mouseWorld.x, mouseWorld.y)
         action.runAction(workingState.molManager, workingState.level)
         mode = Mode.Dragging(action.rootMolecule)
     }

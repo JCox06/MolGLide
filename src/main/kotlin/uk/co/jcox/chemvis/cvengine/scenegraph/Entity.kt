@@ -5,6 +5,14 @@ import org.joml.plus
 import java.util.UUID
 import kotlin.reflect.KClass
 
+//Todo - This scenegraph class needs an urgent re-write, and I think I know how to do it
+//This has been massively over-complicated from the start
+//Just have an entity that is then subclassed to SpriteEntity, TextEntity, etc
+//Then an atom in the level can be represented by an AtomEntity which inherits from TextEntity
+
+//Lines will still be drawn from one entity to another, and they will be stored in a flat list
+//A line is not an entity, and is just a class that contains two entities and an offset vec3f
+
 
 interface IComponent {
     fun clone() : IComponent

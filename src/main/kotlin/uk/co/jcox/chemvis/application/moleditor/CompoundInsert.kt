@@ -5,5 +5,6 @@ enum class CompoundInsert(val ringName: String) {
     BENZENE("Benzene"),
     CYLCOHEXANE("Cyclohexane"),
     CYCLOPENATNE("Cyclopentane"),
-    CYCLOPROPANE("Cyclopropane")
+    CYCLOPROPANE("Cyclopropane"),
+    CYCLOBUTANE("Cyclobutane"),
 }
