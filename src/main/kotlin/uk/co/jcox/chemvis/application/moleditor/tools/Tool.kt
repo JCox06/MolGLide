@@ -1,8 +1,11 @@
 package uk.co.jcox.chemvis.application.moleditor.tools
 
+import org.joml.GeometryUtils.normal
+import org.joml.Math
 import org.joml.Vector2f
 import org.joml.minus
 import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.x
+import org.xmlcml.euclid.Angle
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.ChemLevelPair
 import uk.co.jcox.chemvis.application.moleditor.ClickContext
@@ -13,6 +16,7 @@ import uk.co.jcox.chemvis.application.moleditor.WorkState
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
 import uk.co.jcox.chemvis.cvengine.scenegraph.ObjComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -122,20 +126,18 @@ abstract class Tool (
     abstract fun update()
 
 
-    protected fun closestPointToCircleCircumference(circleCentre: Vector2f, randomPoint: Vector2f, radius: Float, quantize: Int = 32) : Vector2f {
-        val angleStep = (Math.PI * 2) / quantize
+    //Mathematically quantising angles was wrong, this new implementation just takes a list of commonly used angles
+    //And then snaps to the closest angle where the mouse is. This is simple than what was here before at v0.0.3
+    protected fun closestPointToCircleCircumference(circleCentre: Vector2f, randomPoint: Vector2f, radius: Float) : Vector2f {
+        val directionVec = randomPoint - circleCentre
+        val angle = Vector2f(1.0f, 0.0f).angle(directionVec)
 
-        val direction = randomPoint - circleCentre //Direction to point in space
+        val refinedAngle = OrganicEditorState.COMMON_ANGLES.minBy { abs(it - angle) }
 
-        //Find the angle of this vector (between the positive x axis and the point tan(x) = o/a)
-        val angle = atan2(direction.y, direction.x)
-        val quantizedAngleIndex = (angle / angleStep).roundToInt()
-        val quantizedAngle = quantizedAngleIndex * angleStep
+        val x = circleCentre.x + radius * cos(refinedAngle)
+        val y = circleCentre.y + radius * sin(refinedAngle)
 
-        //Turn polar angle into cartesian coordinates
-        val x = circleCentre.x + radius * cos(quantizedAngle)
-        val y = circleCentre.y + radius * sin(quantizedAngle)
-        return Vector2f(x.toFloat(), y.toFloat())
+        return Vector2f(x, y)
     }
 
 

@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application.moleditor
 
 
+import org.joml.Math
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.Vector4f
@@ -258,5 +259,43 @@ class OrganicEditorState (
         const val CARBON_IMPLICIT_LIMIT = 4
         const val DOUBLE_BOND_DISTANCE = 0.1f
         const val SNAPPING_DISTANCE = 5.0f
+
+        val COMMON_ANGLES = listOf<Float>(
+
+            //Cardinal directions
+
+            0.0f,                               //EAST
+            Math.PI.toFloat(),                  //WEST
+            - Math.PI.toFloat(),                //WEST
+            0.5f * Math.PI.toFloat(),           //NORTH
+            -0.5f * Math.PI.toFloat(),          //SOUTH
+
+
+            //Semi Cardinal Directions
+            Math.PI.toFloat() / 4,
+            -Math.PI.toFloat() / 4,
+            (Math.PI.toFloat() / 4 ) * 3,
+            (-Math.PI.toFloat() / 4 ) * 3,
+
+
+            //30, 60, 120 degrees
+            Math.PI.toFloat() / 6,
+            -Math.PI.toFloat() / 6,
+            (Math.PI.toFloat() / 6 ) * 5,
+            (-Math.PI.toFloat() / 6) * 5,
+
+
+            (Math.PI.toFloat() / 6 ) * 2,
+            (-Math.PI.toFloat() / 6 ) * 2,
+            (Math.PI.toFloat() / 6 ) * 2 * 5,
+            (-Math.PI.toFloat() / 6 ) * 2 * 5,
+
+
+
+            (Math.PI.toFloat() / 6 ) * 4,
+            (-Math.PI.toFloat() / 6 ) * 4,
+            (Math.PI.toFloat() / 6 ) * 4 * 5,
+            (-Math.PI.toFloat() / 6 ) * 4 * 5,
+            )
     }
 }

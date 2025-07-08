@@ -38,6 +38,10 @@ class TemplateTool(context: ToolCreationContext) : Tool(context) {
                 CompoundInsert.CYCLOPROPANE -> {}
             }
         }
+
+        if (selection is Selection.Active) {
+            //Then we need to fuse the ring to another molecule through a common bond
+        }
     }
 
     override fun processClickRelease(clickDetails: ClickContext) {
