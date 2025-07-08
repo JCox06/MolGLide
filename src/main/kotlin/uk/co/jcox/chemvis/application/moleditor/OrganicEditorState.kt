@@ -278,7 +278,7 @@ class OrganicEditorState (
             (-Math.PI.toFloat() / 4 ) * 3,
 
 
-            //30, 60, 120 degrees
+            //30, 60, 120 degrees - For cyclohexanes and cyclopropanes
             Math.PI.toFloat() / 6,
             -Math.PI.toFloat() / 6,
             (Math.PI.toFloat() / 6 ) * 5,
@@ -287,15 +287,24 @@ class OrganicEditorState (
 
             (Math.PI.toFloat() / 6 ) * 2,
             (-Math.PI.toFloat() / 6 ) * 2,
-            (Math.PI.toFloat() / 6 ) * 2 * 5,
-            (-Math.PI.toFloat() / 6 ) * 2 * 5,
-
 
 
             (Math.PI.toFloat() / 6 ) * 4,
             (-Math.PI.toFloat() / 6 ) * 4,
-            (Math.PI.toFloat() / 6 ) * 4 * 5,
-            (-Math.PI.toFloat() / 6 ) * 4 * 5,
+
+
+//            //72 angle - For cyclopentanes - or 2/5 PI
+            (Math.PI.toFloat() / 5) * 1,
+            (-Math.PI.toFloat() / 5) * 1,
+            (Math.PI.toFloat() / 5) * 2,
+            (-Math.PI.toFloat() / 5) * 2,
+            (Math.PI.toFloat() / 5) * 3,
+            (-Math.PI.toFloat() / 5) * 3,
+            (Math.PI.toFloat() / 5) * 4,
+            (-Math.PI.toFloat() / 5) * 4,
+            (Math.PI.toFloat() / 5) * 5,
+            (-Math.PI.toFloat() / 5) * 5,
+
             )
     }
 }

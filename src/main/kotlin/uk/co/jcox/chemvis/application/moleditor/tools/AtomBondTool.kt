@@ -150,17 +150,6 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
         val lineDirection = tool.proposedDragPos - Vector2f(stationaryPos.x, stationaryPos.y)
         lineDirection.normalize().absolute()
 
-
-        //Todo - This code will allow 3-membered rings possible - But I think calling it here is wrong, so I have stopped it
-//        if (lineDirection.equals(Vector2f(1.0f, 0.0f), 0.001f) || lineDirection.equals(Vector2f(0.0f, 1.0f), 0.001f)) {
-//            val newPos = closestPointToCircleCircumference(Vector2f(stationaryPos.x, stationaryPos.y), mouse, OrganicEditorState.Companion.CONNECTION_DIST)
-//            tool.proposedDragPos = newPos
-//        } else {
-//            //Line is not on coordinate axes (needs to be longer)
-//            val newPos = closestPointToCircleCircumference(Vector2f(stationaryPos.x, stationaryPos.y), mouse, OrganicEditorState.Companion.CONNECTION_DIST_ANGLE)
-//            tool.proposedDragPos = newPos
-//        }
-
         val newPos = closestPointToCircleCircumference(Vector2f(stationaryPos.x, stationaryPos.y), mouse, OrganicEditorState.Companion.CONNECTION_DIST)
         tool.proposedDragPos = newPos
 
