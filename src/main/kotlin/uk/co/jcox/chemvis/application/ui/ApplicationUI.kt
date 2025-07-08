@@ -67,6 +67,14 @@ class ApplicationUI (
                 }
             }
         }
+
+        menuBar.onSwitchAtomBondTool {
+            activeState?.second?.setAtomBondTool()
+        }
+
+        menuBar.onSwitchTemplateTool {
+            activeState?.second?.setTemplateTool()
+        }
     }
 
     fun drawApplicationUI() {
@@ -76,6 +84,8 @@ class ApplicationUI (
         welcomeUI.draw(dockID)
         drawRenderTargets(dockID)
         activeState?.second?.atomInsert = menuBar.getSelectedInsert()
+        activeState?.second?.compoundInsert = menuBar.getSelectedCompoundInsert()
+
 
         screenShotUI?.draw()
     }

@@ -5,6 +5,7 @@ import imgui.ImVec4
 import imgui.flag.ImGuiCol
 import imgui.type.ImInt
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
+import uk.co.jcox.chemvis.application.moleditor.CompoundInsert
 import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.CLOSE_ICON
 import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.CLOSE_WINDOW_ICON
 import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.EDIT_ICON
@@ -21,6 +22,9 @@ class MainMenuBarUI {
     private var undo: (() -> Unit)? = null
     private var redo: (() -> Unit)? = null
     private var screenshot: (() -> Unit)? = null
+
+    private var switchAtomBondTool: (() -> Unit)? = null
+    private var switchTemplateTool: (() -> Unit)? = null
 
 
     private var activeTool = 0
@@ -54,9 +58,22 @@ class MainMenuBarUI {
         this.screenshot =  func
     }
 
+    fun onSwitchAtomBondTool(func: () -> Unit) {
+        this.switchAtomBondTool =  func
+    }
+
+    fun onSwitchTemplateTool(func: () -> Unit) {
+        this.switchTemplateTool =  func
+    }
+
 
     fun getSelectedInsert() : AtomInsert {
         return AtomInsert.entries[activeInsert.get()]
+    }
+
+
+    fun getSelectedCompoundInsert() : CompoundInsert {
+        return CompoundInsert.entries[activeTemplate.get()]
     }
 
 
@@ -129,9 +146,11 @@ class MainMenuBarUI {
     private fun drawTools() {
         if (ImGui.menuItem("${ApplicationUI.ATOM_BOND_TOOL_ICON} Atom Bond Tool", activeTool == 0)) {
             activeTool = 0
+            switchAtomBondTool?.invoke()
         }
         if (ImGui.menuItem("${ApplicationUI.TEMPLATE_TOOL_ICON} Template Tool", activeTool == 1)) {
             activeTool = 1
+            switchTemplateTool?.invoke()
         }
     }
 
@@ -144,7 +163,7 @@ class MainMenuBarUI {
 
         //Tool 1 is the Template Tool
         if (activeTool == 1) {
-            renderButtons(listOf("Benzene", "CycloPentane", "CycloPropane"), activeTemplate, false)
+            renderButtons(CompoundInsert.entries.map { it.ringName }, activeTemplate, false)
         }
     }
 

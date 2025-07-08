@@ -7,6 +7,7 @@ import org.joml.Vector4f
 import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.tools.AtomBondTool
+import uk.co.jcox.chemvis.application.moleditor.tools.TemplateTool
 import uk.co.jcox.chemvis.application.moleditor.tools.Tool
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
@@ -39,11 +40,12 @@ class OrganicEditorState (
     var readOnly = false
 
     var atomInsert = AtomInsert.CARBON
+    var compoundInsert = CompoundInsert.BENZENE
 
     var moformula = "null"
     private set
 
-    private lateinit var atomBondTool: Tool
+    private lateinit var currentTool: Tool
 
     override fun init() {
         workState.init()
@@ -52,14 +54,7 @@ class OrganicEditorState (
 
         setThemeStyle(Vector3f(1.0f, 1.0f, 1.0f), Vector3f(1.0f, 1.0f, 1.0f), 2.5f)
 
-        atomBondTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
-
-        atomBondTool.onCommit {
-            workState.makeCheckpoint(it.clone())
-
-            //After each commit action get a copy of the clp so we dont have to clone it every frame
-            refreshStateCache()
-        }
+        setAtomBondTool()
 
         services.inputs().subscribe(this)
     }
@@ -85,7 +80,7 @@ class OrganicEditorState (
         }
 
 
-        atomBondTool.update()
+        currentTool.update()
 
         val sel = selection.getPrimary()
         if (sel is Selection.Active) {
@@ -121,7 +116,7 @@ class OrganicEditorState (
 
         val transientUI = EntityLevel()
 
-        atomBondTool.renderTransientUI(transientUI)
+        currentTool.renderTransientUI(transientUI)
 
 
         val textEntity = transientUI.addEntity()
@@ -130,8 +125,8 @@ class OrganicEditorState (
 
         levelRenderer.renderLevel(transientUI, camera, viewport)
 
-        if (atomBondTool.inProgress()) {
-            levelRenderer.renderLevel(atomBondTool.workingState.level, camera, viewport)
+        if (currentTool.inProgress()) {
+            levelRenderer.renderLevel(currentTool.workingState.level, camera, viewport)
         } else {
             levelRenderer.renderLevel(clpCache.level, camera, viewport)
         }
@@ -154,7 +149,7 @@ class OrganicEditorState (
 
         if (inputManager.mouseClick(RawInput.MOUSE_1)) {
             val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
-            atomBondTool.processClick(ClickContext(mousePos.x, mousePos.y, atomInsert))
+            currentTool.processClick(ClickContext(mousePos.x, mousePos.y, atomInsert, compoundInsert))
         }
 
     }
@@ -162,14 +157,14 @@ class OrganicEditorState (
 
     fun undo() {
         workState.undo()
-        atomBondTool.refreshWorkingState()
+        currentTool.refreshWorkingState()
         refreshStateCache()
     }
 
 
     fun redo() {
         workState.redo()
-        atomBondTool.refreshWorkingState()
+        currentTool.refreshWorkingState()
         refreshStateCache()
     }
 
@@ -181,7 +176,7 @@ class OrganicEditorState (
 
         if (key == RawInput.MOUSE_1) {
             val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
-            atomBondTool.processClickRelease(ClickContext(mousePos.x, mousePos.y, atomInsert))
+            currentTool.processClickRelease(ClickContext(mousePos.x, mousePos.y, atomInsert, compoundInsert))
         }
     }
 
@@ -220,35 +215,6 @@ class OrganicEditorState (
         refreshStateCache()
     }
 
-
-    fun getBondStyle(): Vector4f {
-        val comp = clpCache.level.getComponent(LineDrawerComponent::class)
-        val cx = comp.colourX
-        val cy = comp.colourY
-        val cz = comp.colourZ
-        val w = comp.width
-
-        if (cx == null || cy == null || cz == null || w  == null) {
-            return Vector4f()
-        }
-        return Vector4f(cx, cy, cz, w)
-    }
-
-
-    fun getTextStyle(): Vector3f {
-        val comp  = clpCache.level.getComponent(TextComponent::class)
-        val cx = comp.colourX
-        val cy = comp.colourY
-        val cz = comp.colourZ
-
-        if (cx == null || cy == null || cz == null) {
-            return Vector3f()
-        }
-
-        return Vector3f(cx, cy, cz)
-    }
-
-
     fun refreshStateCache() {
         this.clpCache = workState.get()
     }
@@ -256,6 +222,30 @@ class OrganicEditorState (
     override fun cleanup() {
 
     }
+
+
+    fun setAtomBondTool() {
+        currentTool = AtomBondTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
+
+        setPushFunc(currentTool)
+    }
+
+
+    fun setTemplateTool() {
+        currentTool = TemplateTool(ToolCreationContext(workState, services.inputs(), renderTargetContext, selection, camera))
+
+        setPushFunc(currentTool)
+    }
+
+    private fun setPushFunc(tool: Tool) {
+        currentTool.onCommit {
+            workState.makeCheckpoint(it.clone())
+
+            //After each commit action get a copy of the clp so we dont have to clone it every frame
+            refreshStateCache()
+        }
+    }
+
 
     companion object {
         const val XY_PLANE = -1.0f

@@ -1,12 +1,9 @@
 package uk.co.jcox.chemvis.application.moleditor.tools
 
-import org.apache.jena.sparql.pfunction.library.str
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
 import org.joml.plus
-import org.xmlcml.euclid.Vector2
-import org.xmlcml.euclid.Vector3
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditor.AtomComponent
 import uk.co.jcox.chemvis.application.moleditor.AtomInsert
@@ -21,7 +18,6 @@ import uk.co.jcox.chemvis.application.moleditor.actions.AtomInsertionAction
 import uk.co.jcox.chemvis.application.moleditor.actions.BondOrderAction
 import uk.co.jcox.chemvis.application.moleditor.actions.ElementalEditAction
 import uk.co.jcox.chemvis.cvengine.scenegraph.EntityLevel
-import uk.co.jcox.chemvis.cvengine.scenegraph.LineDrawerComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TextComponent
 import uk.co.jcox.chemvis.cvengine.scenegraph.TransformComponent
 
@@ -83,7 +79,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
         val selectionMode = context.selectionManager.primarySelection
 
         when (val selector = selectionMode) {
-            is Selection.None -> return Mode.Placement(clickDetails.xPos, clickDetails.yPos, clickDetails.insert)
+            is Selection.None -> return Mode.Placement(clickDetails.xPos, clickDetails.yPos, clickDetails.atomInsert)
 
             is Selection.Active -> {
                 val selectedID = selector.id
@@ -91,7 +87,7 @@ class AtomBondTool(context: ToolCreationContext) : Tool(context){
                 if (selectedEntity == null) {
                     return Mode.None
                 }
-                return Mode.Replacement(selectedEntity, clickDetails.insert)
+                return Mode.Replacement(selectedEntity, clickDetails.atomInsert)
             }
         }
     }
