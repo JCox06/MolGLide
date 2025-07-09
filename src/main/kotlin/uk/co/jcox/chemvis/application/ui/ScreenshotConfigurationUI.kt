@@ -10,6 +10,7 @@ import org.joml.Vector3f
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
+import org.lwjgl.opengl.GL32
 import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditor.Utils
 import uk.co.jcox.chemvis.cvengine.RenderTarget
@@ -23,7 +24,7 @@ class ScreenshotConfigurationUI (
 ) {
 
     val backgroundColour = floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f)
-    val textColour = floatArrayOf(1.0f, 0.0f, 0.0f)
+    val textColour = floatArrayOf(0.0f, 0.41176f, 0.67843f)
     val bondColour = floatArrayOf(0.0f, 0.0f, 0.0f)
     val thickness = floatArrayOf(2.5f)
 

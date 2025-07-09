@@ -23,7 +23,10 @@ class WelcomeUI {
     private var showAbout = false
     private var extendedOpenGL = false
 
-    private var MSAACount = IntArray(1)
+    private var MSAACount = intArrayOf(4)
+    private var globalScale = floatArrayOf(1.0f)
+
+    val highestSamples = GL11.glGetInteger(GL32.GL_MAX_DEPTH_TEXTURE_SAMPLES)
 
     fun draw(dockID: Int) {
 
@@ -34,7 +37,14 @@ class WelcomeUI {
         ImGui.textWrapped("Welcome to MolGLide. Click File -> New to open a new project")
 
         ImGui.separatorText("Graphics Options")
-        ImGui.sliderInt("MSAA Samples (Hardware Restricted)", MSAACount, 2, 128)
+        ImGui.sliderInt("MSAA Samples (Hardware Restricted)", MSAACount, 2, highestSamples)
+        if (ImGui.isItemHovered()) {
+            ImGui.setTooltip("Multi Sampled Antialiasing makes certain lines and text smoother, but comes at a performance cost. The maximum sample size is limited by hardware")
+        }
+
+        if (ImGui.sliderFloat("ImGui Global Scale", globalScale, 0.0f, 5.0f)) {
+            ImGui.getIO().fontGlobalScale = globalScale[0]
+        }
 
         ImGui.separatorText("Debug Options")
 
