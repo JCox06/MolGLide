@@ -33,7 +33,7 @@ class ApplicationUI (
         }
 
         menuBar.onNewOrganicEditor {
-            val renderStateID = mainState.createOrganicEditor()
+            val renderStateID = mainState.createOrganicEditor(welcomeUI.getSamples())
             renderStateIDs.add(renderStateID)
             restoreColour(services.resourceManager().getRenderTarget(renderStateID))
         }

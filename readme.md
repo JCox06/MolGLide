@@ -17,7 +17,7 @@ Chemical structure details are stored using CDK, and the 2D diagrams are stored 
 This project uses the Ubuntu font, see data/chemvis/fonts/ for the full licence.
 
 Screen shot mode:
-![Screenshot](screenshots/v0.0.3/Screenshot-Config.png)
+![Screenshot](screenshots/v0.0.4/DNA-RNA-Bases.png)
 
 ## Building and Running
 All the building issues have now been fixed. Maven should now import the project and be able to build it. To run the project make sure you have Java 21 installed.

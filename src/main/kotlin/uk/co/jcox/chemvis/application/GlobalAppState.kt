@@ -25,10 +25,10 @@ class GlobalAppState (val services: ICVServices, renderTargetContext: IRenderTar
         renderTargetContext.recalculate()
     }
 
-    fun createOrganicEditor() : String {
+    fun createOrganicEditor(samples: Int) : String {
         val newState = OrganicEditorState(services, ImGuiRenderingContext())
         val renderTargetID = "Editor#${idCount++}"
-        services.resourceManager().createMultiSampledRenderTarget(renderTargetID, 4)
+        services.resourceManager().createMultiSampledRenderTarget(renderTargetID, samples)
         services.setApplicationState(newState, renderTargetID)
         return renderTargetID
     }

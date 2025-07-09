@@ -23,6 +23,8 @@ class WelcomeUI {
     private var showAbout = false
     private var extendedOpenGL = false
 
+    private var MSAACount = IntArray(1)
+
     fun draw(dockID: Int) {
 
         ImGui.setNextWindowDockID(dockID)
@@ -30,6 +32,9 @@ class WelcomeUI {
         ImGui.begin("Welcome")
 
         ImGui.textWrapped("Welcome to MolGLide. Click File -> New to open a new project")
+
+        ImGui.separatorText("Graphics Options")
+        ImGui.sliderInt("MSAA Samples (Hardware Restricted)", MSAACount, 2, 128)
 
         ImGui.separatorText("Debug Options")
 
@@ -115,6 +120,10 @@ class WelcomeUI {
 
         ImGui.end()
 
+    }
+
+    fun getSamples() : Int {
+        return MSAACount[0]
     }
 
 

@@ -261,50 +261,20 @@ class OrganicEditorState (
         const val SNAPPING_DISTANCE = 5.0f
 
         val COMMON_ANGLES = listOf<Float>(
-
             //Cardinal directions
+            0.0f, 90.0f, -90.0f, 180.0f, -180.0f,
 
-            0.0f,                               //EAST
-            Math.PI.toFloat(),                  //WEST
-            - Math.PI.toFloat(),                //WEST
-            0.5f * Math.PI.toFloat(),           //NORTH
-            -0.5f * Math.PI.toFloat(),          //SOUTH
+            //Semi Cardinal directions
+            45.0f, 135.0f, -45.0f, -135.0f,
 
+            //Odd angles - For triangles
+            30.0f, -30.0f, 60.0f, -60.0f, 120.0f, -120.0f, 150.0f, -150.0f,
 
-            //Semi Cardinal Directions
-            Math.PI.toFloat() / 4,
-            -Math.PI.toFloat() / 4,
-            (Math.PI.toFloat() / 4 ) * 3,
-            (-Math.PI.toFloat() / 4 ) * 3,
+            //For Pentagons
+            108.0f, -108.0f, 72.0f, -72.0f, 36.0f, -36.0f, 126.0f, -126.0f, 144.0f, -144.0f,
+            18.0f, -18.0f, 162.0f, -162.0f, 126.0f, -126.0f, 36.0f, -36.0f, 54.0f, -54.0f,
 
 
-            //30, 60, 120 degrees - For cyclohexanes and cyclopropanes
-            Math.PI.toFloat() / 6,
-            -Math.PI.toFloat() / 6,
-            (Math.PI.toFloat() / 6 ) * 5,
-            (-Math.PI.toFloat() / 6) * 5,
-
-
-            (Math.PI.toFloat() / 6 ) * 2,
-            (-Math.PI.toFloat() / 6 ) * 2,
-
-
-            (Math.PI.toFloat() / 6 ) * 4,
-            (-Math.PI.toFloat() / 6 ) * 4,
-
-
-//            //72 angle - For cyclopentanes - or 2/5 PI
-            (Math.PI.toFloat() / 5) * 1,
-            (-Math.PI.toFloat() / 5) * 1,
-            (Math.PI.toFloat() / 5) * 2,
-            (-Math.PI.toFloat() / 5) * 2,
-            (Math.PI.toFloat() / 5) * 3,
-            (-Math.PI.toFloat() / 5) * 3,
-            (Math.PI.toFloat() / 5) * 4,
-            (-Math.PI.toFloat() / 5) * 4,
-            (Math.PI.toFloat() / 5) * 5,
-            (-Math.PI.toFloat() / 5) * 5,
-
-            )
+        )
     }
 }

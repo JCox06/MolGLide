@@ -132,10 +132,12 @@ abstract class Tool (
         val directionVec = randomPoint - circleCentre
         val angle = Vector2f(1.0f, 0.0f).angle(directionVec)
 
-        val refinedAngle = OrganicEditorState.COMMON_ANGLES.minBy { abs(it - angle) }
+        val refinedAngle = OrganicEditorState.COMMON_ANGLES.minBy { abs(Math.toRadians(it) - angle) }
 
-        val x = circleCentre.x + radius * cos(refinedAngle)
-        val y = circleCentre.y + radius * sin(refinedAngle)
+        val refinedAngeRad = Math.toRadians(refinedAngle)
+
+        val x = circleCentre.x + radius * cos(refinedAngeRad)
+        val y = circleCentre.y + radius * sin(refinedAngeRad)
 
         return Vector2f(x, y)
     }
