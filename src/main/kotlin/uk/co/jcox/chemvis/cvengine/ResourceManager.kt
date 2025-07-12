@@ -522,6 +522,27 @@ class ResourceManager : IResourceManager{
         renderTargets[id] = target
     }
 
+    override fun createRenderTarget(id: String) {
+        val initialWidth = 1
+        val initialHeight = 1
+
+        val resolvedFrameBuffer = GL30.glGenFramebuffers()
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, resolvedFrameBuffer)
+
+        val resolvedColour = loadTextureToOpenGL(null, initialWidth, initialHeight, GL11.GL_NEAREST, GL11.GL_NEAREST, false)
+        GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, GL11.GL_TEXTURE_2D, resolvedColour, 0)
+
+        val resolvedDepth = GL30.glGenRenderbuffers()
+        GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, resolvedDepth)
+        GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL30.GL_DEPTH24_STENCIL8, initialWidth.toInt(), initialHeight.toInt())
+        GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_STENCIL_ATTACHMENT, GL30.GL_RENDERBUFFER, resolvedDepth)
+
+        logFrameBufferStatus(resolvedFrameBuffer, id, "RESOLVED")
+
+        val target: RenderTarget = RenderTarget(resolvedFrameBuffer, resolvedColour, resolvedDepth, initialWidth.toFloat(), initialHeight.toFloat())
+        renderTargets[id] = target
+
+    }
 
     override fun resizeRenderTarget(id: String, proposedWidth: Float, proposedHeight: Float) {
         val target = renderTargets[id]

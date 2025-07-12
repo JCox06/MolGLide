@@ -74,6 +74,14 @@ interface IResourceManager {
      */
     fun createMultiSampledRenderTarget(id: String, samples: Int = 4)
 
+
+    /**
+     * Creates a render target that exposes a texture to sample in a shader.
+     * Works like the multi-sampled render target, but has no MSAA.
+     * @param id The ID you wish to use for this render target
+     */
+    fun createRenderTarget(id: String)
+
     fun destroyRenderTarget(id: String)
 
     fun getRenderTarget(id: String) : RenderTarget

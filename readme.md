@@ -7,26 +7,31 @@ ___
 
 [Download the latest version here](https://github.com/JCox06/MolGLide/releases) 
 
-MolGLide is a simple 2D molecular editor that I am working on.
-
-It's currently a work in progress, and it will get things wrong. There will be bugs and weird errors.
+MolGLide is a simple 2D molecular editor that I am working on.  It's currently a work in progress, and it will get things wrong. There will be bugs and weird errors.
 
 
 Chemical structure details are stored using CDK, and the 2D diagrams are stored using a custom scene graph. Rendering is provided by OpenGL.
 
 This project uses the Ubuntu font, see data/chemvis/fonts/ for the full licence.
 
-Screen shot mode:
+Screenshot mode:
 ![Screenshot](screenshots/v0.0.4/DNA-RNA-Bases.png)
+_It is then possible to save the image above with options to remove the background_
 
 ## Building and Running
 All the building issues have now been fixed. Maven should now import the project and be able to build it. To run the project make sure you have Java 21 installed.
+1) Install the latest JDK
+2) Install Maven build tool (or use a Java IDE)
+3) Run the commands below in the project directory, or use the bult in tools in your IDE
+4) `mvn clean`
+5) `mvn package`
+6) Now you should have a .jar archive produced in the target directory. 
+7) Run the jar with `java -jar filename.jar`
+
+_Note that only Windows AMD64 and Linux AMD64 are currently supported_
+
 
 ## Todo
 - Rewrite the scene graph and component system. I still need to decide how the new system should be designed and how it should work. But the current system needs an urgent rewrite
 - Fix bugs when taking screenshots (lots of bugs here)
 - Refactor code and make it clearer to read because right now the code is terrible!
-
-## More screenshots
-The following is a screenshot I have taken using screenshot mode, saved with the background removed (Alpha channel set to 0):
-![Screenshot](screenshots/v0.0.3/Screenshot.png)
