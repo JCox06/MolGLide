@@ -18,8 +18,8 @@ Screenshot mode:
 ![Screenshot](screenshots/v0.0.4/DNA-RNA-Bases.png)
 _It is then possible to save the image above with options to remove the background_
 
-## Building and Running
-All the building issues have now been fixed. Maven should now import the project and be able to build it. To run the project make sure you have Java 21 installed.
+## Building
+All the building issues have now been fixed. Maven should now import the project and be able to build it. To run the project make sure you have Java 23 installed.
 1) Install the latest JDK
 2) Install Maven build tool (or use a Java IDE)
 3) Run the commands below in the project directory, or use the bult in tools in your IDE
@@ -30,6 +30,10 @@ All the building issues have now been fixed. Maven should now import the project
 
 _Note that only Windows AMD64 and Linux AMD64 are currently supported_
 
+## Running
+1) Install a JDK 23 (although I have been testing on 17)
+2) Download MolGLide from the releases section on this page 
+3) Extract the archive and run the program (jar file) by double-clicking or using the command line
 
 ## Todo
 - Rewrite the scene graph and component system. I still need to decide how the new system should be designed and how it should work. But the current system needs an urgent rewrite
