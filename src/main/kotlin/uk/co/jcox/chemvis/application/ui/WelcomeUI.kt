@@ -37,7 +37,7 @@ class WelcomeUI {
         ImGui.textWrapped("Welcome to MolGLide. Click File -> New to open a new project")
 
         ImGui.separatorText("Graphics Options")
-        ImGui.sliderInt("MSAA Samples (Hardware Restricted)", MSAACount, 2, highestSamples)
+        ImGui.sliderInt("MSAA Samples (Hardware Restricted)", MSAACount, 1, highestSamples)
         if (ImGui.isItemHovered()) {
             ImGui.setTooltip("Multi Sampled Antialiasing makes certain lines and text smoother, but comes at a performance cost. The maximum sample size is limited by hardware")
         }
