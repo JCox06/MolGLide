@@ -2,8 +2,6 @@
 _2D molecular drawing system_
 ___
 
-Development will resume in one week. 
-
 > [!CAUTION]
 > MolGLide currently exists as a prototype. It just about draws extremely simple molecules and is highly unstable.
 
