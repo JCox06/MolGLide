@@ -28,17 +28,17 @@ class ApplicationUI (
 
 
     fun setup() {
-        menuBar.onQuitApplication {
+        menuBar.quitApplication = {
             services.shutdown()
         }
 
-        menuBar.onNewOrganicEditor {
+        menuBar.newOrganicEditor = {
             val renderStateID = mainState.createOrganicEditor(welcomeUI.getSamples())
             renderStateIDs.add(renderStateID)
             restoreColour(services.resourceManager().getRenderTarget(renderStateID))
         }
 
-        menuBar.onCloseCurrentWindow {
+        menuBar.closeCurrentWindow = {
             val stateID = activeState?.first
 
             if (renderStateIDs.contains(stateID) && stateID != null) {
@@ -48,15 +48,15 @@ class ApplicationUI (
             }
         }
 
-        menuBar.onUndo {
+        menuBar.undo = {
             activeState?.second?.undo()
         }
 
-        menuBar.onRedo {
+        menuBar.redo = {
             activeState?.second?.redo()
         }
 
-        menuBar.onScreenshot {
+        menuBar.screenshot = {
             if (screenShotUI == null) {
                 activeState?.let {
                     setupScreenshotUI(it.first, it.second, services.resourceManager().getRenderTarget(it.first))
@@ -68,11 +68,11 @@ class ApplicationUI (
             }
         }
 
-        menuBar.onSwitchAtomBondTool {
+        menuBar.switchAtomBondTool = {
             activeState?.second?.setAtomBondTool()
         }
 
-        menuBar.onSwitchTemplateTool {
+        menuBar.switchTemplateTool = {
             activeState?.second?.setTemplateTool()
         }
     }

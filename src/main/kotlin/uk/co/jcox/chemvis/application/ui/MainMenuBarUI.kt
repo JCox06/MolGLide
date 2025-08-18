@@ -16,15 +16,14 @@ import uk.co.jcox.chemvis.application.ui.ApplicationUI.Companion.UNDO_ICON
 
 class MainMenuBarUI {
 
-    private var newOrganicEditor: (() -> Unit)? = null
-    private var closeCurrentWindow: (() -> Unit)? = null
-    private var quitApplication: (() -> Unit)? = null
-    private var undo: (() -> Unit)? = null
-    private var redo: (() -> Unit)? = null
-    private var screenshot: (() -> Unit)? = null
-
-    private var switchAtomBondTool: (() -> Unit)? = null
-    private var switchTemplateTool: (() -> Unit)? = null
+     var newOrganicEditor: (() -> Unit)? = null
+     var closeCurrentWindow: (() -> Unit)? = null
+     var quitApplication: (() -> Unit)? = null
+     var undo: (() -> Unit)? = null
+     var redo: (() -> Unit)? = null
+     var screenshot: (() -> Unit)? = null
+     var switchAtomBondTool: (() -> Unit)? = null
+     var switchTemplateTool: (() -> Unit)? = null
 
 
     private var activeTool = 0
@@ -33,38 +32,6 @@ class MainMenuBarUI {
     private val activeTemplate: ImInt = ImInt(0)
 
     var inspectedFormula = "Waiting For Data"
-
-    fun onNewOrganicEditor(func: () -> Unit) {
-        this.newOrganicEditor = func
-    }
-
-    fun onCloseCurrentWindow(func: () -> Unit) {
-        this.closeCurrentWindow = func
-    }
-
-    fun onQuitApplication(func: () -> Unit) {
-        this.quitApplication =  func
-    }
-
-    fun onUndo(func: () -> Unit) {
-        this.undo =  func
-    }
-
-    fun onRedo(func: () -> Unit) {
-        this.redo =  func
-    }
-
-    fun onScreenshot(func: () -> Unit) {
-        this.screenshot =  func
-    }
-
-    fun onSwitchAtomBondTool(func: () -> Unit) {
-        this.switchAtomBondTool =  func
-    }
-
-    fun onSwitchTemplateTool(func: () -> Unit) {
-        this.switchTemplateTool =  func
-    }
 
 
     fun getSelectedInsert() : AtomInsert {
