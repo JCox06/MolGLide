@@ -14,6 +14,9 @@ import kotlin.reflect.KClass
 //A line is not an entity, and is just a class that contains two entities and an offset vec3f
 
 
+
+//todo - This class is being re-written into newScene package!
+
 interface IComponent {
     fun clone() : IComponent
 }
