@@ -17,7 +17,7 @@ open class RenderTarget (
     val resolvedDepthAttachmentRenderBuffer: Int,
     var width: Float,
     var height: Float,
-    val clearColour: Vector4f = Vector4f(0.0f, 0.0f, 0.0f, 1.0f)
+    var clearColour: Vector4f = Vector4f(0.0f, 0.0f, 0.0f, 1.0f)
 ) : AutoCloseable {
 
     /**

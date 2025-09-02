@@ -6,7 +6,6 @@ import java.util.UUID
 class ChemAtom (
     localPos: Vector3f,
     linker: UUID,
-    themeStyle: ThemeStyle,
     val text: String,
-) : ChemObject(localPos, linker, themeStyle) {
+) : ChemObject(localPos, linker) {
 }

@@ -2,16 +2,15 @@ package uk.co.jcox.chemvis.application
 
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
+import uk.co.jcox.chemvis.application.mainstate.MainState
 import uk.co.jcox.chemvis.application.ui.ApplicationUI
 import uk.co.jcox.chemvis.cvengine.*
 import java.io.File
 
 class MolGLide : IApplication, IInputSubscriber {
     private lateinit var services: ICVServices
+    private lateinit var ui: ApplicationUI
 
-    private lateinit var mainState: GlobalAppState
-
-    private lateinit var mainApplicationUI: ApplicationUI
 
     override fun init(engineServices: ICVServices) {
         this.services = engineServices
@@ -19,20 +18,20 @@ class MolGLide : IApplication, IInputSubscriber {
         GL11.glClearColor(0.22f, 0.22f, 0.26f, 1.0f)
         loadCoreAssets()
         services.inputs().subscribe(this)
-        newState()
-    }
 
 
-    private fun newState() {
-        val windowContext = WindowRenderingContext(services)
-
-        mainState = GlobalAppState(services, windowContext)
-
+        //Setup the main application state.
+        //This application is bound to the main GLFW window - so has a render target of null
+        //This main state is always running and manages the smaller mol editor states that are bound to the GLFW target windows
+        //IMPORTANT*** - The UI sits above the main state
+        val mainState = MainState(services, WindowRenderingContext(services))
         services.setApplicationState(mainState, null)
 
-        mainApplicationUI = ApplicationUI(mainState, services)
-        mainApplicationUI.setup()
+        ui = ApplicationUI(mainState, services)
+        ui.setup()
     }
+
+
 
     override fun loop() {
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT or GL11.GL_DEPTH_BUFFER_BIT)
@@ -40,8 +39,8 @@ class MolGLide : IApplication, IInputSubscriber {
         val wm = services.windowMetrics()
         services.setViewport(0, 0, wm.x, wm.y)
 
-        mainApplicationUI.drawApplicationUI()
 
+        ui.drawApplicationUI()
     }
 
 

@@ -32,7 +32,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private lateinit var batcher: Batch2D
     private lateinit var instancer: InstancedRenderer
     private lateinit var resourceManager: IResourceManager
-    private lateinit var levelRenderer: LevelRenderer
 
 
     private val appRenderStates: MutableMap<String?, ApplicationState> = mutableMapOf()
@@ -107,7 +106,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         this.batcher = Batch2D()
         this.instancer = InstancedRenderer()
         this.resourceManager = ResourceManager()
-        this.levelRenderer = LevelRenderer(batcher, instancer, resourceManager)
         Logger.info{"Success! InputManager, Batcher, Instancer, ResourceManager, and LevelRenderer have all started"}
     }
 
@@ -327,10 +325,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     override fun batchRenderer(): Batch2D {
         return this.batcher
-    }
-
-    override fun levelRenderer(): LevelRenderer {
-        return levelRenderer
     }
 
     override fun resourceManager(): IResourceManager {

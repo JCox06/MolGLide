@@ -15,7 +15,6 @@ import org.openscience.cdk.tools.IDeduceBondOrderTool
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator
 import org.tinylog.Logger
-import uk.co.jcox.chemvis.application.moleditor.AtomInsert
 import java.util.UUID
 
 class CDKotMan (
@@ -130,9 +129,11 @@ class CDKotMan (
             hydrogenAdder.addImplicitHydrogens(cdkMolecule)
 
             for (atom in cdkMolecule.atoms()) {
-                if (!AtomInsert.fromSymbol(atom.symbol).hydrogenable) {
-                    atom.implicitHydrogenCount = 0
-                }
+//                if (!AtomInsert.fromSymbol(atom.symbol).hydrogenable) {
+//                    atom.implicitHydrogenCount = 0
+//                }
+
+                //todo reimplement this once the new system is in place
             }
         } catch (e: CDKException) {
             Logger.error ("Error when calculating molecule type {}", e)

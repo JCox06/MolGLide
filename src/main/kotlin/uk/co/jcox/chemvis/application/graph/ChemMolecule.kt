@@ -6,8 +6,8 @@ import java.util.UUID
 class ChemMolecule (
     localPos: Vector3f,
     bridge: UUID,
-    themeStyle: ThemeStyle
-) : ChemObject(localPos, bridge, themeStyle) {
+) : ChemObject(localPos, bridge) {
 
     val atoms = mutableListOf<ChemAtom>()
+    val bonds = mutableListOf<ChemBond>()
 }
