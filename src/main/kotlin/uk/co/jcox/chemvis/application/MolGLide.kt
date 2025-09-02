@@ -41,6 +41,7 @@ class MolGLide : IApplication, IInputSubscriber {
         services.setViewport(0, 0, wm.x, wm.y)
 
         mainApplicationUI.drawApplicationUI()
+
     }
 
 
