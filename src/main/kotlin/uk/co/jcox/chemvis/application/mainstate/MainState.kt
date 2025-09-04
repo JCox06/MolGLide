@@ -19,7 +19,7 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
 
 
     private val themeStyleManager = ThemeStyleManager()
-    private val levelRenderer = LevelRenderer(themeStyleManager)
+    private val levelRenderer = LevelRenderer(services.batchRenderer(), services.instancedRenderer(), services.resourceManager(), themeStyleManager)
 
     fun createNewEditor() : String {
        val newEditor = OrganicEditorState(services, ImGuiRenderingContext(), levelRenderer)

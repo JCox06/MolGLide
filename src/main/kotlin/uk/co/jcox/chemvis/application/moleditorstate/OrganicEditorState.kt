@@ -3,6 +3,7 @@ package uk.co.jcox.chemvis.application.moleditorstate
 import org.apache.jena.sparql.function.library.context
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
@@ -34,11 +35,12 @@ class OrganicEditorState (
     }
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
-
+        camera.update(renderTargetContext.getWidth().toInt(), renderingContext.getHeight().toInt())
     }
 
     override fun render(viewport: Vector2f) {
-        renderer.renderLevel(this.levelContainer, viewport)
+        GL11.glViewport(0, 0, renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
+        renderer.renderLevel(this.levelContainer, camera, viewport)
     }
 
     override fun cleanup() {
@@ -55,8 +57,8 @@ class OrganicEditorState (
 
     override fun clickEvent(inputManager: InputManager, key: RawInput) {
         //So lets just add a small molecule in here to see if rendering works
-        val atom = ChemAtom(Vector3f(), UUID.randomUUID(), "HELLO")
-        val molecule = ChemMolecule(Vector3f(), UUID.randomUUID())
+        val atom = ChemAtom(Vector3f(0.0f, 0.0f, 0.0f), UUID.randomUUID(), "CH4")
+        val molecule = ChemMolecule(Vector3f(mouseWorld(), -2.0f), UUID.randomUUID())
         molecule.atoms.add(atom)
 
         levelContainer.sceneMolecules.add(molecule)
@@ -78,7 +80,9 @@ class OrganicEditorState (
     }
 
     override fun mouseScrollEvent(inputManager: InputManager, xScroll: Double, yScroll: Double) {
-
+        if (inputManager.keyClick(RawInput.LCTRL)) {
+            this.camera.camWidth -= yScroll.toFloat() * 2;
+        }
     }
 
 
