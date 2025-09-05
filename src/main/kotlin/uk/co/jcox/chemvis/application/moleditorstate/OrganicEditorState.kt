@@ -49,6 +49,9 @@ class OrganicEditorState (
 
     override fun render(viewport: Vector2f) {
         GL11.glViewport(0, 0, renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
+
+        currentTool.renderTransients(services.resourceManager())
+
         renderer.renderLevel(this.levelContainer, camera, viewport)
     }
 
@@ -100,5 +103,6 @@ class OrganicEditorState (
 
     companion object {
         const val ATOM_PLANE = -3.0f
+        const val MARKER_PLANE = -2.0f
     }
 }

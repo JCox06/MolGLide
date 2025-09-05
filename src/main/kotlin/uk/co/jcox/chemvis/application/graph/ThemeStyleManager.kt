@@ -27,7 +27,7 @@ class ThemeStyleManager {
 
     companion object {
         val MolGLideEditTheme = ThemeStyle(
-            backgroundColour = Vector4f(0.1f, 0.1f, 0.1f, 0.1f),
+            backgroundColour = Vector4f(0.15f, 0.16f, 0.16f, 1.0f),
             hydrogenColour = Vector3f(1.0f, 1.0f, 1.0f),
             carbonColour = Vector3f(1.0f, 1.0f, 1.0f),
             nitrogenColour = Vector3f(1.0f, 1.0f, 1.0f),

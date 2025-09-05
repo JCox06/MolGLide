@@ -10,7 +10,9 @@ import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
+import uk.co.jcox.chemvis.cvengine.IResourceManager
 import uk.co.jcox.chemvis.cvengine.InputManager
+import uk.co.jcox.chemvis.cvengine.ResourceManager
 import java.util.UUID
 
 class AtomBondTool (
@@ -40,7 +42,12 @@ class AtomBondTool (
     }
 
 
+    override fun renderTransients(resourceManager: IResourceManager) {
+        renderTransientSelectionMarker(resourceManager)
+    }
+
     private fun createNewMolecule() {
+
     }
 
 
