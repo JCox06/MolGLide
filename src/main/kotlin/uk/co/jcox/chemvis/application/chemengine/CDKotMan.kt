@@ -34,6 +34,19 @@ class CDKotMan (
         return id
     }
 
+
+    override fun deleteMolecule(uuid: UUID) {
+        molecules.remove(uuid)
+    }
+
+    override fun deleteAtom(uuid: UUID) {
+        atoms.remove(uuid)
+    }
+
+    override fun deleteBond(uuid: UUID) {
+        bonds.remove(uuid)
+    }
+
     override fun addAtom(molecule: UUID, element: String): UUID {
         val cdkContainer = molecules[molecule]
 

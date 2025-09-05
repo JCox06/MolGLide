@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.graph.LevelContainer
+import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.cvengine.CVEngine
@@ -23,7 +24,8 @@ abstract class Tool(
     private val inputManager: InputManager,
     private val camera2D: Camera2D,
     protected val levelContainer: LevelContainer,
-    protected val selectionManager: SelectionManager
+    protected val selectionManager: SelectionManager,
+    protected val actionManager: ActionManager,
 ) {
 
 

@@ -25,14 +25,16 @@ class OrganicEditorState (
     val services: ICVServices,
     val renderingContext: IRenderTargetContext,
     val renderer: LevelRenderer,
-    val toolbox: ToolboxContext,
+    toolbox: ToolboxContext,
 ) : ApplicationState(renderingContext), IInputSubscriber {
 
+
     private val levelContainer = LevelContainer()
+    private val actionManager = ActionManager(levelContainer)
     private val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
     private val selectionManager = SelectionManager()
 
-    private val currentTool: Tool = AtomBondTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager)
+    private val currentTool: Tool = AtomBondTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
 
     override fun init() {
 
@@ -75,6 +77,24 @@ class OrganicEditorState (
 
             currentTool.onClick(mousePos.x, mousePos.y)
         }
+
+        //Check if CTRL key is being held down
+        if (inputManager.keyClick(RawInput.LCTRL)) {
+            if (key == RawInput.KEY_Z) {
+                undo()
+            }
+            if (key == RawInput.KEY_Y) {
+                redo()
+            }
+        }
+    }
+
+    fun undo() {
+        actionManager.undoLastAction()
+    }
+
+    fun redo() {
+        actionManager.restoreLastAction()
     }
 
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
