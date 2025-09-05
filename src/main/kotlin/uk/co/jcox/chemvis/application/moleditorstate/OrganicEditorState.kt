@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application.moleditorstate
 
 import org.apache.jena.sparql.function.library.context
+import org.apache.jena.sparql.function.library.print
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
@@ -10,6 +11,7 @@ import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.graph.LevelRenderer
 import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
+import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -22,13 +24,15 @@ import java.util.UUID
 class OrganicEditorState (
     val services: ICVServices,
     val renderingContext: IRenderTargetContext,
-    val renderer: LevelRenderer
+    val renderer: LevelRenderer,
+    val toolbox: ToolboxContext,
 ) : ApplicationState(renderingContext), IInputSubscriber {
 
     private val levelContainer = LevelContainer()
     private val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
+    private val selectionManager = SelectionManager()
 
-    private val currentTool: Tool = AtomBondTool()
+    private val currentTool: Tool = AtomBondTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager)
 
     override fun init() {
 
@@ -36,6 +40,11 @@ class OrganicEditorState (
 
     override fun update(inputManager: InputManager, timeElapsed: Float) {
         camera.update(renderTargetContext.getWidth().toInt(), renderingContext.getHeight().toInt())
+
+        if (!inputManager.mouseClick(RawInput.MOUSE_1)) {
+            val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
+            selectionManager.update(levelContainer, mousePos.x, mousePos.y)
+        }
     }
 
     override fun render(viewport: Vector2f) {
@@ -56,16 +65,20 @@ class OrganicEditorState (
     }
 
     override fun clickEvent(inputManager: InputManager, key: RawInput) {
-        //So lets just add a small molecule in here to see if rendering works
-        val atom = ChemAtom(Vector3f(0.0f, 0.0f, 0.0f), UUID.randomUUID(), "CH4")
-        val molecule = ChemMolecule(Vector3f(mouseWorld(), -2.0f), UUID.randomUUID())
-        molecule.atoms.add(atom)
+        val mousePosScreen = renderingContext.getMousePos(inputManager)
 
-        levelContainer.sceneMolecules.add(molecule)
+        if (key == RawInput.MOUSE_1) {
+            val mousePos = camera.screenToWorld(mousePosScreen)
+
+            currentTool.onClick(mousePos.x, mousePos.y)
+        }
     }
 
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
-
+        if (key == RawInput.MOUSE_1) {
+            val mousePos = camera.screenToWorld(renderingContext.getMousePos(inputManager))
+            currentTool.onRelease(mousePos.x, mousePos.y)
+        }
     }
 
     override fun mouseMoveEvent(inputManager: InputManager, xPos: Double, yPos: Double) {
@@ -85,9 +98,7 @@ class OrganicEditorState (
         }
     }
 
-
-    fun mouseWorld() : Vector2f {
-        val mousePos = renderingContext.getMousePos(services.inputs())
-        return camera.screenToWorld(mousePos)
+    companion object {
+        const val ATOM_PLANE = -3.0f
     }
 }

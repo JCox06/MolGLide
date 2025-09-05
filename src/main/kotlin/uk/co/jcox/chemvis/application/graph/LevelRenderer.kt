@@ -34,7 +34,7 @@ class LevelRenderer (
     fun renderLevel(container: LevelContainer, camera2D: Camera2D, viewport: Vector2f) {
 
         //Group everything together
-        val atomEntities: MutableMap<ChemAtom, Vector3f> = mutableMapOf()
+        val atomEntities: MutableList<ChemAtom> = mutableListOf()
 
         traverseAndCollect(container, atomEntities)
 
@@ -43,34 +43,33 @@ class LevelRenderer (
     }
 
 
-    private fun traverseAndCollect(container: LevelContainer, atomTextMap: MutableMap<ChemAtom, Vector3f>) {
+    private fun traverseAndCollect(container: LevelContainer, atomsFound: MutableList<ChemAtom>) {
 
         //Go through every molecule, noting down the molecule position
         container.sceneMolecules.forEach { mol ->
-            val posMod = mol.localPos
+
             //Now go through every atom
             mol.atoms.forEach { atom ->
-                val globalPos = posMod + atom.localPos
-                atomTextMap[atom] = globalPos
+                atomsFound.add(atom)
             }
         }
     }
 
 
-    private fun renderAtomSymbols(atoms: Map<ChemAtom, Vector3f>, camera2D: Camera2D) {
+    private fun renderAtomSymbols(atoms: List<ChemAtom>, camera2D: Camera2D) {
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
         val textProgram = resources.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
         textProgram.uniform("uPerspective", camera2D.combined())
 
-        atoms.forEach { atom, pos ->
-            renderSymbol(atom, pos, textProgram)
+        atoms.forEach { atom, ->
+            renderSymbol(atom, textProgram)
         }
 
         GL11.glDisable(GL11.GL_BLEND)
     }
 
-    private fun renderSymbol(entity: ChemAtom, pos: Vector3f, program: ShaderProgram) {
+    private fun renderSymbol(entity: ChemAtom, program: ShaderProgram) {
         val theme = themeStyleManager.activeTheme
 
         val fontID = MolGLide.FONT
@@ -85,7 +84,9 @@ class LevelRenderer (
         program.uniform("uLight", colour)
         program.uniform("uModel", Matrix4f())
 
-        var renderX = pos.y
+        val pos = entity.getWorldPosition()
+
+        var renderX = pos.x
         val renderY = pos.y
 
         batcher.begin(Batch2D.Mode.TRIANGLES)

@@ -6,13 +6,17 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import org.joml.Vector2f
 import uk.co.jcox.chemvis.application.mainstate.MainState
+import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
+import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
 import uk.co.jcox.chemvis.cvengine.ICVServices
 
 class ApplicationUI (
     val appManager: MainState,
     val engineManager: ICVServices,
 ) {
+
 
     private val menuBar = MenuBar(appManager, engineManager)
 

@@ -4,7 +4,9 @@ import org.joml.Vector2f
 import uk.co.jcox.chemvis.application.graph.LevelRenderer
 import uk.co.jcox.chemvis.application.graph.ThemeStyle
 import uk.co.jcox.chemvis.application.graph.ThemeStyleManager
+import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
@@ -21,8 +23,10 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
     private val themeStyleManager = ThemeStyleManager()
     private val levelRenderer = LevelRenderer(services.batchRenderer(), services.instancedRenderer(), services.resourceManager(), themeStyleManager)
 
+    val toolboxContext = ToolboxContext(AtomInsert.CARBON)
+
     fun createNewEditor() : String {
-       val newEditor = OrganicEditorState(services, ImGuiRenderingContext(), levelRenderer)
+       val newEditor = OrganicEditorState(services, ImGuiRenderingContext(), levelRenderer, toolboxContext)
         val stateRenderID = "Editor#${idCount++}"
 
         services.resourceManager().createMultiSampledRenderTarget(stateRenderID, 8)
