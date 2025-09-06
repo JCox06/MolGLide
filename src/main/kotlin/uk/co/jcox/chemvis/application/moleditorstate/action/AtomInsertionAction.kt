@@ -25,6 +25,8 @@ class AtomInsertionAction (
     private var newStructBond: UUID? = null
     private var newLevelBond: ChemBond? = null
 
+    private var wasVisibleBefore = false
+
     override fun execute(levelContainer: LevelContainer) {
         //First turn off hydrogens for the old atom if it is carbon (only for source carbon)
         disableHydrogensForCarbon()
@@ -58,8 +60,11 @@ class AtomInsertionAction (
     }
 
     override fun undo(levelContainer: LevelContainer) {
+
+        //todo - Not currently working
+
         //Does the opposite of execute
-        enableHydrogensForCarbon()
+        srcAtom.visible = wasVisibleBefore
 
         srcMol.atoms.remove(newLevelAtom)
         srcMol.bonds.remove(newLevelBond)
@@ -73,16 +78,13 @@ class AtomInsertionAction (
     }
 
     private fun disableHydrogensForCarbon() {
+        wasVisibleBefore = srcAtom.visible
+
         if (srcAtom.text == "C") {
             srcAtom.visible = false
         }
     }
 
-    private fun enableHydrogensForCarbon() {
-        if (srcAtom.text == "C") {
-            srcAtom.visible = true
-        }
-    }
 
     private fun createNewStructAtom(levelContainer: LevelContainer, mol: UUID, symbol: String): UUID {
         val srcStructMolcule = srcMol.molManagerLink

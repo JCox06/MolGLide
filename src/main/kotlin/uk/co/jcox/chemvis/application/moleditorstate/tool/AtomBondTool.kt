@@ -1,9 +1,14 @@
 package uk.co.jcox.chemvis.application.moleditorstate.tool
 
+import org.joml.Vector2f
+import org.joml.Vector3f
+import org.joml.minus
+import org.xmlcml.euclid.Vector2
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
+import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomInsertionAction
@@ -79,7 +84,20 @@ class AtomBondTool (
         val currentMode = toolMode
         if (currentMode is Mode.AtomInsertionDragging) {
             //Drag the atom around in a circle near the mouse
+            handleNewAtomDragging(currentMode)
         }
+    }
+
+    private fun handleNewAtomDragging(mode: Mode.AtomInsertionDragging) {
+        val mousePos = mouseWorld()
+        val srcPos = mode.srcAtom.getWorldPosition()
+
+        val newAtomPos = closestPointToCircleCircumference(Vector2f(srcPos.x, srcPos.y), mousePos, OrganicEditorState.CONNECTION_DISTANCE)
+
+        val localTransform = mode.srcAtom.parent.localPos
+        val localAtomTransform = Vector3f(newAtomPos.x, newAtomPos.y, 0.0f) - localTransform
+        mode.destAtom.localPos.x = localAtomTransform.x
+        mode.destAtom.localPos.y = localAtomTransform.y
     }
 
     sealed class Mode {

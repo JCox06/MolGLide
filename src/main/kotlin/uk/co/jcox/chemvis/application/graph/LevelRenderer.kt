@@ -17,7 +17,7 @@ import uk.co.jcox.chemvis.cvengine.InstancedRenderer
 import uk.co.jcox.chemvis.cvengine.ShaderProgram
 import uk.co.jcox.chemvis.cvengine.Shaper2D
 
-class LevelRenderer (
+class LevelRenderer(
     private val batcher: Batch2D,
     private val instancer: InstancedRenderer,
     private val resources: IResourceManager,
@@ -48,7 +48,11 @@ class LevelRenderer (
     }
 
 
-    private fun traverseAndCollect(container: LevelContainer, atomsFound: MutableList<ChemAtom>, bondsFound: MutableList<ChemBond>) {
+    private fun traverseAndCollect(
+        container: LevelContainer,
+        atomsFound: MutableList<ChemAtom>,
+        bondsFound: MutableList<ChemBond>
+    ) {
 
         //Go through every molecule, noting down the molecule position
         container.sceneMolecules.forEach { mol ->
@@ -65,7 +69,6 @@ class LevelRenderer (
     }
 
 
-
     private fun renderBondLines(bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
         val lineProgram = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
         lineProgram.uniform("uPerspective", camera2D.combined())
@@ -77,20 +80,22 @@ class LevelRenderer (
         val instanceData = mutableListOf<Float>()
 
         val lineColour = themeStyleManager.activeTheme.lineColour
-        val lineThickness = 1.5f
+        val lineThickness = 2.0f
 
         lineProgram.uniform("uLight", lineColour)
 
 
-
         for (line in bonds) {
+
+
             val start = line.atomA.getWorldPosition() + line.localPos
             val end = line.atomB.getWorldPosition() + line.localPos
 
-            val perInstanceData = listOf<Float>(start.x, start.y, start.z, end.x, end.y, end.z, lineThickness)
 
+            val perInstanceData = listOf<Float>(start.x, start.y, start.z, end.x, end.y, end.z, lineThickness)
             instanceData.addAll(perInstanceData)
         }
+
 
         instancer.drawLines(glMesh, instanceData)
     }
@@ -102,17 +107,18 @@ class LevelRenderer (
         val textProgram = resources.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
         textProgram.uniform("uPerspective", camera2D.combined())
 
-        atoms.forEach { atom, ->
+        atoms.forEach { atom ->
             //Render the atom symbol
             val worldPos = atom.getWorldPosition()
             if (atom.visible) {
-                renderString(atom.text, worldPos,  textProgram)
+                renderString(atom.text, worldPos, textProgram)
             }
 
             //Check to see if this atom has any implicit hydrogens
             if (atom.implicitHydrogenCount >= 1 && atom.visible) {
                 if (atom.implicitHydrogenPos != ChemAtom.RelationalPos.LEFT) {
-                    val implicitHPos = atom.implicitHydrogenPos.mod * MolGLide.GLOBAL_SCALE * MolGLide.FONT_SIZE.toFloat() * 0.75f
+                    val implicitHPos =
+                        atom.implicitHydrogenPos.mod * MolGLide.GLOBAL_SCALE * MolGLide.FONT_SIZE.toFloat() * 0.75f
                     renderString("H${atom.implicitHydrogenCount}", implicitHPos + worldPos, textProgram)
                 } else {
                     Logger.warn { "Implicit left groups are not currently supported" }
@@ -148,7 +154,7 @@ class LevelRenderer (
         for (c in label) {
             var character = c
 
-            if (! fontData.glyphs.keys.contains(c)) {
+            if (!fontData.glyphs.keys.contains(c)) {
                 character = fontData.glyphs.keys.first()
             }
 
@@ -158,13 +164,17 @@ class LevelRenderer (
                 return
             }
 
-            val width = glyphMetrics.glyphWidth *  scale /2
-            val height = glyphMetrics.glyphHeight * scale /2
+            val width = glyphMetrics.glyphWidth * scale / 2
+            val height = glyphMetrics.glyphHeight * scale / 2
 
             //Does not work!
 //            val meshToDraw = Shaper2D.rectangle(renderX + width, renderY + height, width, height, (Text rendering works fine If you use this line instead of the one below) - However then the text is uncentred
-            val meshToDraw = Shaper2D.rectangle(renderX, renderY, width, height,
-                Vector2f(glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX, glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY),
+            val meshToDraw = Shaper2D.rectangle(
+                renderX, renderY, width, height,
+                Vector2f(
+                    glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX,
+                    glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY
+                ),
                 Vector2f(glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
                 Vector2f(0.0f + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
                 Vector2f(0.0f + glyphMetrics.textureUnitX, glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY)
@@ -178,7 +188,7 @@ class LevelRenderer (
     }
 
 
-    private fun getSymbolColour(symbol: String) : Vector3f {
+    private fun getSymbolColour(symbol: String): Vector3f {
         return Vector3f(1.0f, 1.0f, 1.0f)
     }
 }

@@ -20,6 +20,7 @@ class ApplicationUI (
 
     private val menuBar = MenuBar(appManager, engineManager)
     private val welcomeUI = WelcomeUI()
+    private var activeSession: OrganicEditorState? = null
 
     fun setup() {
 
@@ -29,6 +30,18 @@ class ApplicationUI (
 
         welcomeUI.newWindow = newWin
         menuBar.newWindow = newWin
+
+        menuBar.undo = {
+            activeSession?.undo()
+        }
+
+        menuBar.redo = {
+            activeSession?.redo()
+        }
+
+        menuBar.getFormula = {
+            activeSession?.getFormula()
+        }
 
         welcomeUI.setup()
     }
@@ -61,6 +74,9 @@ class ApplicationUI (
             renderContext?.setRelativeWindowPos(Vector2f(windowPos.x, windowPos.y))
 
             val state = engineManager.getState(id)
+            if (state is OrganicEditorState) {
+                activeSession = state
+            }
 
             if (ImGui.isWindowHovered()) {
                 engineManager.resumeAppState(id)
@@ -89,6 +105,12 @@ class ApplicationUI (
 
         var newWindow: () -> Unit = {}
 
+        var undo: () -> Unit = {}
+
+        var redo: () -> Unit = {}
+
+        var getFormula: () -> String? = {"Waiting..."}
+
         fun draw() {
 
             if (ImGui.beginMainMenuBar()) {
@@ -110,6 +132,8 @@ class ApplicationUI (
                 drawEditMenu()
                 ImGui.endMenu()
             }
+
+            ImGui.text("Formula: ${getFormula()}")
         }
 
 
@@ -135,10 +159,10 @@ class ApplicationUI (
 
         private fun drawEditMenu() {
             if (ImGui.menuItem("${Icons.UNDO_ICON} Undo")) {
-                TODO("Use the keyboard shortcut for now")
+                undo()
             }
             if (ImGui.menuItem("${Icons.REDO_ICON} Redo")) {
-                TODO("Use the keyboard shortcut for now")
+                redo()
             }
         }
     }

@@ -2,6 +2,7 @@ package uk.co.jcox.chemvis.application.moleditorstate
 
 import org.apache.jena.sparql.function.library.context
 import org.apache.jena.sparql.function.library.print
+import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
@@ -47,6 +48,8 @@ class OrganicEditorState (
             val mousePos = camera.screenToWorld(renderTargetContext.getMousePos(inputManager))
             selectionManager.update(levelContainer, mousePos.x, mousePos.y)
         }
+
+        currentTool.update()
     }
 
     override fun render(viewport: Vector2f) {
@@ -121,8 +124,38 @@ class OrganicEditorState (
         }
     }
 
+    fun getFormula() : String {
+        val selection = selectionManager.primarySelection
+        if (selection is SelectionManager.Type.Active) {
+            val atom = selection.atom
+            val molecule = atom.parent
+
+            return levelContainer.structMolecules.getMolecularFormula(molecule.molManagerLink)
+        }
+        return "No molecule selected"
+    }
+
     companion object {
         const val ATOM_PLANE = -3.0f
         const val MARKER_PLANE = -2.0f
+        const val CONNECTION_DISTANCE = 30.0f
+
+
+        val COMMON_ANGLES = listOf<Float>(
+            //Cardinal directions
+            0.0f, 90.0f, -90.0f, 180.0f, -180.0f,
+
+            //Semi Cardinal directions
+            45.0f, 135.0f, -45.0f, -135.0f,
+
+            //Odd angles - For triangles
+            30.0f, -30.0f, 60.0f, -60.0f, 120.0f, -120.0f, 150.0f, -150.0f,
+
+            //For Pentagons
+            108.0f, -108.0f, 72.0f, -72.0f, 36.0f, -36.0f, 126.0f, -126.0f, 144.0f, -144.0f,
+            18.0f, -18.0f, 162.0f, -162.0f, 126.0f, -126.0f, 36.0f, -36.0f, 54.0f, -54.0f,
+
+
+            )
     }
 }
