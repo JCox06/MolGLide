@@ -60,6 +60,7 @@ abstract class Tool(
         }
     }
 
+    abstract fun update()
 
     protected fun mouseWorld(): Vector2f {
         val mousePos = renderingContext.getMousePos(inputManager)

@@ -27,8 +27,7 @@ class ActionManager (
     fun restoreLastAction() {
         if (discardedActions.isNotEmpty()) {
             val last = discardedActions.removeLast()
-            last.execute(levelContainer)
-            pastActions.addLast(last)
+            executeAction(last)
         }
     }
 }

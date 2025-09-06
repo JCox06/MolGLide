@@ -15,6 +15,7 @@ import org.openscience.cdk.tools.IDeduceBondOrderTool
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator
 import org.tinylog.Logger
+import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import java.util.UUID
 
 class CDKotMan (
@@ -39,12 +40,16 @@ class CDKotMan (
         molecules.remove(uuid)
     }
 
-    override fun deleteAtom(uuid: UUID) {
-        atoms.remove(uuid)
+    override fun deleteAtom(mol: UUID, atom: UUID) {
+        val atom = atoms.remove(atom)
+        val container = molecules[mol]
+        container?.removeAtom(atom)
     }
 
-    override fun deleteBond(uuid: UUID) {
-        bonds.remove(uuid)
+    override fun deleteBond(mol: UUID, bond: UUID) {
+        val bond = bonds.remove(bond)
+        val container = molecules[mol]
+        container?.removeBond(bond)
     }
 
     override fun addAtom(molecule: UUID, element: String): UUID {
@@ -142,9 +147,9 @@ class CDKotMan (
             hydrogenAdder.addImplicitHydrogens(cdkMolecule)
 
             for (atom in cdkMolecule.atoms()) {
-//                if (!AtomInsert.fromSymbol(atom.symbol).hydrogenable) {
-//                    atom.implicitHydrogenCount = 0
-//                }
+                if (!AtomInsert.fromSymbol(atom.symbol).hydrogenable) {
+                    atom.implicitHydrogenCount = 0
+                }
 
                 //todo reimplement this once the new system is in place
             }

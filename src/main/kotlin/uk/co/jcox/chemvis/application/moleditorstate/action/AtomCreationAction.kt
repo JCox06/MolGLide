@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application.moleditorstate.action
 
+import org.apache.jena.sparql.pfunction.library.str
 import org.joml.Vector3f
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
@@ -40,6 +41,11 @@ class AtomCreationAction (
         this.levelMolecule = levelMolecule
         this.structMolecule = structMolecule
         this.structAtom = structAtom
+
+        //Get the updated values from CDK and send them to the view
+        levelContainer.structMolecules.recalculate(structMolecule)
+        val hydrogenCount = levelContainer.structMolecules.getImplicitHydrogens(structAtom)
+        levelAtom.implicitHydrogenCount = hydrogenCount
     }
 
 
@@ -51,12 +57,15 @@ class AtomCreationAction (
         levelContainer.sceneMolecules.remove(this.levelMolecule)
 
         //And now remove the structs
-        this.structAtom?.let {
-            levelContainer.structMolecules.deleteAtom(it)
+        val structMol = this.structMolecule
+        if (structMol != null) {
+            this.structAtom?.let {
+                levelContainer.structMolecules.deleteAtom(structMol, it)
+            }
+            levelContainer.structMolecules.deleteMolecule(structMol)
         }
-        this.structMolecule?.let {
-            levelContainer.structMolecules.deleteMolecule(it)
 
-        }
+
+
     }
 }

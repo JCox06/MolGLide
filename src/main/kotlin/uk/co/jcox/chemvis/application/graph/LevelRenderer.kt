@@ -4,8 +4,10 @@ import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.plus
+import org.joml.times
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
+import org.tinylog.Logger
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.cvengine.Batch2D
 import uk.co.jcox.chemvis.cvengine.CVEngine
@@ -35,15 +37,18 @@ class LevelRenderer (
 
         //Group everything together
         val atomEntities: MutableList<ChemAtom> = mutableListOf()
+        val bondEntities: MutableList<ChemBond> = mutableListOf()
 
-        traverseAndCollect(container, atomEntities)
+        traverseAndCollect(container, atomEntities, bondEntities)
 
         //Now Render
         renderAtomSymbols(atomEntities, camera2D)
+
+        renderBondLines(bondEntities, camera2D, viewport)
     }
 
 
-    private fun traverseAndCollect(container: LevelContainer, atomsFound: MutableList<ChemAtom>) {
+    private fun traverseAndCollect(container: LevelContainer, atomsFound: MutableList<ChemAtom>, bondsFound: MutableList<ChemBond>) {
 
         //Go through every molecule, noting down the molecule position
         container.sceneMolecules.forEach { mol ->
@@ -52,7 +57,42 @@ class LevelRenderer (
             mol.atoms.forEach { atom ->
                 atomsFound.add(atom)
             }
+
+            mol.bonds.forEach { bond ->
+                bondsFound.add(bond)
+            }
         }
+    }
+
+
+
+    private fun renderBondLines(bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
+        val lineProgram = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
+        lineProgram.uniform("uPerspective", camera2D.combined())
+        lineProgram.uniform("u_viewport", viewport)
+        lineProgram.uniform("uModel", Matrix4f())
+
+        val glMesh = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
+
+        val instanceData = mutableListOf<Float>()
+
+        val lineColour = themeStyleManager.activeTheme.lineColour
+        val lineThickness = 1.5f
+
+        lineProgram.uniform("uLight", lineColour)
+
+
+
+        for (line in bonds) {
+            val start = line.atomA.getWorldPosition() + line.localPos
+            val end = line.atomB.getWorldPosition() + line.localPos
+
+            val perInstanceData = listOf<Float>(start.x, start.y, start.z, end.x, end.y, end.z, lineThickness)
+
+            instanceData.addAll(perInstanceData)
+        }
+
+        instancer.drawLines(glMesh, instanceData)
     }
 
 
@@ -63,18 +103,32 @@ class LevelRenderer (
         textProgram.uniform("uPerspective", camera2D.combined())
 
         atoms.forEach { atom, ->
-            renderSymbol(atom, textProgram)
+            //Render the atom symbol
+            val worldPos = atom.getWorldPosition()
+            if (atom.visible) {
+                renderString(atom.text, worldPos,  textProgram)
+            }
+
+            //Check to see if this atom has any implicit hydrogens
+            if (atom.implicitHydrogenCount >= 1 && atom.visible) {
+                if (atom.implicitHydrogenPos != ChemAtom.RelationalPos.LEFT) {
+                    val implicitHPos = atom.implicitHydrogenPos.mod * MolGLide.GLOBAL_SCALE * MolGLide.FONT_SIZE.toFloat() * 0.75f
+                    renderString("H${atom.implicitHydrogenCount}", implicitHPos + worldPos, textProgram)
+                } else {
+                    Logger.warn { "Implicit left groups are not currently supported" }
+                }
+            }
         }
 
         GL11.glDisable(GL11.GL_BLEND)
     }
 
-    private fun renderSymbol(entity: ChemAtom, program: ShaderProgram) {
+    private fun renderString(label: String, pos: Vector3f, program: ShaderProgram) {
         val theme = themeStyleManager.activeTheme
 
         val fontID = MolGLide.FONT
         val scale = MolGLide.GLOBAL_SCALE
-        val colour = getSymbolColour(entity.text)
+        val colour = getSymbolColour(label)
 
         val fontData = resources.getFont(fontID)
 
@@ -84,7 +138,6 @@ class LevelRenderer (
         program.uniform("uLight", colour)
         program.uniform("uModel", Matrix4f())
 
-        val pos = entity.getWorldPosition()
 
         var renderX = pos.x
         val renderY = pos.y
@@ -92,7 +145,7 @@ class LevelRenderer (
         batcher.begin(Batch2D.Mode.TRIANGLES)
 
 
-        for (c in entity.text) {
+        for (c in label) {
             var character = c
 
             if (! fontData.glyphs.keys.contains(c)) {

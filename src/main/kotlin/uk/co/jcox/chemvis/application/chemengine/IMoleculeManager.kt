@@ -14,9 +14,9 @@ interface IMoleculeManager {
 
     fun deleteMolecule(uuid: UUID)
 
-    fun deleteAtom(uuid: UUID)
+    fun deleteAtom(mol: UUID, atom: UUID)
 
-    fun deleteBond(uuid: UUID)
+    fun deleteBond(mol: UUID, bond: UUID)
 
     /**
      * Add an atom to an already existing molecule
