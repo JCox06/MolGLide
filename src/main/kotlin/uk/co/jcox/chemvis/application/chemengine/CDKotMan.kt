@@ -12,6 +12,7 @@ import org.openscience.cdk.interfaces.IAtomContainer
 import org.openscience.cdk.interfaces.IBond
 import org.openscience.cdk.tools.CDKHydrogenAdder
 import org.openscience.cdk.tools.IDeduceBondOrderTool
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator
 import org.tinylog.Logger
@@ -41,9 +42,10 @@ class CDKotMan (
     }
 
     override fun deleteAtom(mol: UUID, atom: UUID) {
-        val atom = atoms.remove(atom)
+        val cdkAtom = atoms.remove(atom)
         val container = molecules[mol]
-        container?.removeAtom(atom)
+
+        container?.removeAtom(cdkAtom)
     }
 
     override fun deleteBond(mol: UUID, bond: UUID) {
@@ -122,7 +124,10 @@ class CDKotMan (
     }
 
     override fun recalculate(molecule: UUID) {
+
+
         val cdkMolecule = molecules[molecule]
+
         if (cdkMolecule == null) {
             return
         }

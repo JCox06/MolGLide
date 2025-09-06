@@ -45,7 +45,7 @@ class AtomInsertionAction (
         val newLevelBond = ChemBond(srcAtom, newLevelAtom,ChemBond.Type.SINGLE, Vector3f(), newStructBond)
         srcMol.bonds.add(newLevelBond)
 
-        this.newStructAtom = newStructBond
+        this.newStructAtom = newStructAtom
         this.newLevelAtom = newLevelAtom
         this.newStructBond = newStructBond
         this.newLevelBond = newLevelBond
@@ -61,7 +61,6 @@ class AtomInsertionAction (
 
     override fun undo(levelContainer: LevelContainer) {
 
-        //todo - Not currently working
 
         //Does the opposite of execute
         srcAtom.visible = wasVisibleBefore
@@ -73,6 +72,7 @@ class AtomInsertionAction (
 
         newStructBond?.let { levelContainer.structMolecules.deleteBond(mol, it) }
         newStructAtom?.let { levelContainer.structMolecules.deleteAtom(mol, it) }
+
 
         updateImplicitHydrogens(levelContainer, srcAtom, srcAtom.molManagerLink, srcMol.molManagerLink)
     }
