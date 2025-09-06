@@ -25,11 +25,15 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
 
     val toolboxContext = ToolboxContext(AtomInsert.CARBON)
 
-    fun createNewEditor() : String {
+    fun createNewEditor(samples: Int) : String {
        val newEditor = OrganicEditorState(services, ImGuiRenderingContext(), levelRenderer, toolboxContext)
         val stateRenderID = "Editor#${idCount++}"
 
-        services.resourceManager().createMultiSampledRenderTarget(stateRenderID, 8)
+        if (samples > 1) {
+            services.resourceManager().createMultiSampledRenderTarget(stateRenderID, samples)
+        } else {
+            services.resourceManager().createRenderTarget(stateRenderID)
+        }
 
         services.setApplicationState(newEditor, stateRenderID)
 

@@ -19,15 +19,24 @@ class ApplicationUI (
 
 
     private val menuBar = MenuBar(appManager, engineManager)
+    private val welcomeUI = WelcomeUI()
 
     fun setup() {
 
+        val newWin: () -> Unit = {
+            appManager.createNewEditor(welcomeUI.msaaSamples[0])
+        }
+
+        welcomeUI.newWindow = newWin
+        menuBar.newWindow = newWin
+
+        welcomeUI.setup()
     }
 
     fun drawApplicationUI() {
         val dockID = ImGui.dockSpaceOverViewport()
         menuBar.draw()
-
+        welcomeUI.draw(dockID)
 
         drawEditors(dockID)
     }
@@ -78,6 +87,7 @@ class ApplicationUI (
 
     class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
+        var newWindow: () -> Unit = {}
 
         fun draw() {
 
@@ -95,13 +105,18 @@ class ApplicationUI (
                 drawFileMenu()
                 ImGui.endMenu()
             }
+
+            if (ImGui.beginMenu("${Icons.EDIT_ICON} Edit")) {
+                drawEditMenu()
+                ImGui.endMenu()
+            }
         }
 
 
         private fun drawFileMenu() {
 
             if (ImGui.menuItem("${Icons.NEW_ICON} New Project")) {
-                val renderID = appManager.createNewEditor()
+                newWindow()
             }
 
             if (ImGui.menuItem("${Icons.DATABASE_ICON} Load From Disc")) {
@@ -116,6 +131,15 @@ class ApplicationUI (
                 engineManager.shutdown()
             }
 
+        }
+
+        private fun drawEditMenu() {
+            if (ImGui.menuItem("${Icons.UNDO_ICON} Undo")) {
+                TODO("Use the keyboard shortcut for now")
+            }
+            if (ImGui.menuItem("${Icons.REDO_ICON} Redo")) {
+                TODO("Use the keyboard shortcut for now")
+            }
         }
     }
 }
