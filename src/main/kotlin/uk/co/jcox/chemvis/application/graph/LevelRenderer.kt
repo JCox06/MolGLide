@@ -201,6 +201,7 @@ class LevelRenderer(
 
 
     private fun getSymbolColour(symbol: String): Vector3f {
-        return Vector3f(1.0f, 1.0f, 1.0f)
+        val colour = themeStyleManager.activeTheme.symbolColours[symbol] ?: return Vector3f(1.0f, 1.0f, 1.0f)
+        return colour
     }
 }

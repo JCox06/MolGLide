@@ -28,49 +28,59 @@ class ThemeStyleManager {
     companion object {
         val MolGLideEditTheme = ThemeStyle(
             backgroundColour = Vector4f(0.15f, 0.16f, 0.16f, 1.0f),
-            hydrogenColour = Vector3f(1.0f, 1.0f, 1.0f),
-            carbonColour = Vector3f(1.0f, 1.0f, 1.0f),
-            nitrogenColour = Vector3f(1.0f, 1.0f, 1.0f),
-            oxygenColour = Vector3f(1.0f, 1.0f, 1.0f),
-            sulphurColour = Vector3f(1.0f, 1.0f, 1.0f),
-            phosphorusColour = Vector3f(1.0f, 1.0f, 1.0f),
-            fluorineColour = Vector3f(1.0f, 1.0f, 1.0f),
-            chlorineColour =Vector3f(1.0f, 1.0f, 1.0f),
-            bromineColour = Vector3f(1.0f, 1.0f, 1.0f),
-            metalColour = Vector3f(1.0f, 1.0f, 1.0f),
+
             defaultAtomColour = Vector3f(1.0f, 1.0f, 1.0f),
+
+            symbolColours = mapOf(
+                "H" to Vector3f(1.0f, 1.0f, 1.0f),
+                "N" to Vector3f(1.0f, 1.0f, 1.0f),
+                "O" to Vector3f(1.0f, 1.0f, 1.0f),
+                "S" to Vector3f(1.0f, 1.0f, 1.0f),
+                "F" to Vector3f(1.0f, 1.0f, 1.0f),
+                "Cl" to Vector3f(1.0f, 1.0f, 1.0f),
+                "Br" to Vector3f(1.0f, 1.0f, 1.0f),
+            ) ,
+
             lineColour = Vector3f(1.0f, 1.0f, 1.0f),
         )
 
         val screenshotWhiteTheme = ThemeStyle(
             backgroundColour = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-            hydrogenColour = Vector3f(0.0f, 0.0f, 0.0f),
-            carbonColour = Vector3f(0.0f, 0.0f, 0.0f),
-            nitrogenColour = Vector3f(0.0f, 0.0f, 0.0f),
-            oxygenColour = Vector3f(0.0f, 0.0f, 0.0f),
-            sulphurColour = Vector3f(0.0f, 0.0f, 0.0f),
-            phosphorusColour = Vector3f(0.0f, 0.0f, 0.0f),
-            fluorineColour = Vector3f(0.0f, 0.0f, 0.0f),
-            chlorineColour = Vector3f(0.0f, 0.0f, 0.0f),
-            bromineColour = Vector3f(0.0f, 0.0f, 0.0f),
-            metalColour = Vector3f(0.0f, 0.0f, 0.0f),
+            symbolColours = mapOf(
+                "H" to Vector3f(0.0f, 0.0f, 0.0f),
+                "N" to Vector3f(0.0f, 0.0f, 0.0f),
+                "O" to Vector3f(0.0f, 0.0f, 0.0f),
+                "S" to Vector3f(0.0f, 0.0f, 0.0f),
+                "F" to Vector3f(0.0f, 0.0f, 0.0f),
+                "Cl" to Vector3f(0.0f, 0.0f, 0.0f),
+                "Br" to Vector3f(0.0f, 0.0f, 0.0f),
+            ) ,
             defaultAtomColour = Vector3f(0.0f, 0.0f, 0.0f),
+
+
+
             lineColour = Vector3f(0.0f, 0.0f, 0.0f),
         )
 
 
         val screenshotMolGLideTheme = ThemeStyle(
             backgroundColour = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-            hydrogenColour = Vector3f(0.0f, 0.0f, 0.0f),
-            carbonColour = Vector3f(0.0f, 0.0f, 0.0f),
-            nitrogenColour = Vector3f(0.0f, 0.41176f, 0.67843f),
-            oxygenColour = Vector3f(1.0f, 0.0f, 0.0f),
-            sulphurColour = Vector3f(0.8f, 0.7f, 0.0f),
-            phosphorusColour = Vector3f(0.0f, 0.0f, 0.0f),
-            fluorineColour = Vector3f(0.2f, 0.8f, 0.0f),
-            chlorineColour = Vector3f(0.3f, 0.7f, 0.0f),
-            bromineColour = Vector3f(0.4f, 0.6f, 0.0f),
-            metalColour = Vector3f(0.9f, 0.9f, 0.9f),
+
+
+
+            symbolColours = mapOf(
+                "H" to Vector3f(0.0f, 0.0f, 0.0f),
+                "C" to Vector3f(0.0f, 0.0f, 0.0f),
+                "N" to Vector3f(0.0f, 0.41176f, 0.67843f),
+                "O" to Vector3f(1.0f, 0.0f, 0.0f),
+                "S" to Vector3f(0.8f, 0.7f, 0.0f),
+                "P" to Vector3f(0.0f, 0.0f, 0.0f),
+                "F" to Vector3f(0.2f, 0.8f, 0.0f),
+                "Cl" to Vector3f(0.3f, 0.7f, 0.0f),
+                "Br" to Vector3f(0.4f, 0.6f, 0.0f),
+
+            ),
+
             defaultAtomColour = Vector3f(0.0f, 0.0f, 0.0f),
             lineColour = Vector3f(0.0f, 0.0f, 0.0f),
         )
@@ -78,16 +88,19 @@ class ThemeStyleManager {
 
         val CPKColouringTheme = ThemeStyle(
             backgroundColour = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
-            hydrogenColour = Vector3f(0.0f, 0.0f, 0.0f),
-            carbonColour = Vector3f(0.0f, 0.0f, 0.0f),
-            nitrogenColour = Vector3f(0.0f, 0.0f, 1.0f),
-            oxygenColour = Vector3f(1.0f, 0.0f, 0.0f),
-            sulphurColour = Vector3f(1.0f, 1.0f, 0.0f),
-            phosphorusColour = Vector3f(1.0f, 0.6f, 0.0f),
-            fluorineColour = Vector3f(0.0f, 1.0f, 0.0f),
-            chlorineColour = Vector3f(0.0f, 1.0f, 0.0f),
-            bromineColour = Vector3f(0.8f, 0.0f, 0.0f),
-            metalColour = Vector3f(0.9f, 0.9f, 0.9f),
+
+            symbolColours = mapOf(
+                "H" to Vector3f(0.0f, 0.0f, 0.0f),
+                "C" to Vector3f(0.0f, 0.0f, 0.0f),
+                "N" to Vector3f(0.0f, 0.0f, 1.0f),
+                "O" to Vector3f(1.0f, 0.0f, 0.0f),
+                "S" to Vector3f(1.0f, 1.0f, 0.0f),
+                "P" to Vector3f(1.0f, 0.6f, 0.0f),
+                "F" to Vector3f(0.0f, 1.0f, 0.0f),
+                "Cl" to Vector3f(0.0f, 1.0f, 0.0f),
+                "Br" to Vector3f(0.8f, 0.0f, 0.0f),
+            ),
+
             defaultAtomColour = Vector3f(0.0f, 0.0f, 0.0f),
             lineColour = Vector3f(0.0f, 0.0f, 0.0f),
         )
