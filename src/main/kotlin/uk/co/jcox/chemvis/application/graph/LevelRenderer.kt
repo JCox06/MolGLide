@@ -117,9 +117,16 @@ class LevelRenderer(
             //Check to see if this atom has any implicit hydrogens
             if (atom.implicitHydrogenCount >= 1 && atom.visible) {
                 if (atom.implicitHydrogenPos != ChemAtom.RelationalPos.LEFT) {
+
+                    var numberString = "${atom.implicitHydrogenCount}"
+
+                    if (atom.implicitHydrogenCount == 1) {
+                        numberString = ""
+                    }
+
                     val implicitHPos =
                         atom.implicitHydrogenPos.mod * MolGLide.GLOBAL_SCALE * MolGLide.FONT_SIZE.toFloat() * 0.75f
-                    renderString("H${atom.implicitHydrogenCount}", implicitHPos + worldPos, textProgram)
+                    renderString("H${numberString}", implicitHPos + worldPos, textProgram)
                 } else {
                     Logger.warn { "Implicit left groups are not currently supported" }
                 }

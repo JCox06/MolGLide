@@ -26,7 +26,7 @@ class OrganicEditorState (
     val services: ICVServices,
     val renderingContext: IRenderTargetContext,
     val renderer: LevelRenderer,
-    toolbox: ToolboxContext,
+    val toolbox: ToolboxContext,
 ) : ApplicationState(renderingContext), IInputSubscriber {
 
 
