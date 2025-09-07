@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application.moleditorstate.tool
 
 import org.apache.jena.sparql.function.library.e
+import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
@@ -62,7 +63,7 @@ class AtomBondTool (
         //Dragging mode is finalised upon key release
 
         atomInsertionAction.newLevelAtom?.let {
-            toolMode = Mode.AtomInsertionDragging(molInsertion.srcAtom, it)
+            toolMode = Mode.AtomInsertionDragging(molInsertion.srcAtom, it, true)
         }
     }
 
@@ -90,6 +91,9 @@ class AtomBondTool (
 
             //Check if the implicit hydrogen group needs to be put on the left of the atom
             autoMoveHydrogenGroup(currentMode)
+
+            //Check if a double bond (todo: or triple bond) needs to be formed
+            checkBondOrderChange(currentMode)
         }
     }
 
@@ -116,6 +120,8 @@ class AtomBondTool (
 
     /**
      * Given an atom to change, depending on its position to another atom
+     * @param checkAgainst the atom that is not affected by this function
+     * @param applier the atom where the implicit group is changed, depending on the tests from the checkAgainst
      */
     private fun autoMoveGroup(checkAgainst: ChemAtom, applier: ChemAtom) {
         val leftTest = ChemAtom.RelationalPos.LEFT.mod + applier.getWorldPosition()
@@ -138,6 +144,46 @@ class AtomBondTool (
         }
     }
 
+    /**
+     * When in dragging mode, the user is free to move the newly inserted atom wherever they want
+     * Should this atom align with an already-existing bond, then, attempt to increase the bond order of that bond
+     *
+     * If the user pulls away again, the action needs to be undone - by using the CommandExecutor,
+     * but also, this tool needs to be restored to allow continued movement of the new atom.
+     *
+     * This action is mainly used for detecting bond order changes, but can also be used to detect cyclisation
+     */
+    private fun checkBondOrderChange(draggingMode: Mode.AtomInsertionDragging) {
+        val draggingPos = draggingMode.destAtom.getWorldPosition()
+
+        //todo At the moment this only works for atoms in the same molecule
+        val commonMolecule = draggingMode.destAtom.parent
+
+        commonMolecule.atoms.forEach { atom ->
+            val worldPos = atom.getWorldPosition()
+
+            if (draggingPos.equals(worldPos, 0.25f) && atom != draggingMode.destAtom && draggingMode.allowBondChanges) {
+                //Now we need to decide if we want to form a bond of a higher order
+                //or form a cyclisation
+
+                //If a bond exists between these two atoms, then increase bond order
+                //If no bond exists, a ring is forming
+
+                draggingMode.allowBondChanges = false
+
+                val bond = levelContainer.structMolecules.getJoiningBond(commonMolecule.molManagerLink, draggingMode.srcAtom.molManagerLink, atom.molManagerLink)
+
+                if (bond == null) {
+                    //Form a ring
+                    println("Forming a ring")
+                } else {
+                    //Form a double bond
+                    println("Forming a double bond")
+                }
+            }
+        }
+    }
+
     sealed class Mode {
 
         object None: Mode()
@@ -156,6 +202,6 @@ class AtomBondTool (
          * @property srcAtom the original atom
          * @property destAtom the atom that was just created by the AtomInsertionAction class
          */
-        class AtomInsertionDragging(val srcAtom: ChemAtom, val destAtom: ChemAtom) : Mode()
+        class AtomInsertionDragging(val srcAtom: ChemAtom, val destAtom: ChemAtom, var allowBondChanges: Boolean) : Mode()
     }
 }
