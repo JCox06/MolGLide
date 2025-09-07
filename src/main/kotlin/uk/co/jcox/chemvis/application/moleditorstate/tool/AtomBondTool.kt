@@ -1,8 +1,10 @@
 package uk.co.jcox.chemvis.application.moleditorstate.tool
 
+import org.apache.jena.sparql.function.library.e
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
+import org.joml.plus
 import org.xmlcml.euclid.Vector2
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
@@ -85,6 +87,9 @@ class AtomBondTool (
         if (currentMode is Mode.AtomInsertionDragging) {
             //Drag the atom around in a circle near the mouse
             handleNewAtomDragging(currentMode)
+
+            //Check if the implicit hydrogen group needs to be put on the left of the atom
+            autoMoveHydrogenGroup(currentMode)
         }
     }
 
@@ -98,6 +103,39 @@ class AtomBondTool (
         val localAtomTransform = Vector3f(newAtomPos.x, newAtomPos.y, 0.0f) - localTransform
         mode.destAtom.localPos.x = localAtomTransform.x
         mode.destAtom.localPos.y = localAtomTransform.y
+    }
+
+
+    private fun autoMoveHydrogenGroup(mode: Mode.AtomInsertionDragging) {
+        val dragging = mode.destAtom
+        val stationary = mode.srcAtom
+
+        autoMoveGroup(dragging, stationary)
+        autoMoveGroup(stationary, dragging)
+    }
+
+    /**
+     * Given an atom to change, depending on its position to another atom
+     */
+    private fun autoMoveGroup(checkAgainst: ChemAtom, applier: ChemAtom) {
+        val leftTest = ChemAtom.RelationalPos.LEFT.mod + applier.getWorldPosition()
+        val rightTest = ChemAtom.RelationalPos.RIGHT.mod + applier.getWorldPosition()
+
+        val leftDistance = checkAgainst.getWorldPosition().distance(leftTest)
+        val rightDistance = checkAgainst.getWorldPosition().distance(rightTest)
+
+        //If they are the same, then the hydrogen does not need to move
+        if (leftDistance == rightDistance) {
+            return
+        }
+
+        //Otherwise move the implicit hydrogen to the side that is further away
+        //Hence more space and less crowded
+        if (rightDistance > leftDistance) {
+            applier.implicitHydrogenPos = ChemAtom.RelationalPos.RIGHT
+        } else {
+            applier.implicitHydrogenPos = ChemAtom.RelationalPos.LEFT
+        }
     }
 
     sealed class Mode {

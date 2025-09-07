@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import org.tinylog.Logger
 import uk.co.jcox.chemvis.application.MolGLide
+import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.Batch2D
 import uk.co.jcox.chemvis.cvengine.CVEngine
 import uk.co.jcox.chemvis.cvengine.Camera2D
@@ -116,20 +117,24 @@ class LevelRenderer(
 
             //Check to see if this atom has any implicit hydrogens
             if (atom.implicitHydrogenCount >= 1 && atom.visible) {
+
+                var numberString = "${atom.implicitHydrogenCount}"
+
+                if (atom.implicitHydrogenCount == 1) {
+                    numberString = ""
+                }
+
                 if (atom.implicitHydrogenPos != ChemAtom.RelationalPos.LEFT) {
 
-                    var numberString = "${atom.implicitHydrogenCount}"
 
-                    if (atom.implicitHydrogenCount == 1) {
-                        numberString = ""
-                    }
-
-                    val implicitHPos =
-                        atom.implicitHydrogenPos.mod * MolGLide.GLOBAL_SCALE * MolGLide.FONT_SIZE.toFloat() * 0.75f
+                    val implicitHPos = atom.implicitHydrogenPos.mod * OrganicEditorState.IMPLICIT_SCALE
                     renderString("H${numberString}", implicitHPos + worldPos, textProgram)
+
                 } else {
-                    Logger.warn { "Implicit left groups are not currently supported" }
+                    val implicitHPos = atom.implicitHydrogenPos.mod * OrganicEditorState.IMPLICIT_SCALE * (numberString.length.toFloat() + 1.0f)
+                    renderString("H${numberString}", implicitHPos + worldPos, textProgram)
                 }
+
             }
         }
 

@@ -6,6 +6,7 @@ import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
+import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
@@ -139,6 +140,7 @@ class OrganicEditorState (
         const val ATOM_PLANE = -3.0f
         const val MARKER_PLANE = -2.0f
         const val CONNECTION_DISTANCE = 30.0f
+        const val IMPLICIT_SCALE = 0.75f * MolGLide.FONT_SIZE * MolGLide.GLOBAL_SCALE
 
 
         val COMMON_ANGLES = listOf<Float>(
