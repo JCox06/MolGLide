@@ -61,7 +61,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GLFW.GLFW_TRUE)
         GLFW.glfwWindowHint(GLFW.GLFW_DECORATED, GLFW.GLFW_TRUE)
 
-        this.windowHandle = GLFW.glfwCreateWindow(800, 600, name, 0, 0)
+        this.windowHandle = GLFW.glfwCreateWindow(1500, 1200, name, 0, 0)
 
         if (this.windowHandle == 0L) {
             throw RuntimeException("Filed to create a window and setup OpenGL")

@@ -15,6 +15,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomInsertionAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.RingCyclisationAction
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.IResourceManager
@@ -159,10 +160,13 @@ class AtomBondTool (
         //todo At the moment this only works for atoms in the same molecule
         val commonMolecule = draggingMode.destAtom.parent
 
-        commonMolecule.atoms.forEach { atom ->
+        //Note the shallow copy of toList(). This is because we don't know if undoing the last action could change the list
+        commonMolecule.atoms.toList().forEach { atom ->
             val worldPos = atom.getWorldPosition()
 
             if (draggingPos.equals(worldPos, 0.25f) && atom != draggingMode.destAtom && draggingMode.allowBondChanges) {
+                actionManager.undoLastAction()
+
                 //Now we need to decide if we want to form a bond of a higher order
                 //or form a cyclisation
 
@@ -175,11 +179,15 @@ class AtomBondTool (
 
                 if (bond == null) {
                     //Form a ring
-                    println("Forming a ring")
+                    val action = RingCyclisationAction(commonMolecule, draggingMode.srcAtom, atom)
+                    actionManager.executeAction(action)
                 } else {
                     //Form a double bond
-                    println("Forming a double bond")
                 }
+            } else if (!draggingMode.allowBondChanges) {
+//                draggingMode.allowBondChanges = true
+//                actionManager.undoLastAction()
+                println("HELLO, WORLD")
             }
         }
     }
