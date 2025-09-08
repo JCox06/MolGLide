@@ -1,14 +1,10 @@
 package uk.co.jcox.chemvis.application.moleditorstate.tool
 
-import org.apache.jena.sparql.function.library.e
-import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
 import org.joml.plus
-import org.xmlcml.euclid.Vector2
 import uk.co.jcox.chemvis.application.graph.ChemAtom
-import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
@@ -21,10 +17,15 @@ import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.IResourceManager
 import uk.co.jcox.chemvis.cvengine.InputManager
 
-class AtomBondTool (
-    toolboxContext: ToolboxContext, renderingContext: IRenderTargetContext, inputManager: InputManager, camera2D: Camera2D, levelContainer: LevelContainer, selectionManager: SelectionManager,
+class AtomBondTool(
+    toolboxContext: ToolboxContext,
+    renderingContext: IRenderTargetContext,
+    inputManager: InputManager,
+    camera2D: Camera2D,
+    levelContainer: LevelContainer,
+    selectionManager: SelectionManager,
     actionManager: ActionManager,
-) : Tool(toolboxContext, renderingContext, inputManager, camera2D, levelContainer, selectionManager, actionManager){
+) : Tool(toolboxContext, renderingContext, inputManager, camera2D, levelContainer, selectionManager, actionManager) {
 
     var toolMode: Mode = Mode.None
 
@@ -69,7 +70,7 @@ class AtomBondTool (
     }
 
 
-    private fun prepareCorrectMode(clickX: Float, clickY: Float) : Mode {
+    private fun prepareCorrectMode(clickX: Float, clickY: Float): Mode {
         val selectionType = selectionManager.primarySelection
         if (selectionType is SelectionManager.Type.None) {
             //No molecule is selected, therefore we can't add to a molecule, and instead
@@ -95,6 +96,7 @@ class AtomBondTool (
 
             //Check if a double bond (todo: or triple bond) needs to be formed
             checkBondOrderChange(currentMode)
+
         }
     }
 
@@ -102,7 +104,11 @@ class AtomBondTool (
         val mousePos = mouseWorld()
         val srcPos = mode.srcAtom.getWorldPosition()
 
-        val newAtomPos = closestPointToCircleCircumference(Vector2f(srcPos.x, srcPos.y), mousePos, OrganicEditorState.CONNECTION_DISTANCE)
+        val newAtomPos = closestPointToCircleCircumference(
+            Vector2f(srcPos.x, srcPos.y),
+            mousePos,
+            OrganicEditorState.CONNECTION_DISTANCE
+        )
 
         val localTransform = mode.srcAtom.parent.localPos
         val localAtomTransform = Vector3f(newAtomPos.x, newAtomPos.y, 0.0f) - localTransform
@@ -161,48 +167,62 @@ class AtomBondTool (
         val commonMolecule = draggingMode.destAtom.parent
 
         //Note the shallow copy of toList(). This is because we don't know if undoing the last action could change the list
-        commonMolecule.atoms.toList().forEach { atom ->
-            val worldPos = atom.getWorldPosition()
 
-            if (draggingPos.equals(worldPos, 0.25f) && atom != draggingMode.destAtom && draggingMode.allowBondChanges) {
-                actionManager.undoLastAction()
+        val atom = commonMolecule.atoms.toList().find {
+            draggingPos.equals(
+                it.getWorldPosition(),
+                0.25f
+            ) && it != draggingMode.destAtom
+        }
 
-                //Now we need to decide if we want to form a bond of a higher order
-                //or form a cyclisation
+        if (atom != null && draggingMode.allowBondChanges) {
 
-                //If a bond exists between these two atoms, then increase bond order
-                //If no bond exists, a ring is forming
+            actionManager.undoLastAction()
 
-                draggingMode.allowBondChanges = false
+            //Now we need to decide if we want to form a bond of a higher order
+            //or form a cyclisation
 
-                val bond = levelContainer.structMolecules.getJoiningBond(commonMolecule.molManagerLink, draggingMode.srcAtom.molManagerLink, atom.molManagerLink)
+            //If a bond exists between these two atoms, then increase bond order
+            //If no bond exists, a ring is forming
 
-                if (bond == null) {
-                    //Form a ring
-                    val action = RingCyclisationAction(commonMolecule, draggingMode.srcAtom, atom)
-                    actionManager.executeAction(action)
-                } else {
-                    //Form a double bond
-                }
-            } else if (!draggingMode.allowBondChanges) {
-//                draggingMode.allowBondChanges = true
-//                actionManager.undoLastAction()
-                println("HELLO, WORLD")
+            draggingMode.allowBondChanges = false
+
+            val bond = levelContainer.structMolecules.getJoiningBond(
+                commonMolecule.molManagerLink,
+                draggingMode.srcAtom.molManagerLink,
+                atom.molManagerLink
+            )
+
+            if (bond == null) {
+                //Form a ring
+                val action = RingCyclisationAction(commonMolecule, draggingMode.srcAtom, atom)
+                actionManager.executeAction(action)
+            } else {
+                //Form a double bond
             }
+        }
+
+        if (atom == null && !draggingMode.allowBondChanges) {
+            actionManager.undoLastAction()
+//            actionManager.executeAction(draggingMode.restore)
+
+            addAtomToMolecule(Mode.AtomInsertion(draggingMode.srcAtom))
+            draggingMode.allowBondChanges = true
         }
     }
 
+
     sealed class Mode {
 
-        object None: Mode()
-        class MolCreation(val xPos: Float, val yPos: Float): Mode()
+        object None : Mode()
+        class MolCreation(val xPos: Float, val yPos: Float) : Mode()
 
 
         /**
          * Used to represent the moment when a new atom is added to an existing molecule and a bond is formed
          * @property srcAtom the existing atom that the new atom will bond to
          */
-        class AtomInsertion(val srcAtom: ChemAtom): Mode()
+        class AtomInsertion(val srcAtom: ChemAtom) : Mode()
 
         /**
          * Used to represent the period of time after the insertion of a new atom, while the user is holding
@@ -210,6 +230,7 @@ class AtomBondTool (
          * @property srcAtom the original atom
          * @property destAtom the atom that was just created by the AtomInsertionAction class
          */
-        class AtomInsertionDragging(val srcAtom: ChemAtom, val destAtom: ChemAtom, var allowBondChanges: Boolean) : Mode()
+        class AtomInsertionDragging(val srcAtom: ChemAtom, val destAtom: ChemAtom, var allowBondChanges: Boolean) :
+            Mode()
     }
 }
