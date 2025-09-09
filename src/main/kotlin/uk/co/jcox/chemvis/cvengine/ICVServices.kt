@@ -30,8 +30,6 @@ interface ICVServices {
 
     fun instancedRenderer() : InstancedRenderer
 
-    fun levelRenderer(): LevelRenderer
-
     fun resourceManager(): IResourceManager
 
     fun setViewport(a: Int, b: Int, c: Int, d: Int)

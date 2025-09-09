@@ -1,176 +1,213 @@
 package uk.co.jcox.chemvis.application.ui
 
 import imgui.ImGui
-import imgui.ImGuiStyle
 import imgui.ImVec2
+import imgui.ImVec4
+import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
+import imgui.type.ImInt
 import org.joml.Vector2f
-import uk.co.jcox.chemvis.application.GlobalAppState
-import uk.co.jcox.chemvis.application.main
-import uk.co.jcox.chemvis.application.moleditor.OrganicEditorState
-import uk.co.jcox.chemvis.cvengine.ApplicationState
+import uk.co.jcox.chemvis.application.mainstate.MainState
+import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
+import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
+import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
 import uk.co.jcox.chemvis.cvengine.ICVServices
-import uk.co.jcox.chemvis.cvengine.RenderTarget
 
 class ApplicationUI (
-    private val mainState: GlobalAppState,
-    private val services: ICVServices,
+    val appManager: MainState,
+    val engineManager: ICVServices,
 ) {
 
-    private val menuBar = MainMenuBarUI()
+
+    private val menuBar = MenuBar(appManager, engineManager)
     private val welcomeUI = WelcomeUI()
-
-    private var screenShotUI: ScreenshotConfigurationUI? = null
-
-    private val renderStateIDs = mutableListOf<String>()
-    private var activeState: Pair<String, OrganicEditorState>? = null
-
+    private var activeSession: OrganicEditorState? = null
 
     fun setup() {
-        menuBar.quitApplication = {
-            services.shutdown()
+
+        val newWin: () -> Unit = {
+            appManager.createNewEditor(welcomeUI.msaaSamples[0])
         }
 
-        menuBar.newOrganicEditor = {
-            val renderStateID = mainState.createOrganicEditor(welcomeUI.getSamples())
-            renderStateIDs.add(renderStateID)
-            restoreColour(services.resourceManager().getRenderTarget(renderStateID))
-        }
-
-        menuBar.closeCurrentWindow = {
-            val stateID = activeState?.first
-
-            if (renderStateIDs.contains(stateID) && stateID != null) {
-                renderStateIDs.remove(stateID)
-                mainState.closeOrganicEditor(stateID)
-                activeState = null
-            }
-        }
+        welcomeUI.newWindow = newWin
+        menuBar.newWindow = newWin
 
         menuBar.undo = {
-            activeState?.second?.undo()
+            activeSession?.undo()
         }
 
         menuBar.redo = {
-            activeState?.second?.redo()
+            activeSession?.redo()
         }
 
-        menuBar.screenshot = {
-            if (screenShotUI == null) {
-                activeState?.let {
-                    setupScreenshotUI(it.first, it.second, services.resourceManager().getRenderTarget(it.first))
-                }
-            } else {
-                activeState?.let {
-                    destroyScreenshotUI(it.second, services.resourceManager().getRenderTarget(it.first))
-                }
-            }
+        menuBar.getFormula = {
+            activeSession?.getFormula()
         }
 
-        menuBar.switchAtomBondTool = {
-            activeState?.second?.setAtomBondTool()
-        }
-
-        menuBar.switchTemplateTool = {
-            activeState?.second?.setTemplateTool()
-        }
+        welcomeUI.setup()
     }
 
     fun drawApplicationUI() {
         val dockID = ImGui.dockSpaceOverViewport()
-
         menuBar.draw()
         welcomeUI.draw(dockID)
-        drawRenderTargets(dockID)
-        activeState?.second?.atomInsert = menuBar.getSelectedInsert()
-        activeState?.second?.compoundInsert = menuBar.getSelectedCompoundInsert()
 
-
-        screenShotUI?.draw()
+        drawEditors(dockID)
     }
 
-    private fun drawRenderTargets(dockID: Int) {
+
+    fun drawEditors(dockingID: Int) {
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, ImVec2(0.0f, 0.0f))
 
-        renderStateIDs.forEach { stateID ->
-            val renderTarget = services.resourceManager().getRenderTarget(stateID)
-            val renderingContext = services.getAppStateRenderingContext(stateID)
+        appManager.editors.forEach { id ->
+            val renderTarget = engineManager.resourceManager().getRenderTarget(id)
+            val renderContext = engineManager.getAppStateRenderingContext(id)
 
-            ImGui.setNextWindowDockID(dockID, ImGuiCond.FirstUseEver)
-            ImGui.begin(stateID)
+
+            renderTarget.clearColour = appManager.getCurrentTheme().backgroundColour
+
+            ImGui.setNextWindowDockID(dockingID, ImGuiCond.FirstUseEver)
+
+
+            ImGui.begin(id)
 
             val windowPos = ImGui.getWindowPos()
-            renderingContext?.setRelativeWindowPos(Vector2f(windowPos.x, windowPos.y))
+            renderContext?.setRelativeWindowPos(Vector2f(windowPos.x, windowPos.y))
 
-            val state = services.getState(stateID)
+            val state = engineManager.getState(id)
+            if (state is OrganicEditorState) {
+                activeSession = state
+                state.toolbox.atomInsert = menuBar.getAtomInsert()
+            }
 
             if (ImGui.isWindowHovered()) {
-                services.resumeAppState(stateID)
-
-                if (state is OrganicEditorState) {
-
-                    if (screenShotUI != null && activeState?.first != stateID) {
-                        //Screenshot mode active in other state
-                        destroyScreenshotUI(state, renderTarget)
-                    }
-                    activeState = Pair(stateID, state)
-
-                    menuBar.inspectedFormula = state.moformula
-                }
+                engineManager.resumeAppState(id)
             } else {
-                services.pauseAppState(stateID)
+                engineManager.pauseAppState(id)
             }
+
 
             val width = ImGui.getContentRegionAvailX()
             val height = ImGui.getContentRegionAvailY()
 
-            services.resourceManager().resizeRenderTarget(stateID, width, height)
+            engineManager.resourceManager().resizeRenderTarget(id, width, height)
 
             ImGui.image(renderTarget.getSamplableTextureAttachment().toLong(), ImVec2(width, height), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f))
 
-            renderingContext?.recalculate()
+            renderContext?.recalculate()
+
             ImGui.end()
         }
+
         ImGui.popStyleVar()
     }
 
 
-    private fun setupScreenshotUI(stateID: String, state: OrganicEditorState, target: RenderTarget) {
-        state.readOnly = true
-        state.makeCheckpoint()
+    class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
-        screenShotUI = ScreenshotConfigurationUI(stateID, state, target)
-    }
+        var newWindow: () -> Unit = {}
 
-    private fun destroyScreenshotUI(state: OrganicEditorState, renderTarget: RenderTarget) {
-        screenShotUI = null
-        state.readOnly = false
+        var undo: () -> Unit = {}
 
-        restoreColour(renderTarget)
+        var redo: () -> Unit = {}
 
-        state.undo()
-    }
+        var getFormula: () -> String? = {"Waiting..."}
 
-    private fun restoreColour(renderTarget: RenderTarget) {
-        renderTarget.clearColour.x = 0.22f
-        renderTarget.clearColour.y = 0.22f
-        renderTarget.clearColour.z = 0.226f
-        renderTarget.clearColour.w = 1.0f
-    }
+        private val atomSelections = AtomInsert.entries.map { it.symbol }
+        private val selected: ImInt = ImInt(0)
+
+        fun draw() {
+
+            if (ImGui.beginMainMenuBar()) {
+
+                drawMenuLists()
+
+                ImGui.endMainMenuBar()
+            }
+        }
 
 
-    companion object {
-        const val FILE_ICON = "\uf07c"
-        const val EDIT_ICON = "\uf304"
-        const val NEW_ICON = "\uf15b"
-        const val CLOSE_ICON = "\uf2d3"
-        const val UNDO_ICON = "\uf2ea"
-        const val REDO_ICON = "\uf2f9"
-        const val SAVE_IMAGE_ICON ="\uf0c7"
-        const val CLOSE_WINDOW_ICON = "\uf04d"
-        const val ATOM_BOND_TOOL_ICON = "\uf0fe"
-        const val TEMPLATE_TOOL_ICON ="\uf1b2"
-        const val TOOLS_ICON ="\uf6e3"
+        private fun drawMenuLists() {
+            if (ImGui.beginMenu("${Icons.FILE_ICON} File")) {
+                drawFileMenu()
+                ImGui.endMenu()
+            }
+
+            if (ImGui.beginMenu("${Icons.EDIT_ICON} Edit")) {
+                drawEditMenu()
+                ImGui.endMenu()
+            }
+
+
+            renderButtons(atomSelections, selected, true)
+
+            ImGui.text("Formula: ${getFormula()}")
+        }
+
+
+        private fun drawFileMenu() {
+
+            if (ImGui.menuItem("${Icons.NEW_ICON} New Project")) {
+                newWindow()
+            }
+
+            if (ImGui.menuItem("${Icons.DATABASE_ICON} Load From Disc")) {
+                TODO()
+            }
+
+            if (ImGui.menuItem("${Icons.CLOSE_ICON} Close Tab")) {
+                TODO()
+            }
+
+            if (ImGui.menuItem("${Icons.CLOSE_WINDOW_ICON} Close Window")) {
+                engineManager.shutdown()
+            }
+
+        }
+
+        private fun drawEditMenu() {
+            if (ImGui.menuItem("${Icons.UNDO_ICON} Undo")) {
+                undo()
+            }
+            if (ImGui.menuItem("${Icons.REDO_ICON} Redo")) {
+                redo()
+            }
+        }
+
+        fun getAtomInsert() : AtomInsert {
+            val symobl = atomSelections[selected.get()]
+            return AtomInsert.fromSymbol(symobl)
+        }
+
+        private fun renderButtons(elements: List<String>, activeOption: ImInt, uniformSize: Boolean) {
+
+            for ((index, insert) in elements.withIndex()) {
+
+                val standardButtonSize = ImGui.getFrameHeight()
+
+                if (index == activeOption.get()) {
+                    ImGui.pushStyleColor(ImGuiCol.Button, ImVec4(0.0f, 100.0f, 0.0f, 255.0f))
+                    if (uniformSize) {
+                        ImGui.button(insert, standardButtonSize * 2, standardButtonSize)
+                    } else {
+                        ImGui.button(insert)
+                    }
+                    ImGui.popStyleColor()
+                } else {
+                    if (uniformSize) {
+                        if (ImGui.button(insert, standardButtonSize * 1.5f, standardButtonSize)) {
+                            activeOption.set(index)
+                        }
+                    } else {
+                        if (ImGui.button(insert)) {
+                            activeOption.set(index)
+                        }
+                    }
+
+                }
+            }
+        }
     }
 }

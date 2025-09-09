@@ -1,7 +1,4 @@
-package uk.co.jcox.chemvis.application.moleditor
-
-import uk.co.jcox.chemvis.cvengine.RawInput
-import uk.co.jcox.chemvis.cvengine.RawInput.NULL
+package uk.co.jcox.chemvis.application.moleditorstate
 
 enum class AtomInsert(val symbol: String, val hydrogenable: Boolean) {
     CARBON("C", true),
@@ -21,7 +18,7 @@ enum class AtomInsert(val symbol: String, val hydrogenable: Boolean) {
 
     companion object {
 
-        private val symbolCache = AtomInsert.entries.associateBy { it.symbol }
+        private val symbolCache = entries.associateBy { it.symbol }
 
         fun fromSymbol(symbol: String) : AtomInsert {
             val key = symbolCache[symbol]

@@ -12,10 +12,11 @@ import org.openscience.cdk.interfaces.IAtomContainer
 import org.openscience.cdk.interfaces.IBond
 import org.openscience.cdk.tools.CDKHydrogenAdder
 import org.openscience.cdk.tools.IDeduceBondOrderTool
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator
 import org.tinylog.Logger
-import uk.co.jcox.chemvis.application.moleditor.AtomInsert
+import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import java.util.UUID
 
 class CDKotMan (
@@ -33,6 +34,24 @@ class CDKotMan (
         cdkContainer.setProperty(MANAGER_ID, id)
 
         return id
+    }
+
+
+    override fun deleteMolecule(uuid: UUID) {
+        molecules.remove(uuid)
+    }
+
+    override fun deleteAtom(mol: UUID, atom: UUID) {
+        val cdkAtom = atoms.remove(atom)
+        val container = molecules[mol]
+
+        container?.removeAtom(cdkAtom)
+    }
+
+    override fun deleteBond(mol: UUID, bond: UUID) {
+        val bond = bonds.remove(bond)
+        val container = molecules[mol]
+        container?.removeBond(bond)
     }
 
     override fun addAtom(molecule: UUID, element: String): UUID {
@@ -105,7 +124,10 @@ class CDKotMan (
     }
 
     override fun recalculate(molecule: UUID) {
+
+
         val cdkMolecule = molecules[molecule]
+
         if (cdkMolecule == null) {
             return
         }
@@ -133,6 +155,8 @@ class CDKotMan (
                 if (!AtomInsert.fromSymbol(atom.symbol).hydrogenable) {
                     atom.implicitHydrogenCount = 0
                 }
+
+                //todo reimplement this once the new system is in place
             }
         } catch (e: CDKException) {
             Logger.error ("Error when calculating molecule type {}", e)

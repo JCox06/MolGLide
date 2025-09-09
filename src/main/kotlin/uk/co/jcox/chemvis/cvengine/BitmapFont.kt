@@ -1,6 +1,5 @@
 package uk.co.jcox.chemvis.cvengine
 
-import jdk.internal.vm.vector.VectorSupport.blend
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
