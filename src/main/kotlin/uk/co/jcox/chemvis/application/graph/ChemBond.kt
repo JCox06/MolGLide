@@ -6,7 +6,7 @@ import java.util.UUID
 class ChemBond(
     val atomA: ChemAtom,
     val atomB: ChemAtom,
-    val type: Type, localPos: Vector3f, molManagerLink: UUID,
+    var type: Type, localPos: Vector3f, molManagerLink: UUID,
 
     ) : ChemObject(localPos, molManagerLink) {
 

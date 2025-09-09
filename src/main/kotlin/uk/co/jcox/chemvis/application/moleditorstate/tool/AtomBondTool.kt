@@ -11,6 +11,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomInsertionAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.BondOrderChangeAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.RingCyclisationAction
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
@@ -187,18 +188,18 @@ class AtomBondTool(
 
             draggingMode.allowBondChanges = false
 
-            val bond = levelContainer.structMolecules.getJoiningBond(
-                commonMolecule.molManagerLink,
-                draggingMode.srcAtom.molManagerLink,
-                atom.molManagerLink
-            )
+
+            val bond = commonMolecule.bonds.find {
+                (it.atomA == draggingMode.srcAtom && it.atomB == atom) || (it.atomA == atom && it.atomB === draggingMode.srcAtom)
+            }
 
             if (bond == null) {
                 //Form a ring
                 val action = RingCyclisationAction(commonMolecule, draggingMode.srcAtom, atom)
                 actionManager.executeAction(action)
             } else {
-                //Form a double bond
+                val action = BondOrderChangeAction(commonMolecule, bond)
+                actionManager.executeAction(action)
             }
         }
 

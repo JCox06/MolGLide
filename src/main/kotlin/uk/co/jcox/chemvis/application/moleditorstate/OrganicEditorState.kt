@@ -142,6 +142,8 @@ class OrganicEditorState (
         const val CONNECTION_DISTANCE = 30.0f
         const val IMPLICIT_SCALE = 0.75f * MolGLide.FONT_SIZE * MolGLide.GLOBAL_SCALE
 
+        const val MULTI_BOND_DISTANCE = 3.5f
+
 
         val COMMON_ANGLES = listOf<Float>(
             //Cardinal directions

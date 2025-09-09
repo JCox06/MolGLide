@@ -3,6 +3,7 @@ package uk.co.jcox.chemvis.application.graph
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
+import org.joml.minus
 import org.joml.plus
 import org.joml.times
 import org.lwjgl.opengl.GL11
@@ -87,14 +88,21 @@ class LevelRenderer(
 
 
         for (line in bonds) {
-
-
-            val start = line.atomA.getWorldPosition() + line.localPos
-            val end = line.atomB.getWorldPosition() + line.localPos
-
-
+            val start = line.atomA.getWorldPosition()
+            val end = line.atomB.getWorldPosition()
             val perInstanceData = listOf<Float>(start.x, start.y, start.z, end.x, end.y, end.z, lineThickness)
             instanceData.addAll(perInstanceData)
+
+            if (line.type == ChemBond.Type.DOUBLE) {
+                val diff = start - end
+                val orth = Vector3f(diff.y, -diff.x, diff.z).normalize() * OrganicEditorState.MULTI_BOND_DISTANCE
+
+                val newStart = start + orth
+                val newEnd = end + orth
+
+                val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, lineThickness)
+                instanceData.addAll(secondData)
+            }
         }
 
 
