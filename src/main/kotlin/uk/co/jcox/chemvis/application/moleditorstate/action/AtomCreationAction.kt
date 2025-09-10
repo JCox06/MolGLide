@@ -43,8 +43,6 @@ class AtomCreationAction (
 
         //Get the updated values from CDK and send them to the view
         levelContainer.chemManager.recalculate(structMolecule)
-        val hydrogenCount = levelContainer.chemManager.getImplicitHydrogens(structAtom)
-        levelAtom.implicitHydrogenCount = hydrogenCount
     }
 
 
@@ -63,8 +61,5 @@ class AtomCreationAction (
             }
             levelContainer.chemManager.deleteMolecule(structMol)
         }
-
-
-
     }
 }

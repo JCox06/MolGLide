@@ -24,8 +24,7 @@ class RingCyclisationAction(
         molecule.bonds.add(levelBond)
         this.bond = levelBond
 
-        updateImplicitHydrogens(levelContainer)
-    }
+        levelContainer.chemManager.recalculate(molecule.molManagerLink)    }
 
     override fun undo(levelContainer: LevelContainer) {
 
@@ -34,14 +33,6 @@ class RingCyclisationAction(
             levelContainer.chemManager.deleteBond(molecule.molManagerLink, it.molManagerLink)
         }
 
-        updateImplicitHydrogens(levelContainer)
-    }
+        levelContainer.chemManager.recalculate(molecule.molManagerLink)    }
 
-    private fun updateImplicitHydrogens(levelContainer: LevelContainer) {
-        levelContainer.chemManager.recalculate(molecule.molManagerLink)
-        val atomAH = levelContainer.chemManager.getImplicitHydrogens(atomA.molManagerLink)
-        val atomBH = levelContainer.chemManager.getImplicitHydrogens(atomB.molManagerLink)
-        atomA.implicitHydrogenCount = atomAH
-        atomB.implicitHydrogenCount = atomBH
-    }
 }

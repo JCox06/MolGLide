@@ -50,8 +50,7 @@ class AtomInsertionAction (
         this.newStructBond = newStructBond
         this.newLevelBond = newLevelBond
 
-        updateImplicitHydrogens(levelContainer, srcAtom, srcAtom.molManagerLink, srcMol.molManagerLink)
-        updateImplicitHydrogens(levelContainer, newLevelAtom, newStructAtom, srcMol.molManagerLink)
+        levelContainer.chemManager.recalculate(srcMol.molManagerLink)
 
         //And finally, if the atom added was carbon, we do not need to include the hydrogens
         if (atomInsert == AtomInsert.CARBON) {
@@ -74,8 +73,7 @@ class AtomInsertionAction (
         newStructAtom?.let { levelContainer.chemManager.deleteAtom(mol, it) }
 
 
-        updateImplicitHydrogens(levelContainer, srcAtom, srcAtom.molManagerLink, srcMol.molManagerLink)
-    }
+        levelContainer.chemManager.recalculate(srcMol.molManagerLink)    }
 
     private fun disableHydrogensForCarbon(levelContainer: LevelContainer) {
         wasVisibleBefore = srcAtom.visible
@@ -96,11 +94,4 @@ class AtomInsertionAction (
         return newSrcAtom
     }
 
-    private fun updateImplicitHydrogens(levelContainer: LevelContainer, srcLevelAtom: ChemAtom, srcStructAtom: UUID, srcStructMol: UUID) {
-        levelContainer.chemManager.recalculate(srcStructMol)
-
-        val newH = levelContainer.chemManager.getImplicitHydrogens(srcStructAtom)
-
-        srcLevelAtom.implicitHydrogenCount = newH
-    }
 }

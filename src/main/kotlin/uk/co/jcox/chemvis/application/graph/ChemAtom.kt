@@ -11,7 +11,6 @@ class ChemAtom (
 ) : ChemObject(localPos, linker) {
 
     var visible = true
-    var implicitHydrogenCount: Int = 0
     var implicitHydrogenPos: RelationalPos = RelationalPos.RIGHT
 
     fun getWorldPosition() : Vector3f {

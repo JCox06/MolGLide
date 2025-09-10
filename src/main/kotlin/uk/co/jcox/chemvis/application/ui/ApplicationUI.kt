@@ -8,9 +8,11 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import imgui.type.ImInt
 import org.joml.Vector2f
+import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.v
 import uk.co.jcox.chemvis.application.mainstate.MainState
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -55,6 +57,8 @@ class ApplicationUI (
         welcomeUI.draw(dockID)
 
         drawEditors(dockID)
+
+        displayProbeInfo()
     }
 
 
@@ -105,6 +109,28 @@ class ApplicationUI (
     }
 
 
+    private fun displayProbeInfo() {
+        if (! menuBar.enableProbe) {
+            return
+        }
+
+        val selection = activeSession?.selectionManager?.primarySelection
+        val container = activeSession?.levelContainer
+
+        if (selection == null || container == null || selection !is SelectionManager.Type.Active) {
+            return
+        }
+
+        val atom = selection.atom
+
+        val insert = container.chemManager.getAtomInsert(atom.molManagerLink)
+        val implicitHydrogen = container.chemManager.getImplicitHydrogens(atom.molManagerLink)
+        val bondCount = container.chemManager.getBondCount(atom.parent.molManagerLink, atom.molManagerLink)
+
+
+        ImGui.setTooltip("Atom Symbol ${insert.symbol} \nImplicit H $implicitHydrogen \nBondCount ${bondCount}")
+    }
+
     class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
         var newWindow: () -> Unit = {}
@@ -117,6 +143,9 @@ class ApplicationUI (
 
         private val atomSelections = AtomInsert.entries.map { it.symbol }
         private val selected: ImInt = ImInt(0)
+
+        var enableProbe = false
+        private set
 
         fun draw() {
 
@@ -144,6 +173,10 @@ class ApplicationUI (
             renderButtons(atomSelections, selected, true)
 
             ImGui.text("Formula: ${getFormula()}")
+
+            if (ImGui.checkbox("Enable probe", enableProbe)) {
+                enableProbe = !enableProbe
+            }
         }
 
 

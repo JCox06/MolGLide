@@ -10,4 +10,15 @@ class ChemBond(
 
     ) : ChemObject(localPos, molManagerLink) {
 
+    /**
+     * This flag is used to hint to the LevelRenderer to centre the bond if it is a double bond
+     * It is often used for Carbonyl bonds or Imine bonds
+     *
+     * Although this could be dynamically calculated during render-time, it is instead set at action time
+     * This allows the user to override the parameter
+     */
+    var centredBond = false
+
+
+
 }

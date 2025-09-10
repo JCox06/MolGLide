@@ -125,12 +125,14 @@ class LevelRenderer(
                 renderString(leveLContainer.chemManager.getAtomInsert(atom.molManagerLink).symbol, worldPos, textProgram)
             }
 
+            val hydrogen = leveLContainer.chemManager.getImplicitHydrogens(atom.molManagerLink)
+
             //Check to see if this atom has any implicit hydrogens
-            if (atom.implicitHydrogenCount >= 1 && atom.visible) {
+            if (hydrogen >= 1 && atom.visible) {
 
-                var numberString = "${atom.implicitHydrogenCount}"
+                var numberString = "$hydrogen"
 
-                if (atom.implicitHydrogenCount == 1) {
+                if (hydrogen == 1) {
                     numberString = ""
                 }
 

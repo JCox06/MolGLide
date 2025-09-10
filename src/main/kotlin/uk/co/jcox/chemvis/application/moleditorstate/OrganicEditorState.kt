@@ -24,11 +24,11 @@ class OrganicEditorState (
     val toolbox: ToolboxContext,
 ) : ApplicationState(renderingContext), IInputSubscriber {
 
-
-    private val levelContainer = LevelContainer()
+    val levelContainer = LevelContainer()
     private val actionManager = ActionManager(levelContainer)
     private val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
-    private val selectionManager = SelectionManager()
+    val selectionManager = SelectionManager()
+
 
     private val currentTool: Tool = AtomBondTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
 
