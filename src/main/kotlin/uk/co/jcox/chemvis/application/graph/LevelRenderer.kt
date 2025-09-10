@@ -83,7 +83,6 @@ class LevelRenderer(
         val instanceData = mutableListOf<Float>()
 
         val lineColour = themeStyleManager.activeTheme.lineColour
-        val lineThickness = 2.0f
 
         lineProgram.uniform("uLight", lineColour)
 
@@ -107,7 +106,7 @@ class LevelRenderer(
     private fun renderSingleBond(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
         val start = line.atomA.getWorldPosition()
         val end = line.atomB.getWorldPosition()
-        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, 2.0f))
+        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.activeTheme.lineThickness))
     }
 
     private fun renderDoubleBond(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
@@ -122,7 +121,7 @@ class LevelRenderer(
         val newEnd = end + orth
 
         renderSingleBond(chemManager, line, renderData)
-        val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, 2.0f)
+        val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, themeStyleManager.activeTheme.lineThickness)
         renderData.addAll(secondData)
 
     }
@@ -229,7 +228,7 @@ class LevelRenderer(
 
 
     private fun getSymbolColour(symbol: String): Vector3f {
-        val colour = themeStyleManager.activeTheme.symbolColours[symbol] ?: return Vector3f(1.0f, 1.0f, 1.0f)
+        val colour = themeStyleManager.activeTheme.symbolColours[symbol] ?: return themeStyleManager.activeTheme.lineColour
         return colour
     }
 }

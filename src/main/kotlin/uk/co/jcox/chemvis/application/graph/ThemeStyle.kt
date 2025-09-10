@@ -12,5 +12,5 @@ data class ThemeStyle(
 
 
     val lineColour: Vector3f,
-
+    val lineThickness: Float,
 )

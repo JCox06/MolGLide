@@ -54,7 +54,7 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
     }
 
     override fun init() {
-        themeStyleManager.applyMolGLideEdit()
+        themeStyleManager.applyCPKTheme()
     }
     override fun update(inputManager: InputManager, timeElapsed: Float) {
 
