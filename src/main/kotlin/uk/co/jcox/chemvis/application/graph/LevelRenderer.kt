@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.chemengine.BondOrder
+import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.Batch2D
 import uk.co.jcox.chemvis.cvengine.CVEngine
@@ -86,29 +87,44 @@ class LevelRenderer(
 
         lineProgram.uniform("uLight", lineColour)
 
-
         for (line in bonds) {
-            val start = line.atomA.getWorldPosition()
-            val end = line.atomB.getWorldPosition()
-            val perInstanceData = listOf<Float>(start.x, start.y, start.z, end.x, end.y, end.z, lineThickness)
-            instanceData.addAll(perInstanceData)
-
-            val lineBondOrder = container.chemManager.getBondOrder(line.molManagerLink)
-
-            if (lineBondOrder == BondOrder.DOUBLE) {
-                val diff = start - end
-                val orth = Vector3f(diff.y, -diff.x, diff.z).normalize() * OrganicEditorState.MULTI_BOND_DISTANCE
-
-                val newStart = start + orth
-                val newEnd = end + orth
-
-                val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, lineThickness)
-                instanceData.addAll(secondData)
-            }
+            prepareLineRenderData(container.chemManager, line, instanceData)
         }
-
-
         instancer.drawLines(glMesh, instanceData)
+    }
+
+
+    private fun prepareLineRenderData(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
+        val lineTypeOrder = chemManager.getBondOrder(line.molManagerLink)
+        if (lineTypeOrder == BondOrder.SINGLE) {
+            renderSingleBond(chemManager, line, renderData)
+        }
+        if (lineTypeOrder == BondOrder.DOUBLE) {
+            renderDoubleBond(chemManager, line, renderData)
+        }
+    }
+
+    private fun renderSingleBond(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
+        val start = line.atomA.getWorldPosition()
+        val end = line.atomB.getWorldPosition()
+        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, 2.0f))
+    }
+
+    private fun renderDoubleBond(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
+        val start = line.atomA.getWorldPosition()
+        val end = line.atomB.getWorldPosition()
+
+
+        val diff = start - end
+        val orth = Vector3f(diff.y, -diff.x, diff.z).normalize() * OrganicEditorState.MULTI_BOND_DISTANCE
+
+        val newStart = start + orth
+        val newEnd = end + orth
+
+        renderSingleBond(chemManager, line, renderData)
+        val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, 2.0f)
+        renderData.addAll(secondData)
+
     }
 
 
