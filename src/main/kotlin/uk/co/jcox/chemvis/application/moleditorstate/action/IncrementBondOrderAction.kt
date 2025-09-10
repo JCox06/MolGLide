@@ -3,6 +3,7 @@ package uk.co.jcox.chemvis.application.moleditorstate.action
 import org.apache.commons.math.geometry.Vector3D.dotProduct
 import org.joml.Vector3f
 import org.joml.minus
+import org.joml.plus
 import uk.co.jcox.chemvis.application.chemengine.BondOrder
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.graph.ChemAtom
@@ -102,6 +103,8 @@ class IncrementBondOrderAction (val molecule: ChemMolecule, val bond: ChemBond) 
 
         val carbonToAtomA = (atomA - carbonPos).normalize()
         val carbonToAtomB = (atomB - carbonPos).normalize()
+
+        bond.bisectorNudge = (carbonToAtomA + carbonToAtomB).normalize()
 
         val dotProduct = carbonToAtomA.dot(carbonToAtomB)
 

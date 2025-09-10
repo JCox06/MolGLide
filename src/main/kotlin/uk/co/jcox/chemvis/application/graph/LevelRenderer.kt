@@ -119,11 +119,9 @@ class LevelRenderer(
 
         if (line.centredBond) {
             val newOffset = orth.div(-2.0f, Vector3f())
-            newOffset.y =-1.0f
-            start.x += newOffset.x
-            start.y += newOffset.y
-            end.x += newOffset.x
-            end.y += newOffset.y
+            newOffset.add(line.bisectorNudge)
+            start.add(newOffset)
+            end.add(newOffset)
         }
 
         val newStart = start + orth
