@@ -108,7 +108,7 @@ class IncrementBondOrderAction (val molecule: ChemMolecule, val bond: ChemBond) 
 
         val dotProduct = carbonToAtomA.dot(carbonToAtomB)
 
-        if (dotProduct <= -0.30f) {
+        if (dotProduct <= -0.30f || dotProduct == 0.0f || dotProduct >= 0.30f) {
             return true
         }
 
