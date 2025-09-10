@@ -33,7 +33,7 @@ class AtomCreationAction (
 
         //Create the level data
         val levelMolecule = ChemMolecule(Vector3f(newAtomX, newAtomY, OrganicEditorState.ATOM_PLANE), structMolecule)
-        val levelAtom = ChemAtom(Vector3f(0.0f, 0.0f, 0.0f), structAtom, insert.symbol, levelMolecule)
+        val levelAtom = ChemAtom(Vector3f(0.0f, 0.0f, 0.0f), structAtom, levelMolecule)
         levelMolecule.atoms.add(levelAtom)
 
         levelContainer.sceneMolecules.add(levelMolecule)

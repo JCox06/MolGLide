@@ -44,7 +44,7 @@ class LevelRenderer(
         traverseAndCollect(container, atomEntities, bondEntities)
 
         //Now Render
-        renderAtomSymbols(atomEntities, camera2D)
+        renderAtomSymbols(container, atomEntities, camera2D)
 
         renderBondLines(bondEntities, camera2D, viewport)
     }
@@ -110,7 +110,7 @@ class LevelRenderer(
     }
 
 
-    private fun renderAtomSymbols(atoms: List<ChemAtom>, camera2D: Camera2D) {
+    private fun renderAtomSymbols(leveLContainer: LevelContainer, atoms: List<ChemAtom>, camera2D: Camera2D) {
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
         val textProgram = resources.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
@@ -120,7 +120,7 @@ class LevelRenderer(
             //Render the atom symbol
             val worldPos = atom.getWorldPosition()
             if (atom.visible) {
-                renderString(atom.text, worldPos, textProgram)
+                renderString(leveLContainer.structMolecules.getSymbol(atom.molManagerLink), worldPos, textProgram)
             }
 
             //Check to see if this atom has any implicit hydrogens

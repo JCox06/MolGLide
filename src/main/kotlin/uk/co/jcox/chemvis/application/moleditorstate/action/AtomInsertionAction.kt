@@ -29,13 +29,13 @@ class AtomInsertionAction (
 
     override fun execute(levelContainer: LevelContainer) {
         //First turn off hydrogens for the old atom if it is carbon (only for source carbon)
-        disableHydrogensForCarbon()
+        disableHydrogensForCarbon(levelContainer)
 
         //Now create the new atom
         val newStructAtom = createNewStructAtom(levelContainer, srcMol.molManagerLink, atomInsert.symbol)
 
         //Create the new atom level view side
-        val newLevelAtom = ChemAtom(Vector3f(0.0f, 0.0f, 0.0f), newStructAtom, atomInsert.symbol, srcMol)
+        val newLevelAtom = ChemAtom(Vector3f(0.0f, 0.0f, 0.0f), newStructAtom, srcMol)
         srcMol.atoms.add(newLevelAtom)
 
         //Create the bonds struct side
@@ -77,10 +77,13 @@ class AtomInsertionAction (
         updateImplicitHydrogens(levelContainer, srcAtom, srcAtom.molManagerLink, srcMol.molManagerLink)
     }
 
-    private fun disableHydrogensForCarbon() {
+    private fun disableHydrogensForCarbon(levelContainer: LevelContainer) {
         wasVisibleBefore = srcAtom.visible
 
-        if (srcAtom.text == "C") {
+
+        val srcAtomSymbol = levelContainer.structMolecules.getSymbol(srcAtom.molManagerLink)
+
+        if (srcAtomSymbol == "C") {
             srcAtom.visible = false
         }
     }
