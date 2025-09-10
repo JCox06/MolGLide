@@ -117,10 +117,20 @@ class LevelRenderer(
         val diff = start - end
         val orth = Vector3f(diff.y, -diff.x, diff.z).normalize() * OrganicEditorState.MULTI_BOND_DISTANCE
 
+        if (line.centredBond) {
+            val newOffset = orth.div(-2.0f, Vector3f())
+            newOffset.y =-1.0f
+            start.x += newOffset.x
+            start.y += newOffset.y
+            end.x += newOffset.x
+            end.y += newOffset.y
+        }
+
         val newStart = start + orth
         val newEnd = end + orth
 
-        renderSingleBond(chemManager, line, renderData)
+        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.activeTheme.lineThickness))
+
         val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, themeStyleManager.activeTheme.lineThickness)
         renderData.addAll(secondData)
 
