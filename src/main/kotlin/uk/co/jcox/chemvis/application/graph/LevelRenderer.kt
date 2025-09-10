@@ -8,7 +8,6 @@ import org.joml.plus
 import org.joml.times
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
-import org.tinylog.Logger
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.Batch2D
@@ -120,7 +119,7 @@ class LevelRenderer(
             //Render the atom symbol
             val worldPos = atom.getWorldPosition()
             if (atom.visible) {
-                renderString(leveLContainer.structMolecules.getSymbol(atom.molManagerLink), worldPos, textProgram)
+                renderString(leveLContainer.structMolecules.getAtomInsert(atom.molManagerLink).symbol, worldPos, textProgram)
             }
 
             //Check to see if this atom has any implicit hydrogens

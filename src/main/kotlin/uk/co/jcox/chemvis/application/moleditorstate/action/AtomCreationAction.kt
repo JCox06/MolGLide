@@ -29,7 +29,7 @@ class AtomCreationAction (
 
         //Create the chem data
         val structMolecule = levelContainer.structMolecules.createMolecule()
-        val structAtom = levelContainer.structMolecules.addAtom(structMolecule, insert.symbol)
+        val structAtom = levelContainer.structMolecules.addAtom(structMolecule, insert)
 
         //Create the level data
         val levelMolecule = ChemMolecule(Vector3f(newAtomX, newAtomY, OrganicEditorState.ATOM_PLANE), structMolecule)

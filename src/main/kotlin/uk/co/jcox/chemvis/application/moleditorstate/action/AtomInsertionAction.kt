@@ -81,9 +81,9 @@ class AtomInsertionAction (
         wasVisibleBefore = srcAtom.visible
 
 
-        val srcAtomSymbol = levelContainer.structMolecules.getSymbol(srcAtom.molManagerLink)
+        val srcAtomSymbol = levelContainer.structMolecules.getAtomInsert(srcAtom.molManagerLink)
 
-        if (srcAtomSymbol == "C") {
+        if (srcAtomSymbol == AtomInsert.CARBON) {
             srcAtom.visible = false
         }
     }
@@ -92,7 +92,7 @@ class AtomInsertionAction (
     private fun createNewStructAtom(levelContainer: LevelContainer, mol: UUID, symbol: String): UUID {
         val srcStructMolcule = srcMol.molManagerLink
 
-        val newSrcAtom = levelContainer.structMolecules.addAtom(srcStructMolcule, atomInsert.symbol)
+        val newSrcAtom = levelContainer.structMolecules.addAtom(srcStructMolcule, atomInsert)
         return newSrcAtom
     }
 
