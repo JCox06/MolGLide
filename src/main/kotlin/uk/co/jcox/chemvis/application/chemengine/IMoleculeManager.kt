@@ -50,7 +50,7 @@ interface IMoleculeManager {
 
     fun getImplicitHydrogens(atom: UUID): Int
 
-    fun updateBondOrder(molecule: UUID, bond: UUID, newBondOrder: Int)
+    fun updateBondOrder(molecule: UUID, bond: UUID, newBondOrder: BondOrder)
 
     fun getJoiningBond(molecule: UUID, atomA: UUID, atomB: UUID): UUID?
 
@@ -58,5 +58,5 @@ interface IMoleculeManager {
 
     fun getAtomInsert(atom: UUID) : AtomInsert
 
-    fun getBondOrder(bond: UUID) : Int
+    fun getBondOrder(bond: UUID) : BondOrder
 }

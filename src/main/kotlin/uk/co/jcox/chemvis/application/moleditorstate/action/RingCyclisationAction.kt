@@ -5,7 +5,6 @@ import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemBond
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
-import java.util.UUID
 
 
 class RingCyclisationAction(
@@ -18,10 +17,10 @@ class RingCyclisationAction(
 
     override fun execute(levelContainer: LevelContainer) {
         //Create a new bond struct side
-        val bondID = levelContainer.structMolecules.formBond(molecule.molManagerLink, atomA.molManagerLink, atomB.molManagerLink, 1)
+        val bondID = levelContainer.chemManager.formBond(molecule.molManagerLink, atomA.molManagerLink, atomB.molManagerLink, 1)
 
         //Create new bond on the level side
-        val levelBond = ChemBond(atomA, atomB, ChemBond.Type.SINGLE, Vector3f(), bondID)
+        val levelBond = ChemBond(atomA, atomB, Vector3f(), bondID)
         molecule.bonds.add(levelBond)
         this.bond = levelBond
 
@@ -32,16 +31,16 @@ class RingCyclisationAction(
 
         bond?.let {
             this.molecule.bonds.remove(it)
-            levelContainer.structMolecules.deleteBond(molecule.molManagerLink, it.molManagerLink)
+            levelContainer.chemManager.deleteBond(molecule.molManagerLink, it.molManagerLink)
         }
 
         updateImplicitHydrogens(levelContainer)
     }
 
     private fun updateImplicitHydrogens(levelContainer: LevelContainer) {
-        levelContainer.structMolecules.recalculate(molecule.molManagerLink)
-        val atomAH = levelContainer.structMolecules.getImplicitHydrogens(atomA.molManagerLink)
-        val atomBH = levelContainer.structMolecules.getImplicitHydrogens(atomB.molManagerLink)
+        levelContainer.chemManager.recalculate(molecule.molManagerLink)
+        val atomAH = levelContainer.chemManager.getImplicitHydrogens(atomA.molManagerLink)
+        val atomBH = levelContainer.chemManager.getImplicitHydrogens(atomB.molManagerLink)
         atomA.implicitHydrogenCount = atomAH
         atomB.implicitHydrogenCount = atomBH
     }

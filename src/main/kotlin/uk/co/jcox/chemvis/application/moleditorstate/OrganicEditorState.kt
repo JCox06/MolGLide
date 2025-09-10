@@ -1,14 +1,9 @@
 package uk.co.jcox.chemvis.application.moleditorstate
 
-import org.apache.jena.sparql.function.library.context
-import org.apache.jena.sparql.function.library.print
-import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.MolGLide
-import uk.co.jcox.chemvis.application.graph.ChemAtom
-import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.graph.LevelRenderer
 import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
@@ -21,7 +16,6 @@ import uk.co.jcox.chemvis.cvengine.IInputSubscriber
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.InputManager
 import uk.co.jcox.chemvis.cvengine.RawInput
-import java.util.UUID
 
 class OrganicEditorState (
     val services: ICVServices,
@@ -131,7 +125,7 @@ class OrganicEditorState (
             val atom = selection.atom
             val molecule = atom.parent
 
-            return levelContainer.structMolecules.getMolecularFormula(molecule.molManagerLink)
+            return levelContainer.chemManager.getMolecularFormula(molecule.molManagerLink)
         }
         return "No molecule selected"
     }

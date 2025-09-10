@@ -159,13 +159,13 @@ class CDKotMan (
         return count
     }
 
-    override fun updateBondOrder(molecule: UUID, bond: UUID, newBondOrder: Int) {
+    override fun updateBondOrder(molecule: UUID, bond: UUID, newBondOrder: BondOrder) {
         val cdkBond = bonds[bond]
         if (cdkBond == null) {
             throw NoSuchElementException("Bond was null")
         }
 
-        cdkBond.order = IBond.Order.DOUBLE
+        cdkBond.order = getCDKBondOrder(newBondOrder)
     }
 
     override fun getJoiningBond(molecule: UUID, atomA: UUID, atomB: UUID): UUID? {
@@ -211,22 +211,35 @@ class CDKotMan (
         cdkAtom.symbol = insert.symbol
     }
 
-    override fun getBondOrder(bond: UUID): Int {
+    override fun getBondOrder(bond: UUID): BondOrder {
         val bond = bonds[bond]
 
         if (bond == null) {
-            throw NoSuchElementException("Bond is null")
+            throw RuntimeException("Could not get the bond specified to calculate bond order")
         }
 
-        if (bond.order == IBond.Order.SINGLE) {
-            return 1
+        val order = getMolGLideBondOrder(bond.order)
+
+        return order
+    }
+
+    private fun getMolGLideBondOrder(bondOrder: IBond.Order) : BondOrder {
+        val proposed = BondOrder.entries.find { it.number == bondOrder.numeric() }
+
+        if (proposed == null) {
+            throw RuntimeException("Could not translate a CDK bond order to a MolGLide bond order")
         }
 
-        if (bond.order == IBond.Order.DOUBLE) {
-            return 2
-        }
+        return proposed
+    }
 
-        return -1
+    private fun getCDKBondOrder(bondOrder: BondOrder) : IBond.Order {
+        val proposed = IBond.Order.entries.find { it.numeric() == bondOrder.number}
+
+        if (proposed == null) {
+            throw RuntimeException("Could not translate a MolGLide bond order to a CDK bond order: $bondOrder")
+        }
+        return proposed
     }
 
     companion object {

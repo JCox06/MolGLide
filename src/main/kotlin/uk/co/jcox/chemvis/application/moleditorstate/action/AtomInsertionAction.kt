@@ -39,10 +39,10 @@ class AtomInsertionAction (
         srcMol.atoms.add(newLevelAtom)
 
         //Create the bonds struct side
-        val newStructBond = levelContainer.structMolecules.formBond(srcMol.molManagerLink, srcAtom.molManagerLink, newStructAtom, 1)
+        val newStructBond = levelContainer.chemManager.formBond(srcMol.molManagerLink, srcAtom.molManagerLink, newStructAtom, 1)
 
         //Create the bond level side
-        val newLevelBond = ChemBond(srcAtom, newLevelAtom,ChemBond.Type.SINGLE, Vector3f(), newStructBond)
+        val newLevelBond = ChemBond(srcAtom, newLevelAtom, Vector3f(), newStructBond)
         srcMol.bonds.add(newLevelBond)
 
         this.newStructAtom = newStructAtom
@@ -70,8 +70,8 @@ class AtomInsertionAction (
 
         val mol = srcMol.molManagerLink
 
-        newStructBond?.let { levelContainer.structMolecules.deleteBond(mol, it) }
-        newStructAtom?.let { levelContainer.structMolecules.deleteAtom(mol, it) }
+        newStructBond?.let { levelContainer.chemManager.deleteBond(mol, it) }
+        newStructAtom?.let { levelContainer.chemManager.deleteAtom(mol, it) }
 
 
         updateImplicitHydrogens(levelContainer, srcAtom, srcAtom.molManagerLink, srcMol.molManagerLink)
@@ -81,7 +81,7 @@ class AtomInsertionAction (
         wasVisibleBefore = srcAtom.visible
 
 
-        val srcAtomSymbol = levelContainer.structMolecules.getAtomInsert(srcAtom.molManagerLink)
+        val srcAtomSymbol = levelContainer.chemManager.getAtomInsert(srcAtom.molManagerLink)
 
         if (srcAtomSymbol == AtomInsert.CARBON) {
             srcAtom.visible = false
@@ -92,14 +92,14 @@ class AtomInsertionAction (
     private fun createNewStructAtom(levelContainer: LevelContainer, mol: UUID, symbol: String): UUID {
         val srcStructMolcule = srcMol.molManagerLink
 
-        val newSrcAtom = levelContainer.structMolecules.addAtom(srcStructMolcule, atomInsert)
+        val newSrcAtom = levelContainer.chemManager.addAtom(srcStructMolcule, atomInsert)
         return newSrcAtom
     }
 
     private fun updateImplicitHydrogens(levelContainer: LevelContainer, srcLevelAtom: ChemAtom, srcStructAtom: UUID, srcStructMol: UUID) {
-        levelContainer.structMolecules.recalculate(srcStructMol)
+        levelContainer.chemManager.recalculate(srcStructMol)
 
-        val newH = levelContainer.structMolecules.getImplicitHydrogens(srcStructAtom)
+        val newH = levelContainer.chemManager.getImplicitHydrogens(srcStructAtom)
 
         srcLevelAtom.implicitHydrogenCount = newH
     }

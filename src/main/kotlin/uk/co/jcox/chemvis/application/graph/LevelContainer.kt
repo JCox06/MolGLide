@@ -6,5 +6,5 @@ import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 class LevelContainer {
 
     val sceneMolecules = mutableListOf<ChemMolecule>()
-    val structMolecules: IMoleculeManager = CDKotMan()
+    val chemManager: IMoleculeManager = CDKotMan()
 }

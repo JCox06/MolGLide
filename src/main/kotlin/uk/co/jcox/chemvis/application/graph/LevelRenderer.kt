@@ -9,6 +9,7 @@ import org.joml.times
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.application.MolGLide
+import uk.co.jcox.chemvis.application.chemengine.BondOrder
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.Batch2D
 import uk.co.jcox.chemvis.cvengine.CVEngine
@@ -45,7 +46,7 @@ class LevelRenderer(
         //Now Render
         renderAtomSymbols(container, atomEntities, camera2D)
 
-        renderBondLines(bondEntities, camera2D, viewport)
+        renderBondLines(container, bondEntities, camera2D, viewport)
     }
 
 
@@ -70,7 +71,7 @@ class LevelRenderer(
     }
 
 
-    private fun renderBondLines(bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
+    private fun renderBondLines(container: LevelContainer, bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
         val lineProgram = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
         lineProgram.uniform("uPerspective", camera2D.combined())
         lineProgram.uniform("u_viewport", viewport)
@@ -92,7 +93,9 @@ class LevelRenderer(
             val perInstanceData = listOf<Float>(start.x, start.y, start.z, end.x, end.y, end.z, lineThickness)
             instanceData.addAll(perInstanceData)
 
-            if (line.type == ChemBond.Type.DOUBLE) {
+            val lineBondOrder = container.chemManager.getBondOrder(line.molManagerLink)
+
+            if (lineBondOrder == BondOrder.DOUBLE) {
                 val diff = start - end
                 val orth = Vector3f(diff.y, -diff.x, diff.z).normalize() * OrganicEditorState.MULTI_BOND_DISTANCE
 
@@ -119,7 +122,7 @@ class LevelRenderer(
             //Render the atom symbol
             val worldPos = atom.getWorldPosition()
             if (atom.visible) {
-                renderString(leveLContainer.structMolecules.getAtomInsert(atom.molManagerLink).symbol, worldPos, textProgram)
+                renderString(leveLContainer.chemManager.getAtomInsert(atom.molManagerLink).symbol, worldPos, textProgram)
             }
 
             //Check to see if this atom has any implicit hydrogens
