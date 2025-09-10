@@ -8,8 +8,9 @@ import org.joml.plus
 import org.joml.times
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
-import org.tinylog.Logger
 import uk.co.jcox.chemvis.application.MolGLide
+import uk.co.jcox.chemvis.application.chemengine.BondOrder
+import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.Batch2D
 import uk.co.jcox.chemvis.cvengine.CVEngine
@@ -44,9 +45,9 @@ class LevelRenderer(
         traverseAndCollect(container, atomEntities, bondEntities)
 
         //Now Render
-        renderAtomSymbols(atomEntities, camera2D)
+        renderAtomSymbols(container, atomEntities, camera2D)
 
-        renderBondLines(bondEntities, camera2D, viewport)
+        renderBondLines(container, bondEntities, camera2D, viewport)
     }
 
 
@@ -71,7 +72,7 @@ class LevelRenderer(
     }
 
 
-    private fun renderBondLines(bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
+    private fun renderBondLines(container: LevelContainer, bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
         val lineProgram = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
         lineProgram.uniform("uPerspective", camera2D.combined())
         lineProgram.uniform("u_viewport", viewport)
@@ -82,35 +83,59 @@ class LevelRenderer(
         val instanceData = mutableListOf<Float>()
 
         val lineColour = themeStyleManager.activeTheme.lineColour
-        val lineThickness = 2.0f
 
         lineProgram.uniform("uLight", lineColour)
 
-
         for (line in bonds) {
-            val start = line.atomA.getWorldPosition()
-            val end = line.atomB.getWorldPosition()
-            val perInstanceData = listOf<Float>(start.x, start.y, start.z, end.x, end.y, end.z, lineThickness)
-            instanceData.addAll(perInstanceData)
-
-            if (line.type == ChemBond.Type.DOUBLE) {
-                val diff = start - end
-                val orth = Vector3f(diff.y, -diff.x, diff.z).normalize() * OrganicEditorState.MULTI_BOND_DISTANCE
-
-                val newStart = start + orth
-                val newEnd = end + orth
-
-                val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, lineThickness)
-                instanceData.addAll(secondData)
-            }
+            prepareLineRenderData(container.chemManager, line, instanceData)
         }
-
-
         instancer.drawLines(glMesh, instanceData)
     }
 
 
-    private fun renderAtomSymbols(atoms: List<ChemAtom>, camera2D: Camera2D) {
+    private fun prepareLineRenderData(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
+        val lineTypeOrder = chemManager.getBondOrder(line.molManagerLink)
+        if (lineTypeOrder == BondOrder.SINGLE) {
+            renderSingleBond(chemManager, line, renderData)
+        }
+        if (lineTypeOrder == BondOrder.DOUBLE) {
+            renderDoubleBond(chemManager, line, renderData)
+        }
+    }
+
+    private fun renderSingleBond(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
+        val start = line.atomA.getWorldPosition()
+        val end = line.atomB.getWorldPosition()
+        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.activeTheme.lineThickness))
+    }
+
+    private fun renderDoubleBond(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
+        val start = line.atomA.getWorldPosition()
+        val end = line.atomB.getWorldPosition()
+
+
+        val diff = start - end
+        val orth = Vector3f(diff.y, -diff.x, diff.z).normalize() * OrganicEditorState.MULTI_BOND_DISTANCE
+
+        if (line.centredBond) {
+            val newOffset = orth.div(-2.0f, Vector3f())
+            newOffset.add(line.bisectorNudge)
+            start.add(newOffset)
+            end.add(newOffset)
+        }
+
+        val newStart = start + orth
+        val newEnd = end + orth
+
+        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.activeTheme.lineThickness))
+
+        val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, themeStyleManager.activeTheme.lineThickness)
+        renderData.addAll(secondData)
+
+    }
+
+
+    private fun renderAtomSymbols(leveLContainer: LevelContainer, atoms: List<ChemAtom>, camera2D: Camera2D) {
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
         val textProgram = resources.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
@@ -120,15 +145,17 @@ class LevelRenderer(
             //Render the atom symbol
             val worldPos = atom.getWorldPosition()
             if (atom.visible) {
-                renderString(atom.text, worldPos, textProgram)
+                renderString(leveLContainer.chemManager.getAtomInsert(atom.molManagerLink).symbol, worldPos, textProgram)
             }
 
+            val hydrogen = leveLContainer.chemManager.getImplicitHydrogens(atom.molManagerLink)
+
             //Check to see if this atom has any implicit hydrogens
-            if (atom.implicitHydrogenCount >= 1 && atom.visible) {
+            if (hydrogen >= 1 && atom.visible) {
 
-                var numberString = "${atom.implicitHydrogenCount}"
+                var numberString = "$hydrogen"
 
-                if (atom.implicitHydrogenCount == 1) {
+                if (hydrogen == 1) {
                     numberString = ""
                 }
 
@@ -209,7 +236,7 @@ class LevelRenderer(
 
 
     private fun getSymbolColour(symbol: String): Vector3f {
-        val colour = themeStyleManager.activeTheme.symbolColours[symbol] ?: return Vector3f(1.0f, 1.0f, 1.0f)
+        val colour = themeStyleManager.activeTheme.symbolColours[symbol] ?: return themeStyleManager.activeTheme.lineColour
         return colour
     }
 }

@@ -1,6 +1,5 @@
 package uk.co.jcox.chemvis.application.moleditorstate.action
 
-import org.apache.jena.sparql.pfunction.library.str
 import org.joml.Vector3f
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
@@ -28,12 +27,12 @@ class AtomCreationAction (
     override fun execute(levelContainer: LevelContainer) {
 
         //Create the chem data
-        val structMolecule = levelContainer.structMolecules.createMolecule()
-        val structAtom = levelContainer.structMolecules.addAtom(structMolecule, insert.symbol)
+        val structMolecule = levelContainer.chemManager.createMolecule()
+        val structAtom = levelContainer.chemManager.addAtom(structMolecule, insert)
 
         //Create the level data
         val levelMolecule = ChemMolecule(Vector3f(newAtomX, newAtomY, OrganicEditorState.ATOM_PLANE), structMolecule)
-        val levelAtom = ChemAtom(Vector3f(0.0f, 0.0f, 0.0f), structAtom, insert.symbol, levelMolecule)
+        val levelAtom = ChemAtom(Vector3f(0.0f, 0.0f, 0.0f), structAtom, levelMolecule)
         levelMolecule.atoms.add(levelAtom)
 
         levelContainer.sceneMolecules.add(levelMolecule)
@@ -43,9 +42,7 @@ class AtomCreationAction (
         this.structAtom = structAtom
 
         //Get the updated values from CDK and send them to the view
-        levelContainer.structMolecules.recalculate(structMolecule)
-        val hydrogenCount = levelContainer.structMolecules.getImplicitHydrogens(structAtom)
-        levelAtom.implicitHydrogenCount = hydrogenCount
+        levelContainer.chemManager.recalculate(structMolecule)
     }
 
 
@@ -60,12 +57,9 @@ class AtomCreationAction (
         val structMol = this.structMolecule
         if (structMol != null) {
             this.structAtom?.let {
-                levelContainer.structMolecules.deleteAtom(structMol, it)
+                levelContainer.chemManager.deleteAtom(structMol, it)
             }
-            levelContainer.structMolecules.deleteMolecule(structMol)
+            levelContainer.chemManager.deleteMolecule(structMol)
         }
-
-
-
     }
 }

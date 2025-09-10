@@ -1,7 +1,5 @@
 package uk.co.jcox.chemvis.application.chemengine
 
-import org.checkerframework.checker.units.qual.cd
-import org.checkerframework.checker.units.qual.mol
 import org.openscience.cdk.Atom
 import org.openscience.cdk.AtomContainer
 import org.openscience.cdk.Bond
@@ -10,9 +8,9 @@ import org.openscience.cdk.exception.CDKException
 import org.openscience.cdk.interfaces.IAtom
 import org.openscience.cdk.interfaces.IAtomContainer
 import org.openscience.cdk.interfaces.IBond
+import org.openscience.cdk.io.SMILESWriter
+import org.openscience.cdk.smiles.SmilesGenerator
 import org.openscience.cdk.tools.CDKHydrogenAdder
-import org.openscience.cdk.tools.IDeduceBondOrderTool
-import org.openscience.cdk.tools.manipulator.AtomContainerManipulator
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator
 import org.tinylog.Logger
@@ -54,14 +52,14 @@ class CDKotMan (
         container?.removeBond(bond)
     }
 
-    override fun addAtom(molecule: UUID, element: String): UUID {
+    override fun addAtom(molecule: UUID, insert: AtomInsert): UUID {
         val cdkContainer = molecules[molecule]
 
         if (cdkContainer == null) {
             throw NoSuchElementException("Unknown molecule with $molecule")
         }
 
-        val atom: IAtom = Atom(element)
+        val atom: IAtom = Atom(insert.symbol)
         val id = UUID.randomUUID()
         atoms[id] = atom
         atom.setProperty(MANAGER_ID, id)
@@ -102,7 +100,7 @@ class CDKotMan (
         return MolecularFormulaManipulator.getString(formula)
     }
 
-    override fun getBonds(moleculeID: UUID, atom: UUID): Int {
+    override fun getBondCount(moleculeID: UUID, atom: UUID): Int {
         val molecule = molecules[moleculeID]
         val cdkAtom = atoms[atom]
 
@@ -111,16 +109,6 @@ class CDKotMan (
         }
 
         return molecule.getConnectedBondsCount(cdkAtom) + cdkAtom.implicitHydrogenCount
-    }
-
-    override fun isOfElement(atom: UUID, element: String): Boolean {
-        val cdkAtom = atoms[atom]
-
-        if (cdkAtom == null) {
-            throw NoSuchElementException("Atom was null")
-        }
-
-        return cdkAtom.symbol == element
     }
 
     override fun recalculate(molecule: UUID) {
@@ -155,8 +143,6 @@ class CDKotMan (
                 if (!AtomInsert.fromSymbol(atom.symbol).hydrogenable) {
                     atom.implicitHydrogenCount = 0
                 }
-
-                //todo reimplement this once the new system is in place
             }
         } catch (e: CDKException) {
             Logger.error ("Error when calculating molecule type {}", e)
@@ -175,13 +161,13 @@ class CDKotMan (
         return count
     }
 
-    override fun updateBondOrder(molecule: UUID, bond: UUID, newBondOrder: Int) {
+    override fun updateBondOrder(molecule: UUID, bond: UUID, newBondOrder: BondOrder) {
         val cdkBond = bonds[bond]
         if (cdkBond == null) {
             throw NoSuchElementException("Bond was null")
         }
 
-        cdkBond.order = IBond.Order.DOUBLE
+        cdkBond.order = getCDKBondOrder(newBondOrder)
     }
 
     override fun getJoiningBond(molecule: UUID, atomA: UUID, atomB: UUID): UUID? {
@@ -208,76 +194,54 @@ class CDKotMan (
         return bondID
     }
 
-    override fun clone(): IMoleculeManager {
-        val moleculeCloneMap: MutableMap<UUID, IAtomContainer> = mutableMapOf()
-        val moleculeBondMap: MutableMap<UUID, IBond> = mutableMapOf()
-        val moleculeAtomMap: MutableMap<UUID, IAtom> = mutableMapOf()
 
-        //Clone all the atom containers in the level
-        molecules.forEach { key, value ->
-            val molClone = value.clone()
-
-            moleculeCloneMap[key] = molClone
-
-            //Now go through the current molecules bonds
-            molClone.bonds().forEach {iBond ->
-                val iBondID = iBond.getProperty<UUID>(MANAGER_ID)
-                if (iBondID == null) {
-                    throw NoSuchElementException("Clone ERROR - Bond ID is missing")
-                }
-
-                moleculeBondMap[iBondID] = iBond
-            }
-
-            //Now go through the current molecules atoms
-            molClone.atoms().forEach {iAtom ->
-
-                val iAtomID = iAtom.getProperty<UUID>(MANAGER_ID)
-                if (iAtomID == null) {
-                    throw NoSuchElementException("Clone ERROR - Atom ID is missing")
-                }
-                moleculeAtomMap[iAtomID] = iAtom
-            }
-        }
-
-        return CDKotMan(moleculeCloneMap, moleculeBondMap, moleculeAtomMap)
-    }
-
-
-    override fun getSymbol(atom: UUID): String {
+    override fun getAtomInsert(atom: UUID): AtomInsert {
         val cdkAtom = atoms[atom]
 
         if (cdkAtom == null) {
-            return ""
+            return AtomInsert.UNKNOWN
         }
-        return cdkAtom.symbol
+        return AtomInsert.fromSymbol(cdkAtom.symbol)
     }
 
-    override fun replace(atom: UUID, element: String) {
+    override fun replace(atom: UUID, insert: AtomInsert) {
         val cdkAtom = atoms[atom]
 
         if (cdkAtom == null) {
             throw NoSuchElementException("Atom is null")
         }
-        cdkAtom.symbol = element
+        cdkAtom.symbol = insert.symbol
     }
 
-    override fun getBondOrder(bond: UUID): Int {
+    override fun getBondOrder(bond: UUID): BondOrder {
         val bond = bonds[bond]
 
         if (bond == null) {
-            throw NoSuchElementException("Bond is null")
+            throw RuntimeException("Could not get the bond specified to calculate bond order")
         }
 
-        if (bond.order == IBond.Order.SINGLE) {
-            return 1
+        val order = getMolGLideBondOrder(bond.order)
+
+        return order
+    }
+
+    private fun getMolGLideBondOrder(bondOrder: IBond.Order) : BondOrder {
+        val proposed = BondOrder.entries.find { it.number == bondOrder.numeric() }
+
+        if (proposed == null) {
+            throw RuntimeException("Could not translate a CDK bond order to a MolGLide bond order")
         }
 
-        if (bond.order == IBond.Order.DOUBLE) {
-            return 2
-        }
+        return proposed
+    }
 
-        return -1
+    private fun getCDKBondOrder(bondOrder: BondOrder) : IBond.Order {
+        val proposed = IBond.Order.entries.find { it.numeric() == bondOrder.number}
+
+        if (proposed == null) {
+            throw RuntimeException("Could not translate a MolGLide bond order to a CDK bond order: $bondOrder")
+        }
+        return proposed
     }
 
     companion object {

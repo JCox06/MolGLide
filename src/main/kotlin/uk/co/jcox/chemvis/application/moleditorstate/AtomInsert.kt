@@ -12,8 +12,9 @@ enum class AtomInsert(val symbol: String, val hydrogenable: Boolean) {
     IODINE("I", false),
     MAGNESIUM("Mg", false),
     LITHIUM("Li", false),
-    SULPHUR("S", true)
+    SULPHUR("S", true),
 
+    UNKNOWN("ERROR", false)
     ;
 
     companion object {

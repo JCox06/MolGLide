@@ -42,6 +42,7 @@ class ThemeStyleManager {
             ) ,
 
             lineColour = Vector3f(1.0f, 1.0f, 1.0f),
+            lineThickness = 2.0f
         )
 
         val screenshotWhiteTheme = ThemeStyle(
@@ -60,6 +61,7 @@ class ThemeStyleManager {
 
 
             lineColour = Vector3f(0.0f, 0.0f, 0.0f),
+            lineThickness = 2.0f
         )
 
 
@@ -83,6 +85,7 @@ class ThemeStyleManager {
 
             defaultAtomColour = Vector3f(0.0f, 0.0f, 0.0f),
             lineColour = Vector3f(0.0f, 0.0f, 0.0f),
+            lineThickness = 2.0f
         )
 
 
@@ -103,6 +106,7 @@ class ThemeStyleManager {
 
             defaultAtomColour = Vector3f(0.0f, 0.0f, 0.0f),
             lineColour = Vector3f(0.0f, 0.0f, 0.0f),
+            lineThickness = 2.0f
         )
 
     }

@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application.chemengine
 
+import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import java.util.*
 
 
@@ -21,10 +22,10 @@ interface IMoleculeManager {
     /**
      * Add an atom to an already existing molecule
      * @param molecule the uuid to reference an already existing molecule
-     * @param element a symbol string of the element to add
+     * @param insert a symbol string of the element to add
      * @return the uuid of the atom
      */
-    fun addAtom(molecule: UUID, element: String): UUID
+    fun addAtom(molecule: UUID, insert: AtomInsert): UUID
 
 
     /**
@@ -38,12 +39,7 @@ interface IMoleculeManager {
 
     fun getMolecularFormula(moleculeID: UUID): String
 
-    fun getBonds(moleculeID: UUID, atom: UUID): Int
-
-    fun isOfElement(Atom: UUID, element: String): Boolean
-
-
-    fun clone(): IMoleculeManager
+    fun getBondCount(moleculeID: UUID, atom: UUID): Int
 
     /**
      * Perform calculations on a given molecule
@@ -54,13 +50,13 @@ interface IMoleculeManager {
 
     fun getImplicitHydrogens(atom: UUID): Int
 
-    fun updateBondOrder(molecule: UUID, bond: UUID, newBondOrder: Int)
+    fun updateBondOrder(molecule: UUID, bond: UUID, newBondOrder: BondOrder)
 
     fun getJoiningBond(molecule: UUID, atomA: UUID, atomB: UUID): UUID?
 
-    fun replace(atom: UUID, element: String)
+    fun replace(atom: UUID, insert: AtomInsert)
 
-    fun getSymbol(atom: UUID) : String
+    fun getAtomInsert(atom: UUID) : AtomInsert
 
-    fun getBondOrder(bond: UUID) : Int
+    fun getBondOrder(bond: UUID) : BondOrder
 }
