@@ -176,6 +176,7 @@ class LevelRenderer(
         GL11.glDisable(GL11.GL_BLEND)
     }
 
+    //todo rewrite but it works for now
     private fun renderString(label: String, pos: Vector3f, program: ShaderProgram) {
         val theme = themeStyleManager.activeTheme
 
@@ -193,7 +194,7 @@ class LevelRenderer(
 
 
         var renderX = pos.x
-        val renderY = pos.y
+        var renderY = pos.y
 
         batcher.begin(Batch2D.Mode.TRIANGLES)
 
@@ -211,14 +212,22 @@ class LevelRenderer(
                 return
             }
 
-            val width = glyphMetrics.glyphWidth * scale / 2
-            val height = glyphMetrics.glyphHeight * scale / 2
+            var scaleMod = 1.0f
+
+            if (c.isDigit()) {
+                scaleMod = 0.75f
+                renderX -= glyphMetrics.glyphWidth * scale * scaleMod / 4
+                renderY -= glyphMetrics.glyphHeight * scale * scaleMod / 4
+            }
+
+            val width = scaleMod * glyphMetrics.glyphWidth * scale / 2
+            val height = scaleMod * glyphMetrics.glyphHeight * scale / 2
 
             //Does not work!
 //            val meshToDraw = Shaper2D.rectangle(renderX + width, renderY + height, width, height, (Text rendering works fine If you use this line instead of the one below) - However then the text is uncentred
             val meshToDraw = Shaper2D.rectangle(
                 renderX, renderY, width, height,
-                Vector2f(
+                Vector2f (
                     glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX,
                     glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY
                 ),
