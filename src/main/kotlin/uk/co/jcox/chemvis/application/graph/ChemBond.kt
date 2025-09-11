@@ -21,5 +21,7 @@ class ChemBond(
 
     var bisectorNudge = Vector3f(0.0f, -1.0f, 0.0f)
 
+    var flipDoubleBond = false
+
 
 }

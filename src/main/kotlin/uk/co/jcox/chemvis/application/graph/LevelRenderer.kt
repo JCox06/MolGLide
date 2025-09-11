@@ -117,6 +117,10 @@ class LevelRenderer(
         val diff = start - end
         val orth = Vector3f(diff.y, -diff.x, diff.z).normalize() * OrganicEditorState.MULTI_BOND_DISTANCE
 
+        if (line.flipDoubleBond) {
+            orth.negate()
+        }
+
         if (line.centredBond) {
             val newOffset = orth.div(-2.0f, Vector3f())
             newOffset.add(line.bisectorNudge)
