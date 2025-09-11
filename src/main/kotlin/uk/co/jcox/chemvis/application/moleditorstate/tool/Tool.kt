@@ -25,7 +25,7 @@ import kotlin.math.sin
 abstract class Tool(
     protected val toolboxContext: ToolboxContext,
     private val renderingContext: IRenderTargetContext,
-    private val inputManager: InputManager,
+    protected val inputManager: InputManager,
     private val camera2D: Camera2D,
     protected val levelContainer: LevelContainer,
     protected val selectionManager: SelectionManager,

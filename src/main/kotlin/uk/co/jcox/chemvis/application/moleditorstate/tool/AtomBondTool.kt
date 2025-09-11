@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application.moleditorstate.tool
 
+import org.apache.jena.sparql.pfunction.library.container
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
@@ -11,6 +12,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomInsertionAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.AtomReplacementAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.IncrementBondOrderAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.RingCyclisationAction
 import uk.co.jcox.chemvis.cvengine.Camera2D
@@ -39,6 +41,7 @@ class AtomBondTool(
             is Mode.AtomInsertion -> addAtomToMolecule(mode)
 
             is Mode.AtomInsertionDragging -> {} //Not an action that takes place here
+            is Mode.PostReplacement -> {} //Not an action that happens here
         }
     }
 
@@ -59,15 +62,9 @@ class AtomBondTool(
     }
 
     private fun addAtomToMolecule(molInsertion: Mode.AtomInsertion) {
-        val atomInsertionAction = AtomInsertionAction(toolboxContext.atomInsert, molInsertion.srcAtom)
-        actionManager.executeAction(atomInsertionAction)
-
-        //While the user is pressing and holding, we need to change the mode to dragging.
-        //Dragging mode is finalised upon key release
-
-        atomInsertionAction.newLevelAtom?.let {
-            toolMode = Mode.AtomInsertionDragging(molInsertion.srcAtom, it, true)
-        }
+        val atomReplacementAction = AtomReplacementAction(molInsertion.srcAtom, toolboxContext.atomInsert)
+        actionManager.executeAction(atomReplacementAction)
+        toolMode = Mode.PostReplacement(molInsertion.srcAtom)
     }
 
 
@@ -88,6 +85,12 @@ class AtomBondTool(
 
     override fun update() {
         val currentMode = toolMode
+
+        //Check if we need to turn an atom replacement action into an atom insertion action
+        if (currentMode is Mode.PostReplacement) {
+            convertPostReplaceToAtomInsert(currentMode)
+        }
+
         if (currentMode is Mode.AtomInsertionDragging) {
             //Drag the atom around in a circle near the mouse
             handleNewAtomDragging(currentMode)
@@ -100,6 +103,7 @@ class AtomBondTool(
 
         }
     }
+
 
     private fun handleNewAtomDragging(mode: Mode.AtomInsertionDragging) {
         val mousePos = mouseWorld()
@@ -213,6 +217,24 @@ class AtomBondTool(
     }
 
 
+    private fun convertPostReplaceToAtomInsert(mode: Mode.PostReplacement) {
+        val mouseWorld = mouseWorld()
+        val dMouse = inputManager.deltaMousePos()
+
+        if (dMouse.length() >= SIG_DELTA) {
+            //Uno the atom replace action
+            actionManager.undoLastAction()
+
+            val atomInsertionAction = AtomInsertionAction(toolboxContext.atomInsert, mode.srcAtom)
+            actionManager.executeAction(atomInsertionAction)
+
+            atomInsertionAction.newLevelAtom?.let {
+                toolMode = Mode.AtomInsertionDragging(mode.srcAtom, it, true)
+            }
+        }
+    }
+
+
     sealed class Mode {
 
         object None : Mode()
@@ -233,5 +255,18 @@ class AtomBondTool(
          */
         class AtomInsertionDragging(val srcAtom: ChemAtom, val destAtom: ChemAtom, var allowBondChanges: Boolean) :
             Mode()
+
+
+        /**
+         * This mode is set after an atom has been replaced.
+         * When this mode is active, if the mouse then moves more than a SIG_DELTA, the mode is restored and changed to an atom insertion action
+         * @param srcAtom the original atom
+         */
+        class PostReplacement(val srcAtom: ChemAtom) : Mode()
+    }
+
+
+    companion object {
+        private const val SIG_DELTA = 7.5f
     }
 }
