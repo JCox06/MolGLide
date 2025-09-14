@@ -8,13 +8,10 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import imgui.type.ImInt
 import org.joml.Vector2f
-import org.openscience.cdk.smiles.smarts.parser.SMARTSParserConstants.v
 import uk.co.jcox.chemvis.application.mainstate.MainState
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
-import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
-import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
 import uk.co.jcox.chemvis.cvengine.ICVServices
 
 class ApplicationUI (
@@ -46,6 +43,14 @@ class ApplicationUI (
 
         menuBar.getFormula = {
             activeSession?.getFormula()
+        }
+
+        menuBar.atomBondTool = {
+            activeSession?.useAtomBondTool()
+        }
+
+        menuBar.moveImplicitGroupTool = {
+            activeSession?.useImplicitMoveTool()
         }
 
         welcomeUI.setup()
@@ -133,16 +138,22 @@ class ApplicationUI (
 
     class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
+        private val tools = listOf("Atom Bond Tool", "Implicit Move Tool")
+        private var selectedToolSelection = 0
+
         var newWindow: () -> Unit = {}
 
         var undo: () -> Unit = {}
 
         var redo: () -> Unit = {}
 
+        var atomBondTool: () -> Unit = {}
+        var moveImplicitGroupTool: () -> Unit = {}
+
         var getFormula: () -> String? = {"Waiting..."}
 
         private val atomSelections = AtomInsert.entries.map { it.symbol }
-        private val selected: ImInt = ImInt(0)
+        private val selectedInsertSelection: ImInt = ImInt(0)
 
         var enableProbe = false
         private set
@@ -170,7 +181,16 @@ class ApplicationUI (
             }
 
 
-            renderButtons(atomSelections, selected, true)
+            if (ImGui.beginMenu("${Icons.TOOLS_ICON} Tool Selection")) {
+                drawToolSelectionMenu()
+                ImGui.endMenu()
+            }
+
+
+            //Render buttons for the atom bond tool
+            if (selectedToolSelection == 0) {
+                renderButtons(atomSelections, selectedInsertSelection, true)
+            }
 
             ImGui.text("Formula: ${getFormula()}")
 
@@ -209,8 +229,22 @@ class ApplicationUI (
             }
         }
 
+
+        private fun drawToolSelectionMenu() {
+
+            if (ImGui.menuItem("${Icons.ATOM_BOND_TOOL_ICON} Atom Bond Tool", selectedToolSelection == 0)) {
+                atomBondTool()
+                selectedToolSelection = 0
+            }
+
+            if (ImGui.menuItem("${Icons.MOVE_ICON} Move Implicit Group", selectedToolSelection == 1)) {
+                moveImplicitGroupTool()
+                selectedToolSelection = 1
+            }
+        }
+
         fun getAtomInsert() : AtomInsert {
-            val symobl = atomSelections[selected.get()]
+            val symobl = atomSelections[selectedInsertSelection.get()]
             return AtomInsert.fromSymbol(symobl)
         }
 

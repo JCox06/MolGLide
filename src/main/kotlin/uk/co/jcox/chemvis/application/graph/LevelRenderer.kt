@@ -167,6 +167,11 @@ class LevelRenderer(
 
 
                     val implicitHPos = atom.implicitHydrogenPos.mod * OrganicEditorState.IMPLICIT_SCALE
+
+                    if(atom.implicitHydrogenPos == ChemAtom.RelationalPos.ABOVE || atom.implicitHydrogenPos == ChemAtom.RelationalPos.BOTTOM) {
+                        implicitHPos.mul(4/3f)
+                    }
+
                     renderString("H${numberString}", implicitHPos + worldPos, textProgram)
 
                 } else {

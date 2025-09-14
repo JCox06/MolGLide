@@ -7,6 +7,7 @@ import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.graph.LevelRenderer
 import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
+import uk.co.jcox.chemvis.application.moleditorstate.tool.ImplicitAtomMoveTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
 import uk.co.jcox.chemvis.cvengine.ApplicationState
@@ -30,7 +31,7 @@ class OrganicEditorState (
     val selectionManager = SelectionManager()
 
 
-    private val currentTool: Tool = AtomBondTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
+    private var currentTool: Tool = AtomBondTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
 
     override fun init() {
 
@@ -128,6 +129,14 @@ class OrganicEditorState (
             return levelContainer.chemManager.getMolecularFormula(molecule.molManagerLink)
         }
         return "No molecule selected"
+    }
+
+    fun useAtomBondTool() {
+        currentTool = AtomBondTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
+    }
+
+    fun useImplicitMoveTool() {
+        currentTool = ImplicitAtomMoveTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
     }
 
     companion object {
