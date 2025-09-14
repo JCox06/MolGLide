@@ -205,7 +205,6 @@ class AtomBondTool(
                 val action = IncrementBondOrderAction(commonMolecule, bond)
                 actionManager.executeAction(action)
                 if (bond.atomA == draggingMode.srcAtom) {
-                    println("HELLO, WORLD")
                     bond.flipDoubleBond = true
                 } else {
                     bond.flipDoubleBond = false

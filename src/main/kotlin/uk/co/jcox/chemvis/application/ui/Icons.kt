@@ -14,4 +14,5 @@ object Icons {
     const val TEMPLATE_TOOL_ICON ="\uf1b2"
     const val TOOLS_ICON ="\uf6e3"
     const val DATABASE_ICON ="\uf1c0"
+    const val MOVE_ICON = "\uf0b2"
 }
