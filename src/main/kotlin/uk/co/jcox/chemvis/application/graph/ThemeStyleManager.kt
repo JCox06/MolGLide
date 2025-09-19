@@ -46,7 +46,7 @@ class ThemeStyleManager {
         )
 
         val screenshotWhiteTheme = ThemeStyle(
-            backgroundColour = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
+            backgroundColour = Vector4f(0.0f, 0.0f, 0.0f, 0.0f),
             symbolColours = mapOf(
                 "H" to Vector3f(0.0f, 0.0f, 0.0f),
                 "N" to Vector3f(0.0f, 0.0f, 0.0f),
@@ -66,7 +66,7 @@ class ThemeStyleManager {
 
 
         val screenshotMolGLideTheme = ThemeStyle(
-            backgroundColour = Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
+            backgroundColour = Vector4f(0.0f, 0.0f, 0.0f, 0.0f),
 
 
 

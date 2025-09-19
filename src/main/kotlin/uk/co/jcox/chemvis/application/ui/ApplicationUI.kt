@@ -191,6 +191,8 @@ class ApplicationUI (
         private val tools = listOf("Atom Bond Tool", "Implicit Move Tool")
         private var selectedToolSelection = 0
 
+        private var selectedTheme = 0
+
         var newWindow: () -> Unit = {}
 
         var undo: () -> Unit = {}
@@ -229,6 +231,11 @@ class ApplicationUI (
 
             if (ImGui.beginMenu("${Icons.EDIT_ICON} Edit")) {
                 drawEditMenu()
+                ImGui.endMenu()
+            }
+
+            if (ImGui.beginMenu("${Icons.PAINT_BRUSH} Themes")) {
+                drawThemeMenu()
                 ImGui.endMenu()
             }
 
@@ -295,6 +302,25 @@ class ApplicationUI (
             if (ImGui.menuItem("${Icons.MOVE_ICON} Move Implicit Group", selectedToolSelection == 1)) {
                 moveImplicitGroupTool()
                 selectedToolSelection = 1
+            }
+        }
+
+        private fun drawThemeMenu() {
+            if (ImGui.menuItem("MolGLide Edit Theme", selectedTheme == 0)) {
+                selectedTheme = 0
+                appManager.themeStyleManager.applyMolGLideEdit()
+            }
+            if (ImGui.menuItem("CPK Theme", selectedTheme == 1)) {
+                selectedTheme = 1
+                appManager.themeStyleManager.applyCPKTheme()
+            }
+            if (ImGui.menuItem("MolGLide Screenshot theme", selectedTheme == 2)) {
+                selectedTheme = 2
+                appManager.themeStyleManager.applyScreenshotMolGLide()
+            }
+            if (ImGui.menuItem("Screenshot White", selectedTheme == 3)) {
+                selectedTheme = 3
+                appManager.themeStyleManager.applyScreenshotWhite()
             }
         }
 
