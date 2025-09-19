@@ -5,6 +5,7 @@ import imgui.ImVec2
 import imgui.ImVec4
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
+import imgui.type.ImString
 import uk.co.jcox.chemvis.application.MolGLide
 
 class WelcomeUI {

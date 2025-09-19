@@ -7,12 +7,23 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import imgui.type.ImInt
+import org.checkerframework.checker.units.qual.mol
+import org.joda.time.LocalDateTime
 import org.joml.Vector2f
+import org.lwjgl.BufferUtils
+import org.lwjgl.opengl.GL
+import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL30
+import org.roaringbitmap.buffer.BufferUtil
 import uk.co.jcox.chemvis.application.mainstate.MainState
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.cvengine.ICVServices
+import uk.co.jcox.chemvis.cvengine.RenderTarget
+import java.io.File
+import javax.swing.JFileChooser
+import javax.swing.filechooser.FileSystemView
 
 class ApplicationUI (
     val appManager: MainState,
@@ -23,6 +34,7 @@ class ApplicationUI (
     private val menuBar = MenuBar(appManager, engineManager)
     private val welcomeUI = WelcomeUI()
     private var activeSession: OrganicEditorState? = null
+    private var activeTarget: RenderTarget? = null
 
     fun setup() {
 
@@ -53,8 +65,46 @@ class ApplicationUI (
             activeSession?.useImplicitMoveTool()
         }
 
+        menuBar.takeScreenshot = {
+            takeScreenshot()
+        }
+
         welcomeUI.setup()
     }
+
+
+    private fun takeScreenshot() {
+        //Capture image:
+        val target = activeTarget
+        val session = activeSession
+        if (target != null && session != null) {
+            showScreenshotExplorer(target, session)
+        }
+    }
+
+    private fun showScreenshotExplorer(renderTarget: RenderTarget, session: OrganicEditorState) {
+        val width = renderTarget.width.toInt()
+        val height = renderTarget.height.toInt()
+
+        val imgBuff = BufferUtils.createIntBuffer(4 * width * height)
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, renderTarget.getSamplableFrameBuffer())
+        GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_INT, imgBuff)
+
+        val saveImgThread = Runnable {
+            val home = System.getProperty("user.home")
+            val dateTime = LocalDateTime.now()
+            val molphoto = File(home, "Pictures/MolGLide")
+            if (!molphoto.exists()) {
+                molphoto.mkdir()
+            }
+
+            Utils.saveBufferToImg(File(molphoto.toString(), dateTime.toString()), imgBuff, width, height)
+        }
+
+        val thread = Thread(saveImgThread)
+        thread.start()
+    }
+
 
     fun drawApplicationUI() {
         val dockID = ImGui.dockSpaceOverViewport()
@@ -64,8 +114,8 @@ class ApplicationUI (
         drawEditors(dockID)
 
         displayProbeInfo()
-    }
 
+    }
 
     fun drawEditors(dockingID: Int) {
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, ImVec2(0.0f, 0.0f))
@@ -75,7 +125,7 @@ class ApplicationUI (
             val renderContext = engineManager.getAppStateRenderingContext(id)
 
 
-            renderTarget.clearColour = appManager.getCurrentTheme().backgroundColour
+            renderTarget.clearColour = appManager.themeStyleManager.activeTheme.backgroundColour
 
             ImGui.setNextWindowDockID(dockingID, ImGuiCond.FirstUseEver)
 
@@ -88,6 +138,7 @@ class ApplicationUI (
             val state = engineManager.getState(id)
             if (state is OrganicEditorState) {
                 activeSession = state
+                activeTarget = engineManager.resourceManager().getRenderTarget(id)
                 state.toolbox.atomInsert = menuBar.getAtomInsert()
             }
 
@@ -112,7 +163,6 @@ class ApplicationUI (
 
         ImGui.popStyleVar()
     }
-
 
     private fun displayProbeInfo() {
         if (! menuBar.enableProbe) {
@@ -150,6 +200,8 @@ class ApplicationUI (
         var atomBondTool: () -> Unit = {}
         var moveImplicitGroupTool: () -> Unit = {}
 
+        var takeScreenshot: () -> Unit = {}
+
         var getFormula: () -> String? = {"Waiting..."}
 
         private val atomSelections = AtomInsert.entries.map { it.symbol }
@@ -180,6 +232,9 @@ class ApplicationUI (
                 ImGui.endMenu()
             }
 
+            if (ImGui.button("Take Screenshot")) {
+                takeScreenshot()
+            }
 
             if (ImGui.beginMenu("${Icons.TOOLS_ICON} Tool Selection")) {
                 drawToolSelectionMenu()

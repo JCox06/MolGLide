@@ -20,7 +20,7 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
     val editors = mutableListOf<String>()
 
 
-    private val themeStyleManager = ThemeStyleManager()
+    val themeStyleManager = ThemeStyleManager()
     private val levelRenderer = LevelRenderer(services.batchRenderer(), services.instancedRenderer(), services.resourceManager(), themeStyleManager)
 
     val toolboxContext = ToolboxContext(AtomInsert.CARBON)
@@ -48,10 +48,6 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
         editors.remove(id)
     }
 
-
-    fun getCurrentTheme() : ThemeStyle {
-        return themeStyleManager.activeTheme
-    }
 
     override fun init() {
         themeStyleManager.applyMolGLideEdit()
