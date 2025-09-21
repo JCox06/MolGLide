@@ -10,6 +10,7 @@ import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
+import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomInsertionAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomReplacementAction
@@ -77,7 +78,7 @@ class AtomBondTool(
         }
 
         if (selectionType is SelectionManager.Type.Active) {
-            return Mode.AtomInsertion(selectionType.atom)
+            return Mode.AtomInsertion(selectionType.atom,)
         }
 
         return Mode.None
@@ -230,7 +231,7 @@ class AtomBondTool(
             //Uno the atom replace action
             actionManager.undoLastAction()
 
-            val atomInsertionAction = AtomInsertionAction(toolboxContext.atomInsert, mode.srcAtom)
+            val atomInsertionAction = AtomInsertionAction(toolboxContext.atomInsert, toolboxContext.stereoChem, mode.srcAtom)
             actionManager.executeAction(atomInsertionAction)
 
             atomInsertionAction.newLevelAtom?.let {

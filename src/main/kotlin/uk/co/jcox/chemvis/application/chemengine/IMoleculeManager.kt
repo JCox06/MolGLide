@@ -34,7 +34,7 @@ interface IMoleculeManager {
      * @param atom1 form the bond between this atom and
      * @param atom2
      */
-    fun formBond(moleculeID: UUID, atom1: UUID, atom2: UUID, bondOrder: Int): UUID
+    fun formBond(moleculeID: UUID, atom1: UUID, atom2: UUID, bondOrder: BondOrder): UUID
 
 
     fun getMolecularFormula(moleculeID: UUID): String

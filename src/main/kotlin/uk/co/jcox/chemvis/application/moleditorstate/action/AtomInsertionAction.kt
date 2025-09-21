@@ -1,10 +1,12 @@
 package uk.co.jcox.chemvis.application.moleditorstate.action
 
 import org.joml.Vector3f
+import uk.co.jcox.chemvis.application.chemengine.BondOrder
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemBond
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
+import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import java.util.UUID
 
 /**
@@ -15,6 +17,7 @@ import java.util.UUID
  */
 class AtomInsertionAction (
     private val atomInsert: AtomInsert,
+    private val stereoChem: StereoChem,
     private val srcAtom: ChemAtom,
 ) : IAction {
 
@@ -39,7 +42,7 @@ class AtomInsertionAction (
         srcMol.atoms.add(newLevelAtom)
 
         //Create the bonds struct side
-        val newStructBond = levelContainer.chemManager.formBond(srcMol.molManagerLink, srcAtom.molManagerLink, newStructAtom, 1)
+        val newStructBond = levelContainer.chemManager.formBond(srcMol.molManagerLink, srcAtom.molManagerLink, newStructAtom, BondOrder.SINGLE)
 
         //Create the bond level side
         val newLevelBond = ChemBond(srcAtom, newLevelAtom, Vector3f(), newStructBond)

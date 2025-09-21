@@ -69,7 +69,7 @@ class CDKotMan (
         return id
     }
 
-    override fun formBond(moleculeID: UUID, atom1: UUID, atom2: UUID, bondOrder: Int): UUID {
+    override fun formBond(moleculeID: UUID, atom1: UUID, atom2: UUID, bondOrder: BondOrder): UUID {
 
         val cdkMolecule = molecules[moleculeID]
         val cdkAtom1 = atoms[atom1]
@@ -79,7 +79,9 @@ class CDKotMan (
             throw NoSuchElementException("The molecule or atoms were null")
         }
 
-        val bond: IBond = Bond(cdkAtom1, cdkAtom2, IBond.Order.SINGLE)
+        val cdkBondOrder = getCDKBondOrder(bondOrder)
+
+        val bond: IBond = Bond(cdkAtom1, cdkAtom2, cdkBondOrder)
 
         val id = UUID.randomUUID()
         bonds[id] = bond
