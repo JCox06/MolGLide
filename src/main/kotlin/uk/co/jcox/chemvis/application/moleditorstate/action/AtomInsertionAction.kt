@@ -42,7 +42,7 @@ class AtomInsertionAction (
         srcMol.atoms.add(newLevelAtom)
 
         //Create the bonds struct side
-        val newStructBond = levelContainer.chemManager.formBond(srcMol.molManagerLink, srcAtom.molManagerLink, newStructAtom, BondOrder.SINGLE)
+        val newStructBond = levelContainer.chemManager.formBond(srcMol.molManagerLink, srcAtom.molManagerLink, newStructAtom, BondOrder.SINGLE, stereoChem)
 
         //Create the bond level side
         val newLevelBond = ChemBond(srcAtom, newLevelAtom, Vector3f(), newStructBond)
