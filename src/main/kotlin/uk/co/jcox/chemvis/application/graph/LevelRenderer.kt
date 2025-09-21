@@ -53,6 +53,7 @@ class LevelRenderer(
 
         renderNormalBondLines(container, normalBondsFound, camera2D, viewport)
         renderWedgedLines(container, wedgedBondsFound, camera2D, viewport)
+        renderDashedLines(container, dashedBondsFound, camera2D, viewport)
     }
 
 
@@ -82,6 +83,7 @@ class LevelRenderer(
         }
     }
 
+    //TODO - THE FOLLOWING METHODS NEED TO BE MERGED!
 
     private fun renderNormalBondLines(container: LevelContainer, bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
         val lineProgram = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
@@ -119,6 +121,28 @@ class LevelRenderer(
         }
 
         instancer.drawLines(glMesh, instanceData)
+    }
+
+
+    private fun renderDashedLines(container: LevelContainer, bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
+        GL11.glEnable(GL11.GL_BLEND)
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+        val lineProgram = resources.useProgram(MolGLide.SHADER_DASHED_LINE)
+        lineProgram.uniform("uPerspective", camera2D.combined())
+        lineProgram.uniform("u_viewport", viewport)
+        lineProgram.uniform("uModel", Matrix4f())
+        val glMesh = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
+        val instanceData = mutableListOf<Float>()
+        val lineColour = themeStyleManager.activeTheme.lineColour
+        lineProgram.uniform("uLight", lineColour)
+
+        for (line in bonds) {
+            renderSingleBond(container.chemManager, line, instanceData)
+        }
+
+        instancer.drawLines(glMesh, instanceData)
+
+        GL11.glDisable(GL11.GL_BLEND)
     }
 
 

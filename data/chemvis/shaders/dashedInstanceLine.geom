@@ -27,6 +27,8 @@ in float lThickness[1];
 in vec4 lPos1[1];
 in vec4 lPos2[1];
 
+out float lLineDist;
+
 uniform vec2 u_viewport;
 
 void main() {
@@ -52,18 +54,22 @@ void main() {
 
     //Step 3 - Send the vertices into the next stage of the pipeline
     gl_Position = vec4((ndc_lineStart - vectorthickness) * cs_lineStart.w, cs_lineStart.z, cs_lineStart.w);
+    lLineDist = 0.0f;
     EmitVertex();
 
 
     gl_Position = vec4((ndc_lineStart + vectorthickness) * cs_lineStart.w, cs_lineStart.z, cs_lineStart.w);
+    lLineDist = 0.0f;
     EmitVertex();
 
 
     gl_Position = vec4((ndc_lineEnd - vectorThicknessBig) * cs_lineEnd.w, cs_lineEnd.z, cs_lineEnd.w);
+    lLineDist = 1.0f;
     EmitVertex();
 
 
     gl_Position = vec4((ndc_lineEnd + vectorThicknessBig) * cs_lineEnd.w, cs_lineEnd.z, cs_lineEnd.w);
+    lLineDist = 1.0f;
     EmitVertex();
 
 
