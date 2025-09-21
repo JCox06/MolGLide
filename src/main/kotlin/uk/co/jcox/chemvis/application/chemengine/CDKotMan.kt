@@ -275,6 +275,17 @@ class CDKotMan (
         return getMolGLideStereoChem(cdkBond.stereo)
     }
 
+
+    override fun updateStereoChem(bond: UUID, stereoChem: StereoChem) {
+        val cdkBond = bonds[bond]
+
+        if (cdkBond == null) {
+            throw RuntimeException("Could not get the bond specified to update the stereochemistry")
+        }
+
+        cdkBond.stereo = getCDKStereochem(stereoChem)
+    }
+
     companion object {
         private const val MANAGER_ID = "managerID"
     }

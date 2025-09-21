@@ -62,4 +62,6 @@ interface IMoleculeManager {
     fun getBondOrder(bond: UUID) : BondOrder
 
     fun getStereoChem(bond: UUID) : StereoChem
+
+    fun updateStereoChem(bond: UUID, stereoChem: StereoChem)
 }
