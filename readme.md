@@ -17,6 +17,8 @@ Despite being _alpha_ software, MolGLide is able to draw simple molecules and su
 
 [Download the latest version here](https://github.com/JCox06/MolGLide/releases) 
 
+If you need any help, there is a [tutorial.md](tutorial.md) webpage.
+
 ## Screenshots
 
 ![MolGLide Screenshot](screenshots/v0.1.0/document.png)
