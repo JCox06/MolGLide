@@ -12,6 +12,7 @@ import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.chemengine.BondOrder
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import uk.co.jcox.chemvis.cvengine.Batch2D
 import uk.co.jcox.chemvis.cvengine.CVEngine
 import uk.co.jcox.chemvis.cvengine.Camera2D
@@ -40,21 +41,27 @@ class LevelRenderer(
 
         //Group everything together
         val atomEntities: MutableList<ChemAtom> = mutableListOf()
-        val bondEntities: MutableList<ChemBond> = mutableListOf()
+        val normalBondsFound: MutableList<ChemBond> = mutableListOf()
+        val wedgedBondsFound: MutableList<ChemBond> = mutableListOf()
+        val dashedBondsFound: MutableList<ChemBond> = mutableListOf()
 
-        traverseAndCollect(container, atomEntities, bondEntities)
+
+        traverseAndCollect(container, atomEntities, normalBondsFound, wedgedBondsFound, dashedBondsFound)
 
         //Now Render
         renderAtomSymbols(container, atomEntities, camera2D)
 
-        renderBondLines(container, bondEntities, camera2D, viewport)
+        renderNormalBondLines(container, normalBondsFound, camera2D, viewport)
+        renderWedgedLines(container, wedgedBondsFound, camera2D, viewport)
     }
 
 
     private fun traverseAndCollect(
         container: LevelContainer,
         atomsFound: MutableList<ChemAtom>,
-        bondsFound: MutableList<ChemBond>
+        normalBondsFound: MutableList<ChemBond>,
+        wedgedBondsFound: MutableList<ChemBond>,
+        dashedBondsFound: MutableList<ChemBond>,
     ) {
 
         //Go through every molecule, noting down the molecule position
@@ -66,13 +73,17 @@ class LevelRenderer(
             }
 
             mol.bonds.forEach { bond ->
-                bondsFound.add(bond)
+                when (container.chemManager.getStereoChem(bond.molManagerLink)) {
+                    StereoChem.IN_PLANE -> normalBondsFound.add(bond)
+                    StereoChem.FACING_VIEW -> wedgedBondsFound.add(bond)
+                    StereoChem.FACING_PAPER -> dashedBondsFound.add(bond)
+                }
             }
         }
     }
 
 
-    private fun renderBondLines(container: LevelContainer, bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
+    private fun renderNormalBondLines(container: LevelContainer, bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
         val lineProgram = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
         lineProgram.uniform("uPerspective", camera2D.combined())
         lineProgram.uniform("u_viewport", viewport)
@@ -89,6 +100,24 @@ class LevelRenderer(
         for (line in bonds) {
             prepareLineRenderData(container.chemManager, line, instanceData)
         }
+        instancer.drawLines(glMesh, instanceData)
+    }
+
+
+    private fun renderWedgedLines(container: LevelContainer, bonds: List<ChemBond>, camera2D: Camera2D, viewport: Vector2f) {
+        val lineProgram = resources.useProgram(MolGLide.SHADER_WEDGED_LINE)
+        lineProgram.uniform("uPerspective", camera2D.combined())
+        lineProgram.uniform("u_viewport", viewport)
+        lineProgram.uniform("uModel", Matrix4f())
+        val glMesh = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
+        val instanceData = mutableListOf<Float>()
+        val lineColour = themeStyleManager.activeTheme.lineColour
+        lineProgram.uniform("uLight", lineColour)
+
+        for (line in bonds) {
+            renderSingleBond(container.chemManager, line, instanceData)
+        }
+
         instancer.drawLines(glMesh, instanceData)
     }
 

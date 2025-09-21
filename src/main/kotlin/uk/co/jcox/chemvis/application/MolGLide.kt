@@ -54,6 +54,10 @@ class MolGLide : IApplication, IInputSubscriber {
 
         val markerMaterial = Material(Vector3f(0.11f, 0.11f, 0.11f))
         services.resourceManager().manageMaterial(SELECTION_MARKER_MATERIAL, markerMaterial)
+
+
+        //Shaders for dashed and wedged line
+        services.resourceManager().loadShadersFromDisc(SHADER_WEDGED_LINE, File("data/integrated/shaders/instanceLine.vert"), File("data/integrated/shaders/instanceLine.frag"), File("data/chemvis/shaders/wedgedInstanceLine.geom"))
     }
 
     override fun cleanup() {
@@ -68,5 +72,7 @@ class MolGLide : IApplication, IInputSubscriber {
         const val SELECTION_MARKER_MATERIAL: String = "SELECTION_MARKER_MATERIAL"
         const val VERSION = "v0.1.0"
         const val WEBSITE = "https://github.com/JCox06/MolGLide/tree/master"
+
+        const val SHADER_WEDGED_LINE = "WEDGED_LINE"
     }
 }
