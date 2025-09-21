@@ -14,9 +14,13 @@ Chemical structure details are stored using CDK, and the 2D diagrams are stored 
 
 This project uses the Ubuntu font, see data/chemvis/fonts/ for the full licence.
 
-Screenshot mode:
-![Screenshot](screenshots/v0.0.4/DNA-RNA-Bases.png)
-_It is then possible to save the image above with options to remove the background_
+## Screenshots
+
+![MolGLide Screenshot](screenshots/v0.1.0/document.png)
+
+|   |   |
+|---|---|
+|![MolGLide Screenshot](screenshots/v0.1.0/screenshot.png)|![MolGLide Editor image](screenshots/v0.1.0/editor.png)|
 
 ## Building
 All the building issues have now been fixed. Maven should now import the project and be able to build it. To run the project make sure you have Java 23 installed.
@@ -34,8 +38,3 @@ _Note that only Windows AMD64 and Linux AMD64 are currently supported_
 1) Install a JDK 23 (although I have been testing on 17)
 2) Download MolGLide from the releases section on this page 
 3) Extract the archive and run the program (jar file) by double-clicking or using the command line
-
-## Todo
-- Rewrite the scene graph and component system. I still need to decide how the new system should be designed and how it should work. But the current system needs an urgent rewrite
-- Fix bugs when taking screenshots (lots of bugs here)
-- Refactor code and make it clearer to read because right now the code is terrible!
