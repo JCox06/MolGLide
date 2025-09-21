@@ -29,6 +29,13 @@ class WelcomeUI {
         ImGui.text(MolGLide.WEBSITE)
         ImGui.text("Open Source Molecular Drawing System")
 
+
+        ImGui.separator()
+        ImGui.bulletText("Use the Atom Bond Tool to create molecules and add atoms")
+        ImGui.bulletText("Use the Implicit Group Move Tool to move the position of implicit hydrogens")
+        ImGui.bulletText("Press and hold the keys [1] and [2] on your keyboard to apply wedged and dashed bonds for stereochemistry")
+        ImGui.bulletText("[COMING SOON] Use the template tool to quickly add common structures and rings")
+
         ImGui.separator()
 
         if (ImGui.button("New Project")) {
