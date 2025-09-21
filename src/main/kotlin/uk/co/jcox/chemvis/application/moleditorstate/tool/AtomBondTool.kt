@@ -10,9 +10,11 @@ import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
+import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomInsertionAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomReplacementAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.IncrementBondOrderAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.RingCyclisationAction
 import uk.co.jcox.chemvis.cvengine.Camera2D
@@ -77,7 +79,7 @@ class AtomBondTool(
         }
 
         if (selectionType is SelectionManager.Type.Active) {
-            return Mode.AtomInsertion(selectionType.atom)
+            return Mode.AtomInsertion(selectionType.atom,)
         }
 
         return Mode.None
@@ -201,7 +203,7 @@ class AtomBondTool(
                 //Form a ring
                 val action = RingCyclisationAction(commonMolecule, draggingMode.srcAtom, atom)
                 actionManager.executeAction(action)
-            } else {
+            } else if (levelContainer.chemManager.getStereoChem(bond.molManagerLink) == StereoChem.IN_PLANE) {
                 val action = IncrementBondOrderAction(commonMolecule, bond)
                 actionManager.executeAction(action)
                 if (bond.atomA == draggingMode.srcAtom) {
@@ -209,6 +211,9 @@ class AtomBondTool(
                 } else {
                     bond.flipDoubleBond = false
                 }
+            } else {
+                val action = ChangeStereoAction(bond, toolboxContext.stereoChem)
+                actionManager.executeAction(action)
             }
         }
 
@@ -230,7 +235,7 @@ class AtomBondTool(
             //Uno the atom replace action
             actionManager.undoLastAction()
 
-            val atomInsertionAction = AtomInsertionAction(toolboxContext.atomInsert, mode.srcAtom)
+            val atomInsertionAction = AtomInsertionAction(toolboxContext.atomInsert, toolboxContext.stereoChem, mode.srcAtom)
             actionManager.executeAction(atomInsertionAction)
 
             atomInsertionAction.newLevelAtom?.let {

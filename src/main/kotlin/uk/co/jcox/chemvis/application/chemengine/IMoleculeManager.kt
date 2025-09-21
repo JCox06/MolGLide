@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application.chemengine
 
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
+import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import java.util.*
 
 
@@ -34,7 +35,7 @@ interface IMoleculeManager {
      * @param atom1 form the bond between this atom and
      * @param atom2
      */
-    fun formBond(moleculeID: UUID, atom1: UUID, atom2: UUID, bondOrder: Int): UUID
+    fun formBond(moleculeID: UUID, atom1: UUID, atom2: UUID, bondOrder: BondOrder, stereoChem: StereoChem): UUID
 
 
     fun getMolecularFormula(moleculeID: UUID): String
@@ -59,4 +60,8 @@ interface IMoleculeManager {
     fun getAtomInsert(atom: UUID) : AtomInsert
 
     fun getBondOrder(bond: UUID) : BondOrder
+
+    fun getStereoChem(bond: UUID) : StereoChem
+
+    fun updateStereoChem(bond: UUID, stereoChem: StereoChem)
 }

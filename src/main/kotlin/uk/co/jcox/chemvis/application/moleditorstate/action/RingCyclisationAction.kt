@@ -1,10 +1,12 @@
 package uk.co.jcox.chemvis.application.moleditorstate.action
 
 import org.joml.Vector3f
+import uk.co.jcox.chemvis.application.chemengine.BondOrder
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemBond
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
+import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 
 
 class RingCyclisationAction(
@@ -17,7 +19,7 @@ class RingCyclisationAction(
 
     override fun execute(levelContainer: LevelContainer) {
         //Create a new bond struct side
-        val bondID = levelContainer.chemManager.formBond(molecule.molManagerLink, atomA.molManagerLink, atomB.molManagerLink, 1)
+        val bondID = levelContainer.chemManager.formBond(molecule.molManagerLink, atomA.molManagerLink, atomB.molManagerLink, BondOrder.SINGLE, StereoChem.IN_PLANE)
 
         //Create new bond on the level side
         val levelBond = ChemBond(atomA, atomB, Vector3f(), bondID)

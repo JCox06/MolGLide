@@ -15,6 +15,7 @@ import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator
 import org.tinylog.Logger
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
+import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import java.util.UUID
 
 class CDKotMan (
@@ -69,7 +70,7 @@ class CDKotMan (
         return id
     }
 
-    override fun formBond(moleculeID: UUID, atom1: UUID, atom2: UUID, bondOrder: Int): UUID {
+    override fun formBond(moleculeID: UUID, atom1: UUID, atom2: UUID, bondOrder: BondOrder, stereoChem: StereoChem): UUID {
 
         val cdkMolecule = molecules[moleculeID]
         val cdkAtom1 = atoms[atom1]
@@ -79,7 +80,10 @@ class CDKotMan (
             throw NoSuchElementException("The molecule or atoms were null")
         }
 
-        val bond: IBond = Bond(cdkAtom1, cdkAtom2, IBond.Order.SINGLE)
+        val cdkBondOrder = getCDKBondOrder(bondOrder)
+        val cdkStereoChem = getCDKStereochem(stereoChem)
+
+        val bond: IBond = Bond(cdkAtom1, cdkAtom2, cdkBondOrder, cdkStereoChem)
 
         val id = UUID.randomUUID()
         bonds[id] = bond
@@ -242,6 +246,44 @@ class CDKotMan (
             throw RuntimeException("Could not translate a MolGLide bond order to a CDK bond order: $bondOrder")
         }
         return proposed
+    }
+
+    private fun getCDKStereochem(stereoChem: StereoChem): IBond.Stereo {
+        return when (stereoChem) {
+            StereoChem.IN_PLANE -> IBond.Stereo.NONE
+            StereoChem.FACING_VIEW -> IBond.Stereo.UP
+            StereoChem.FACING_PAPER -> IBond.Stereo.DOWN
+        }
+    }
+
+    private fun getMolGLideStereoChem(stereo: IBond.Stereo) : StereoChem {
+        return when (stereo) {
+            IBond.Stereo.NONE -> StereoChem.IN_PLANE
+            IBond.Stereo.UP -> StereoChem.FACING_VIEW
+            IBond.Stereo.DOWN -> StereoChem.FACING_PAPER
+            else -> StereoChem.IN_PLANE
+        }
+    }
+
+    override fun getStereoChem(bond: UUID): StereoChem {
+        val cdkBond = bonds[bond]
+
+        if (cdkBond == null) {
+            throw RuntimeException("Could not get the bond specified to calculate the Stereo Chemistry")
+        }
+
+        return getMolGLideStereoChem(cdkBond.stereo)
+    }
+
+
+    override fun updateStereoChem(bond: UUID, stereoChem: StereoChem) {
+        val cdkBond = bonds[bond]
+
+        if (cdkBond == null) {
+            throw RuntimeException("Could not get the bond specified to update the stereochemistry")
+        }
+
+        cdkBond.stereo = getCDKStereochem(stereoChem)
     }
 
     companion object {

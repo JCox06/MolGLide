@@ -86,6 +86,19 @@ class OrganicEditorState (
                 redo()
             }
         }
+
+        //If key 1 is held down - switch stereochem to facing view
+        //If Key 2 is helf down - switch stereochem to facing paper
+
+        if (inputManager.keyClick(RawInput.KEY_1)) {
+            toolbox.stereoChem = StereoChem.FACING_VIEW
+        }
+        else if (inputManager.keyClick(RawInput.KEY_2)) {
+            toolbox.stereoChem = StereoChem.FACING_PAPER
+        }
+        else {
+            toolbox.stereoChem = StereoChem.IN_PLANE
+        }
     }
 
     fun undo() {
@@ -161,8 +174,6 @@ class OrganicEditorState (
             //For Pentagons
             108.0f, -108.0f, 72.0f, -72.0f, 36.0f, -36.0f, 126.0f, -126.0f, 144.0f, -144.0f,
             18.0f, -18.0f, 162.0f, -162.0f, 126.0f, -126.0f, 36.0f, -36.0f, 54.0f, -54.0f,
-
-
             )
     }
 }

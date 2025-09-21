@@ -6,6 +6,7 @@ import uk.co.jcox.chemvis.application.graph.ThemeStyle
 import uk.co.jcox.chemvis.application.graph.ThemeStyleManager
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
+import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -23,7 +24,7 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
     val themeStyleManager = ThemeStyleManager()
     private val levelRenderer = LevelRenderer(services.batchRenderer(), services.instancedRenderer(), services.resourceManager(), themeStyleManager)
 
-    val toolboxContext = ToolboxContext(AtomInsert.CARBON)
+    val toolboxContext = ToolboxContext(AtomInsert.CARBON, StereoChem.IN_PLANE)
 
     fun createNewEditor(samples: Int) : String {
        val newEditor = OrganicEditorState(services, ImGuiRenderingContext(), levelRenderer, toolboxContext)
