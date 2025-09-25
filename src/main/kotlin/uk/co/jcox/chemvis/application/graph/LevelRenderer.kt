@@ -9,7 +9,7 @@ import org.joml.times
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.application.MolGLide
-import uk.co.jcox.chemvis.application.chemengine.BondOrder
+import uk.co.jcox.chemvis.application.moleditorstate.BondOrder
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.StereoChem

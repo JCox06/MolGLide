@@ -4,7 +4,7 @@ import org.apache.commons.math.geometry.Vector3D.dotProduct
 import org.joml.Vector3f
 import org.joml.minus
 import org.joml.plus
-import uk.co.jcox.chemvis.application.chemengine.BondOrder
+import uk.co.jcox.chemvis.application.moleditorstate.BondOrder
 import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemBond
@@ -80,6 +80,7 @@ class IncrementBondOrderAction (val molecule: ChemMolecule, val bond: ChemBond) 
                     (it.atomA.molManagerLink == otherAtom.molManagerLink && it.atomB.molManagerLink == carbonAtom.molManagerLink) )
         }
 
+        //todo use to work but does not anymore, incorrectly gets bonds - Should only get 2 from the corner of the carbonyl
         if (otherBonds.size != 2) {
             return true
         }

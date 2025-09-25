@@ -1,7 +1,7 @@
 package uk.co.jcox.chemvis.application.moleditorstate.action
 
 import org.joml.Vector3f
-import uk.co.jcox.chemvis.application.chemengine.BondOrder
+import uk.co.jcox.chemvis.application.moleditorstate.BondOrder
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemBond
 import uk.co.jcox.chemvis.application.graph.ChemMolecule

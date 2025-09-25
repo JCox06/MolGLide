@@ -1,7 +1,7 @@
 package uk.co.jcox.chemvis.application.moleditorstate.tool
 
-import uk.co.jcox.chemvis.application.chemengine.BondOrder.Companion.standardIncrements
-import uk.co.jcox.chemvis.application.chemengine.BondOrder.SINGLE
+import uk.co.jcox.chemvis.application.moleditorstate.BondOrder.Companion.standardIncrements
+import uk.co.jcox.chemvis.application.moleditorstate.BondOrder.SINGLE
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager

@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application.chemengine
 
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
+import uk.co.jcox.chemvis.application.moleditorstate.BondOrder
 import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import java.util.*
 

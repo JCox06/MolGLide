@@ -1,4 +1,4 @@
-package uk.co.jcox.chemvis.application.chemengine
+package uk.co.jcox.chemvis.application.moleditorstate
 
 enum class BondOrder (val number: Int) {
     SINGLE(1),

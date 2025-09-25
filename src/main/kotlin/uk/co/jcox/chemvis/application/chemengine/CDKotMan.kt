@@ -15,6 +15,7 @@ import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator
 import org.tinylog.Logger
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
+import uk.co.jcox.chemvis.application.moleditorstate.BondOrder
 import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import java.util.UUID
 
