@@ -7,23 +7,19 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import imgui.type.ImInt
-import org.checkerframework.checker.units.qual.mol
 import org.joda.time.LocalDateTime
 import org.joml.Vector2f
 import org.lwjgl.BufferUtils
-import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
-import org.roaringbitmap.buffer.BufferUtil
 import uk.co.jcox.chemvis.application.mainstate.MainState
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
+import uk.co.jcox.chemvis.application.moleditorstate.TemplateRingInsert
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import uk.co.jcox.chemvis.cvengine.RenderTarget
 import java.io.File
-import javax.swing.JFileChooser
-import javax.swing.filechooser.FileSystemView
 
 class ApplicationUI (
     val appManager: MainState,
@@ -67,6 +63,10 @@ class ApplicationUI (
 
         menuBar.takeScreenshot = {
             takeScreenshot()
+        }
+
+        menuBar.templateTool = {
+            activeSession?.useTemplateTool()
         }
 
         welcomeUI.setup()
@@ -140,6 +140,7 @@ class ApplicationUI (
                 activeSession = state
                 activeTarget = engineManager.resourceManager().getRenderTarget(id)
                 state.toolbox.atomInsert = menuBar.getAtomInsert()
+                state.toolbox.templateInsert = menuBar.getTemplateInsert()
             }
 
             if (ImGui.isWindowHovered()) {
@@ -201,13 +202,16 @@ class ApplicationUI (
 
         var atomBondTool: () -> Unit = {}
         var moveImplicitGroupTool: () -> Unit = {}
+        var templateTool: () -> Unit = {}
 
         var takeScreenshot: () -> Unit = {}
 
         var getFormula: () -> String? = {"Waiting..."}
 
         private val atomSelections = AtomInsert.entries.map { it.symbol }
-        private val selectedInsertSelection: ImInt = ImInt(0)
+        private val selectedInsertSelection = ImInt(0)
+        private val templateSelections = TemplateRingInsert.entries.map { it.template }
+        private val selectedTemplateSelection = ImInt(0)
 
         var enableProbe = false
         private set
@@ -252,6 +256,11 @@ class ApplicationUI (
             //Render buttons for the atom bond tool
             if (selectedToolSelection == 0) {
                 renderButtons(atomSelections, selectedInsertSelection, true)
+            }
+
+            //Render templates like benzene
+            if (selectedToolSelection == 2) {
+                renderButtons(templateSelections, selectedTemplateSelection, false)
             }
 
             ImGui.text("Formula: ${getFormula()}")
@@ -303,6 +312,11 @@ class ApplicationUI (
                 moveImplicitGroupTool()
                 selectedToolSelection = 1
             }
+
+            if (ImGui.menuItem("${Icons.TEMPLATE_TOOL_ICON} Template Tool", selectedToolSelection == 2)) {
+                templateTool()
+                selectedToolSelection = 2
+            }
         }
 
         private fun drawThemeMenu() {
@@ -327,6 +341,11 @@ class ApplicationUI (
         fun getAtomInsert() : AtomInsert {
             val symobl = atomSelections[selectedInsertSelection.get()]
             return AtomInsert.fromSymbol(symobl)
+        }
+
+        fun getTemplateInsert() : TemplateRingInsert {
+            val insert = TemplateRingInsert.entries.find { it.template == templateSelections[selectedTemplateSelection.get()] }
+            return insert!!
         }
 
         private fun renderButtons(elements: List<String>, activeOption: ImInt, uniformSize: Boolean) {

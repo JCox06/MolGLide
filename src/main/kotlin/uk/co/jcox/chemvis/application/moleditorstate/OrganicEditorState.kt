@@ -7,6 +7,7 @@ import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.graph.LevelRenderer
 import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
+import uk.co.jcox.chemvis.application.moleditorstate.tool.CommonTemplateTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ImplicitAtomMoveTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
@@ -150,6 +151,10 @@ class OrganicEditorState (
 
     fun useImplicitMoveTool() {
         currentTool = ImplicitAtomMoveTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
+    }
+
+    fun useTemplateTool() {
+        currentTool = CommonTemplateTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
     }
 
     companion object {

@@ -76,7 +76,9 @@ class AtomInsertionAction (
         newStructAtom?.let { levelContainer.chemManager.deleteAtom(mol, it) }
 
 
-        levelContainer.chemManager.recalculate(srcMol.molManagerLink)    }
+        levelContainer.chemManager.recalculate(srcMol.molManagerLink)
+
+    }
 
     private fun disableHydrogensForCarbon(levelContainer: LevelContainer) {
         wasVisibleBefore = srcAtom.visible
