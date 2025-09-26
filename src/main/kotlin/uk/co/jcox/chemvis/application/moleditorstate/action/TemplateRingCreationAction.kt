@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application.moleditorstate.action
 
+import org.checkerframework.checker.units.qual.mol
 import org.joml.Vector3f
 import org.joml.times
 import uk.co.jcox.chemvis.application.graph.ChemAtom
@@ -18,6 +19,7 @@ class TemplateRingCreationAction (
     val templateInsert: TemplateRingInsert,
 ) : IAction {
 
+    var createdMolecule: ChemMolecule? = null
 
 
     override fun execute(levelContainer: LevelContainer) {
@@ -49,10 +51,26 @@ class TemplateRingCreationAction (
 
 
         levelContainer.chemManager.recalculate(levelNewMolecule.molManagerLink)
+
+        createdMolecule = levelNewMolecule
     }
 
     override fun undo(levelContainer: LevelContainer) {
+        val moleculeToDelete = createdMolecule ?: return
 
+        moleculeToDelete.bonds.forEach { bond ->
+            levelContainer.chemManager.deleteBond(moleculeToDelete.molManagerLink, bond.molManagerLink)
+        }
+
+        moleculeToDelete.atoms.forEach { atom ->
+            levelContainer.chemManager.deleteAtom(moleculeToDelete.molManagerLink, atom.molManagerLink)
+        }
+
+        levelContainer.chemManager.deleteMolecule(moleculeToDelete.molManagerLink)
+
+        levelContainer.sceneMolecules.remove(moleculeToDelete)
+
+        createdMolecule = null
     }
 
 
