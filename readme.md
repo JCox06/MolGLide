@@ -1,6 +1,9 @@
 # MolGLide (v0.1.0 - ALPHA)
 **MolGLide is an open source simple molecular editor. You can draw simple molecules, and export them _for free_ to png image files.**
 
+
+>MolGLide is alpha software and is unstable!
+
 The application is intended for easy, simple and experimental use, for instance, drawing molecules to be used in lab write-ups and other non/semi-professional work.
 
 Despite being _alpha_ software, MolGLide is able to draw simple molecules and supports:

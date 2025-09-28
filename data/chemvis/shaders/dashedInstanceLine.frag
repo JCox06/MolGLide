@@ -11,5 +11,7 @@ void main() {
     float intensity = sin(25 * lLineDist);
     if (intensity < -0.5f) {
         colour = vec4(uLight, 1.0f);
+    } else {
+        discard;
     }
 }
