@@ -17,7 +17,7 @@ class CommonTemplateToolView : ToolViewUI() {
     fun getTemplateInsert() : TemplateRingInsert {
         val found = TemplateRingInsert.entries.find { it.ordinal == activeTemplate.get() }
         if (found == null) {
-            return TemplateRingInsert.BENZENE
+            return TemplateRingInsert.CYCLOHEXANE
         }
         return found
     }
