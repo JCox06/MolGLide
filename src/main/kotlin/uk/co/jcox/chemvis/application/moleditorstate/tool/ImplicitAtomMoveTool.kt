@@ -45,7 +45,10 @@ class ImplicitAtomMoveTool(
     }
 
     override fun renderTransients(resourceManager: IResourceManager) {
-        renderTransientSelectionMarker(resourceManager)
+        val primarySelection = selectionManager.primarySelection
+        if (primarySelection is SelectionManager.Type.Active) {
+            renderTransientSelectionMarker(resourceManager, primarySelection.atom)
+        }
     }
 
     override fun update() {
