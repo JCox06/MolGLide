@@ -11,7 +11,6 @@ import uk.co.jcox.chemvis.application.moleditorstate.TemplateRingInsert
 import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.CommonTemplateTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ImplicitAtomMoveTool
-import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
 import uk.co.jcox.chemvis.application.ui.Icons
 import uk.co.jcox.chemvis.application.ui.tool.AtomBondToolView
 import uk.co.jcox.chemvis.application.ui.tool.CommonTemplateToolView
@@ -33,8 +32,6 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
 
     val themeStyleManager = ThemeStyleManager()
     private val levelRenderer = LevelRenderer(services.batchRenderer(), services.instancedRenderer(), services.resourceManager(), themeStyleManager)
-
-    val toolboxContext = ToolboxContext(AtomInsert.CARBON, StereoChem.IN_PLANE, TemplateRingInsert.BENZENE)
 
     fun createNewEditor(samples: Int) : String {
        val newEditor = OrganicEditorState(services, ImGuiRenderingContext(), levelRenderer)

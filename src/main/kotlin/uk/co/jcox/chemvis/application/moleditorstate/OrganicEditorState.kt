@@ -10,7 +10,6 @@ import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.CommonTemplateTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ImplicitAtomMoveTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
-import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
 import uk.co.jcox.chemvis.application.ui.tool.ToolViewUI
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
