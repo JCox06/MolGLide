@@ -12,6 +12,7 @@ import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
+import uk.co.jcox.chemvis.application.ui.tool.ToolViewUI
 import uk.co.jcox.chemvis.cvengine.CVEngine
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
@@ -22,8 +23,8 @@ import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
-abstract class Tool(
-    protected val toolboxContext: ToolboxContext,
+abstract class Tool<T : ToolViewUI>(
+    protected val toolViewUI: T,
     private val renderingContext: IRenderTargetContext,
     protected val inputManager: InputManager,
     private val camera2D: Camera2D,

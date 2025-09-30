@@ -8,6 +8,7 @@ import org.joml.plus
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
+import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
@@ -17,20 +18,21 @@ import uk.co.jcox.chemvis.application.moleditorstate.action.AtomReplacementActio
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.IncrementBondOrderAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.RingCyclisationAction
+import uk.co.jcox.chemvis.application.ui.tool.AtomBondToolView
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.IResourceManager
 import uk.co.jcox.chemvis.cvengine.InputManager
 
 class AtomBondTool(
-    toolboxContext: ToolboxContext,
+    toolViewUI: AtomBondToolView,
     renderingContext: IRenderTargetContext,
     inputManager: InputManager,
     camera2D: Camera2D,
     levelContainer: LevelContainer,
     selectionManager: SelectionManager,
     actionManager: ActionManager,
-) : Tool(toolboxContext, renderingContext, inputManager, camera2D, levelContainer, selectionManager, actionManager) {
+) : Tool<AtomBondToolView>(toolViewUI, renderingContext, inputManager, camera2D, levelContainer, selectionManager, actionManager) {
 
     var toolMode: Mode = Mode.None
 
@@ -59,12 +61,12 @@ class AtomBondTool(
     }
 
     private fun createNewMolecule(molCreation: Mode.MolCreation) {
-        val atomCreationAction = AtomCreationAction(molCreation.xPos, molCreation.yPos, toolboxContext.atomInsert)
+        val atomCreationAction = AtomCreationAction(molCreation.xPos, molCreation.yPos, toolViewUI.getInsert())
         actionManager.executeAction(atomCreationAction)
     }
 
     private fun addAtomToMolecule(molInsertion: Mode.AtomInsertion) {
-        val atomReplacementAction = AtomReplacementAction(molInsertion.srcAtom, toolboxContext.atomInsert)
+        val atomReplacementAction = AtomReplacementAction(molInsertion.srcAtom, toolViewUI.getInsert())
         actionManager.executeAction(atomReplacementAction)
         toolMode = Mode.PostReplacement(molInsertion.srcAtom)
     }
@@ -203,7 +205,7 @@ class AtomBondTool(
                 //Form a ring
                 val action = RingCyclisationAction(commonMolecule, draggingMode.srcAtom, atom)
                 actionManager.executeAction(action)
-            } else if (levelContainer.chemManager.getStereoChem(bond.molManagerLink) == StereoChem.IN_PLANE) {
+            } else if (levelContainer.chemManager.getStereoChem(bond.molManagerLink) == toolViewUI.stereoChem) {
                 val action = IncrementBondOrderAction(commonMolecule, bond)
                 actionManager.executeAction(action)
                 if (bond.atomA == draggingMode.srcAtom) {
@@ -212,7 +214,7 @@ class AtomBondTool(
                     bond.flipDoubleBond = false
                 }
             } else {
-                val action = ChangeStereoAction(bond, toolboxContext.stereoChem)
+                val action = ChangeStereoAction(bond, toolViewUI.stereoChem)
                 actionManager.executeAction(action)
             }
         }
@@ -235,7 +237,7 @@ class AtomBondTool(
             //Uno the atom replace action
             actionManager.undoLastAction()
 
-            val atomInsertionAction = AtomInsertionAction(toolboxContext.atomInsert, toolboxContext.stereoChem, mode.srcAtom)
+            val atomInsertionAction = AtomInsertionAction(toolViewUI.getInsert(), toolViewUI.stereoChem, mode.srcAtom)
             actionManager.executeAction(atomInsertionAction)
 
             atomInsertionAction.newLevelAtom?.let {
