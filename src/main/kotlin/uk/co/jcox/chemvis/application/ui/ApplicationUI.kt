@@ -36,6 +36,11 @@ class ApplicationUI (
     fun setup() {
 
         val newWin: () -> Unit = {
+
+            if (menuBar.selectedToolset == null) {
+                menuBar.selectedToolset = appManager.toolRegistry.getEntries().values.firstOrNull()
+            }
+
             appManager.createNewEditor(welcomeUI.msaaSamples[0])
         }
 
@@ -129,6 +134,10 @@ class ApplicationUI (
             if (state is OrganicEditorState) {
                 activeSession = state
                 activeTarget = engineManager.resourceManager().getRenderTarget(id)
+
+                if (state.currentTool == null) {
+                    state.currentTool = menuBar.selectedToolset?.toolCreator(state)
+                }
             }
 
             if (ImGui.isWindowHovered()) {
@@ -186,10 +195,6 @@ class ApplicationUI (
         var undo: () -> Unit = {}
 
         var redo: () -> Unit = {}
-
-        var atomBondTool: () -> Unit = {}
-        var moveImplicitGroupTool: () -> Unit = {}
-        var templateTool: () -> Unit = {}
 
         var takeScreenshot: () -> Unit = {}
 

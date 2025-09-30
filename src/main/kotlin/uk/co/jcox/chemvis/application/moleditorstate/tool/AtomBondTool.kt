@@ -61,12 +61,12 @@ class AtomBondTool(
     }
 
     private fun createNewMolecule(molCreation: Mode.MolCreation) {
-        val atomCreationAction = AtomCreationAction(molCreation.xPos, molCreation.yPos, AtomInsert.CARBON)
+        val atomCreationAction = AtomCreationAction(molCreation.xPos, molCreation.yPos, toolViewUI.getInsert())
         actionManager.executeAction(atomCreationAction)
     }
 
     private fun addAtomToMolecule(molInsertion: Mode.AtomInsertion) {
-        val atomReplacementAction = AtomReplacementAction(molInsertion.srcAtom, AtomInsert.CARBON)
+        val atomReplacementAction = AtomReplacementAction(molInsertion.srcAtom, toolViewUI.getInsert())
         actionManager.executeAction(atomReplacementAction)
         toolMode = Mode.PostReplacement(molInsertion.srcAtom)
     }
@@ -205,7 +205,7 @@ class AtomBondTool(
                 //Form a ring
                 val action = RingCyclisationAction(commonMolecule, draggingMode.srcAtom, atom)
                 actionManager.executeAction(action)
-            } else if (levelContainer.chemManager.getStereoChem(bond.molManagerLink) == StereoChem.IN_PLANE) {
+            } else if (levelContainer.chemManager.getStereoChem(bond.molManagerLink) == toolViewUI.stereoChem) {
                 val action = IncrementBondOrderAction(commonMolecule, bond)
                 actionManager.executeAction(action)
                 if (bond.atomA == draggingMode.srcAtom) {
@@ -214,7 +214,7 @@ class AtomBondTool(
                     bond.flipDoubleBond = false
                 }
             } else {
-                val action = ChangeStereoAction(bond, StereoChem.IN_PLANE)
+                val action = ChangeStereoAction(bond, toolViewUI.stereoChem)
                 actionManager.executeAction(action)
             }
         }
@@ -237,7 +237,7 @@ class AtomBondTool(
             //Uno the atom replace action
             actionManager.undoLastAction()
 
-            val atomInsertionAction = AtomInsertionAction(AtomInsert.CARBON, StereoChem.IN_PLANE, mode.srcAtom)
+            val atomInsertionAction = AtomInsertionAction(toolViewUI.getInsert(), toolViewUI.stereoChem, mode.srcAtom)
             actionManager.executeAction(atomInsertionAction)
 
             atomInsertionAction.newLevelAtom?.let {

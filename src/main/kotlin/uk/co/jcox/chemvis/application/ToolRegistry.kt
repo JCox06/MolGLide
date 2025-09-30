@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application
 
+import org.tinylog.Logger
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
 import uk.co.jcox.chemvis.application.ui.tool.ToolViewUI
@@ -11,6 +12,9 @@ class ToolRegistry {
 
 
     fun registerTool(toolID: String, friendlyName: String, toolViewUI: ToolViewUI, toolCreator: (editor: OrganicEditorState) -> Tool<out ToolViewUI>) {
+
+        Logger.info { "Registering tool $toolID with name $friendlyName" }
+
         registeredTools[toolID] = ToolSetup(friendlyName, toolViewUI, toolCreator)
     }
 

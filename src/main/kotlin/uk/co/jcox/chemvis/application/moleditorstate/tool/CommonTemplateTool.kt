@@ -17,7 +17,7 @@ class CommonTemplateTool(commonTemplateToolView: CommonTemplateToolView, renderi
         //This will require an update to the selection manager to check for a common bond
         //Depending on this either TemplateCreationAction is called or TemplateFuseAction
 
-        val action = TemplateRingCreationAction(clickX, clickY, TemplateRingInsert.BENZENE)
+        val action = TemplateRingCreationAction(clickX, clickY, toolViewUI.getTemplateInsert())
         actionManager.executeAction(action)
     }
 

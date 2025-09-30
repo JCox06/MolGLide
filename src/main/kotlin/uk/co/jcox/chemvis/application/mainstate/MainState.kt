@@ -12,6 +12,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.CommonTemplateTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ImplicitAtomMoveTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
+import uk.co.jcox.chemvis.application.ui.Icons
 import uk.co.jcox.chemvis.application.ui.tool.AtomBondToolView
 import uk.co.jcox.chemvis.application.ui.tool.CommonTemplateToolView
 import uk.co.jcox.chemvis.application.ui.tool.ToolViewUI
@@ -69,17 +70,17 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
 
     private fun registerTools() {
         val atomBondToolView = AtomBondToolView()
-        toolRegistry.registerTool("atom_bond_tool", "Atom Bond Tool", atomBondToolView) { state ->
+        toolRegistry.registerTool("atom_bond_tool", "${Icons.ATOM_BOND_TOOL_ICON} Atom Bond Tool", atomBondToolView) { state ->
             return@registerTool AtomBondTool(atomBondToolView, state.renderingContext, services.inputs(), state.camera, state.levelContainer, state.selectionManager, state.actionManager)
         }
 
         val commonTemplateToolView = CommonTemplateToolView()
-        toolRegistry.registerTool("common_template_tool", "Template Tool", commonTemplateToolView) {state ->
+        toolRegistry.registerTool("common_template_tool", "${Icons.TEMPLATE_TOOL_ICON} Template Tool", commonTemplateToolView) { state ->
             return@registerTool CommonTemplateTool(commonTemplateToolView, state.renderingContext, services.inputs(), state.camera, state.levelContainer, state.selectionManager, state.actionManager)
         }
 
         val implicitGroupMoveView = ToolViewUI()
-        toolRegistry.registerTool("implicit_group_move_tool", "Implicit Move Tool", implicitGroupMoveView) {state ->
+        toolRegistry.registerTool("implicit_group_move_tool", "${Icons.MOVE_ICON} Implicit Move Tool", implicitGroupMoveView) { state ->
             return@registerTool ImplicitAtomMoveTool(commonTemplateToolView, state.renderingContext, services.inputs(), state.camera, state.levelContainer, state.selectionManager, state.actionManager)
         }
     }
