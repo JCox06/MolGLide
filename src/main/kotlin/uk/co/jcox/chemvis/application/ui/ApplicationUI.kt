@@ -12,6 +12,7 @@ import org.joml.Vector2f
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
+import uk.co.jcox.chemvis.application.ToolRegistry
 import uk.co.jcox.chemvis.application.mainstate.MainState
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
@@ -53,21 +54,10 @@ class ApplicationUI (
             activeSession?.getFormula()
         }
 
-        menuBar.atomBondTool = {
-            activeSession?.useAtomBondTool()
-        }
-
-        menuBar.moveImplicitGroupTool = {
-            activeSession?.useImplicitMoveTool()
-        }
-
         menuBar.takeScreenshot = {
             takeScreenshot()
         }
 
-        menuBar.templateTool = {
-            activeSession?.useTemplateTool()
-        }
 
         welcomeUI.setup()
     }
@@ -139,8 +129,6 @@ class ApplicationUI (
             if (state is OrganicEditorState) {
                 activeSession = state
                 activeTarget = engineManager.resourceManager().getRenderTarget(id)
-                state.toolbox.atomInsert = menuBar.getAtomInsert()
-                state.toolbox.templateInsert = menuBar.getTemplateInsert()
             }
 
             if (ImGui.isWindowHovered()) {
@@ -189,8 +177,7 @@ class ApplicationUI (
 
     class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
-        private val tools = listOf("Atom Bond Tool", "Implicit Move Tool")
-        private var selectedToolSelection = 0
+        var selectedToolset: ToolRegistry.ToolSetup? = null
 
         private var selectedTheme = 0
 
@@ -208,10 +195,6 @@ class ApplicationUI (
 
         var getFormula: () -> String? = {"Waiting..."}
 
-        private val atomSelections = AtomInsert.entries.map { it.symbol }
-        private val selectedInsertSelection = ImInt(0)
-        private val templateSelections = TemplateRingInsert.entries.map { it.template }
-        private val selectedTemplateSelection = ImInt(0)
 
         var enableProbe = false
         private set
@@ -252,16 +235,7 @@ class ApplicationUI (
                 ImGui.endMenu()
             }
 
-
-            //Render buttons for the atom bond tool
-            if (selectedToolSelection == 0) {
-                renderButtons(atomSelections, selectedInsertSelection, true)
-            }
-
-            //Render templates like benzene
-            if (selectedToolSelection == 2) {
-                renderButtons(templateSelections, selectedTemplateSelection, false)
-            }
+            selectedToolset?.toolViewUI?.renderMenuButtons()
 
             ImGui.text("Formula: ${getFormula()}")
 
@@ -270,6 +244,22 @@ class ApplicationUI (
             }
         }
 
+
+        private fun drawToolSelectionMenu() {
+            //Get the available tools from the app manager
+            appManager.toolRegistry.getEntries().forEach { toolSet ->
+                if (ImGui.menuItem(toolSet.value.name, toolSet.value == selectedToolset)) {
+                    selectedToolset = toolSet.value
+
+                    appManager.editors.forEach { id ->
+                        val state = engineManager.getState(id)
+                        if (state is OrganicEditorState) {
+                            state.currentTool = toolSet.value.toolCreator(state)
+                        }
+                    }
+                }
+            }
+        }
 
         private fun drawFileMenu() {
 
@@ -300,25 +290,6 @@ class ApplicationUI (
             }
         }
 
-
-        private fun drawToolSelectionMenu() {
-
-            if (ImGui.menuItem("${Icons.ATOM_BOND_TOOL_ICON} Atom Bond Tool", selectedToolSelection == 0)) {
-                atomBondTool()
-                selectedToolSelection = 0
-            }
-
-            if (ImGui.menuItem("${Icons.MOVE_ICON} Move Implicit Group", selectedToolSelection == 1)) {
-                moveImplicitGroupTool()
-                selectedToolSelection = 1
-            }
-
-            if (ImGui.menuItem("${Icons.TEMPLATE_TOOL_ICON} Template Tool", selectedToolSelection == 2)) {
-                templateTool()
-                selectedToolSelection = 2
-            }
-        }
-
         private fun drawThemeMenu() {
             if (ImGui.menuItem("MolGLide Edit Theme", selectedTheme == 0)) {
                 selectedTheme = 0
@@ -338,43 +309,5 @@ class ApplicationUI (
             }
         }
 
-        fun getAtomInsert() : AtomInsert {
-            val symobl = atomSelections[selectedInsertSelection.get()]
-            return AtomInsert.fromSymbol(symobl)
-        }
-
-        fun getTemplateInsert() : TemplateRingInsert {
-            val insert = TemplateRingInsert.entries.find { it.template == templateSelections[selectedTemplateSelection.get()] }
-            return insert!!
-        }
-
-        private fun renderButtons(elements: List<String>, activeOption: ImInt, uniformSize: Boolean) {
-
-            for ((index, insert) in elements.withIndex()) {
-
-                val standardButtonSize = ImGui.getFrameHeight()
-
-                if (index == activeOption.get()) {
-                    ImGui.pushStyleColor(ImGuiCol.Button, ImVec4(0.0f, 100.0f, 0.0f, 255.0f))
-                    if (uniformSize) {
-                        ImGui.button(insert, standardButtonSize * 2, standardButtonSize)
-                    } else {
-                        ImGui.button(insert)
-                    }
-                    ImGui.popStyleColor()
-                } else {
-                    if (uniformSize) {
-                        if (ImGui.button(insert, standardButtonSize * 1.5f, standardButtonSize)) {
-                            activeOption.set(index)
-                        }
-                    } else {
-                        if (ImGui.button(insert)) {
-                            activeOption.set(index)
-                        }
-                    }
-
-                }
-            }
-        }
     }
 }

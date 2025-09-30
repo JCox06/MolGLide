@@ -11,6 +11,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.tool.CommonTemplateTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ImplicitAtomMoveTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ToolboxContext
+import uk.co.jcox.chemvis.application.ui.tool.ToolViewUI
 import uk.co.jcox.chemvis.cvengine.ApplicationState
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -23,16 +24,15 @@ class OrganicEditorState (
     val services: ICVServices,
     val renderingContext: IRenderTargetContext,
     val renderer: LevelRenderer,
-    val toolbox: ToolboxContext,
 ) : ApplicationState(renderingContext), IInputSubscriber {
 
     val levelContainer = LevelContainer()
-    private val actionManager = ActionManager(levelContainer)
-    private val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
+    val actionManager = ActionManager(levelContainer)
+    val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
     val selectionManager = SelectionManager()
 
 
-    private var currentTool: Tool = AtomBondTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
+    var currentTool: Tool<out ToolViewUI>? = null
 
     override fun init() {
 
@@ -46,13 +46,13 @@ class OrganicEditorState (
             selectionManager.update(levelContainer, mousePos.x, mousePos.y)
         }
 
-        currentTool.update()
+        currentTool?.update()
     }
 
     override fun render(viewport: Vector2f) {
         GL11.glViewport(0, 0, renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
 
-        currentTool.renderTransients(services.resourceManager())
+        currentTool?.renderTransients(services.resourceManager())
 
         renderer.renderLevel(this.levelContainer, camera, viewport)
     }
@@ -75,7 +75,7 @@ class OrganicEditorState (
         if (key == RawInput.MOUSE_1) {
             val mousePos = camera.screenToWorld(mousePosScreen)
 
-            currentTool.onClick(mousePos.x, mousePos.y)
+            currentTool?.onClick(mousePos.x, mousePos.y)
         }
 
         //Check if CTRL key is being held down
@@ -88,18 +88,6 @@ class OrganicEditorState (
             }
         }
 
-        //If key 1 is held down - switch stereochem to facing view
-        //If Key 2 is helf down - switch stereochem to facing paper
-
-        if (inputManager.keyClick(RawInput.KEY_1)) {
-            toolbox.stereoChem = StereoChem.FACING_VIEW
-        }
-        else if (inputManager.keyClick(RawInput.KEY_2)) {
-            toolbox.stereoChem = StereoChem.FACING_PAPER
-        }
-        else {
-            toolbox.stereoChem = StereoChem.IN_PLANE
-        }
     }
 
     fun undo() {
@@ -113,7 +101,7 @@ class OrganicEditorState (
     override fun clickReleaseEvent(inputManager: InputManager, key: RawInput) {
         if (key == RawInput.MOUSE_1) {
             val mousePos = camera.screenToWorld(renderingContext.getMousePos(inputManager))
-            currentTool.onRelease(mousePos.x, mousePos.y)
+            currentTool?.onRelease(mousePos.x, mousePos.y)
         }
     }
 
@@ -145,17 +133,6 @@ class OrganicEditorState (
         return "No molecule selected"
     }
 
-    fun useAtomBondTool() {
-        currentTool = AtomBondTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
-    }
-
-    fun useImplicitMoveTool() {
-        currentTool = ImplicitAtomMoveTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
-    }
-
-    fun useTemplateTool() {
-        currentTool = CommonTemplateTool(toolbox, renderingContext, services.inputs(), camera, levelContainer, selectionManager, actionManager)
-    }
 
     companion object {
         const val ATOM_PLANE = -3.0f

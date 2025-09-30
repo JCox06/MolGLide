@@ -6,19 +6,21 @@ import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
+import uk.co.jcox.chemvis.application.ui.tool.ToolViewUI
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.IResourceManager
 import uk.co.jcox.chemvis.cvengine.InputManager
 
-class ImplicitAtomMoveTool(toolboxContext: ToolboxContext,
+class ImplicitAtomMoveTool(
+                            simpleToolView: ToolViewUI,
                            renderingContext: IRenderTargetContext,
                            inputManager: InputManager,
                            camera2D: Camera2D,
                            levelContainer: LevelContainer,
                            selectionManager: SelectionManager,
                            actionManager: ActionManager) :
-    Tool(toolboxContext, renderingContext, inputManager, camera2D, levelContainer, selectionManager, actionManager) {
+    Tool<ToolViewUI>(simpleToolView, renderingContext, inputManager, camera2D, levelContainer, selectionManager, actionManager) {
 
 
 
