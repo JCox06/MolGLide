@@ -5,6 +5,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.application.moleditorstate.TemplateRingInsert
 import uk.co.jcox.chemvis.application.moleditorstate.action.TemplateRingCreationAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.TemplateRingFusionAction
 import uk.co.jcox.chemvis.application.ui.tool.CommonTemplateToolView
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
@@ -18,6 +19,9 @@ class CommonTemplateTool(commonTemplateToolView: CommonTemplateToolView, renderi
 
         if (bondSelection == null) {
             val action = TemplateRingCreationAction(clickX, clickY, toolViewUI.getTemplateInsert())
+            actionManager.executeAction(action)
+        } else {
+            val action = TemplateRingFusionAction(bondSelection, toolViewUI.getTemplateInsert())
             actionManager.executeAction(action)
         }
 

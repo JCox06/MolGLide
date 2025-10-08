@@ -95,7 +95,7 @@ class TemplateRingCreationAction (
         }
 
         levelContainer.chemManager.recalculate(levelNewMolecule.molManagerLink)
-
+        createdMolecule = levelNewMolecule
     }
 
     override fun undo(levelContainer: LevelContainer) {
