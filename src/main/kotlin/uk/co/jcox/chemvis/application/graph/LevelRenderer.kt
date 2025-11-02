@@ -86,7 +86,7 @@ class LevelRenderer(
 
     private fun renderLines(container: LevelContainer, camera2D: Camera2D, viewport: Vector2f, normalBonds: List<ChemBond>, wedgedBonds: List<ChemBond>, dashedBonds: List<ChemBond>) {
         val placeHolderVAO = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
-        val lineColour = themeStyleManager.activeTheme.lineColour
+        val lineColour = themeStyleManager.lineColour
         //Render normal lines
         val normalLine = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
         applyLineProgramUniforms(normalLine, camera2D, viewport, lineColour)
@@ -153,7 +153,7 @@ class LevelRenderer(
     private fun renderSingleBond(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
         val start = line.atomA.getWorldPosition()
         val end = line.atomB.getWorldPosition()
-        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.activeTheme.lineThickness))
+        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.lineThickness))
     }
 
     private fun renderDoubleBond(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
@@ -178,9 +178,9 @@ class LevelRenderer(
         val newStart = start + orth
         val newEnd = end + orth
 
-        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.activeTheme.lineThickness))
+        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.lineThickness))
 
-        val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, themeStyleManager.activeTheme.lineThickness)
+        val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, themeStyleManager.lineThickness)
         renderData.addAll(secondData)
 
     }
@@ -234,7 +234,6 @@ class LevelRenderer(
 
     //todo rewrite but it works for now
     private fun renderString(label: String, pos: Vector3f, program: ShaderProgram) {
-        val theme = themeStyleManager.activeTheme
 
         val fontID = MolGLide.FONT
         val scale = MolGLide.GLOBAL_SCALE
@@ -301,7 +300,7 @@ class LevelRenderer(
 
 
     private fun getSymbolColour(symbol: String): Vector3f {
-        val colour = themeStyleManager.activeTheme.symbolColours[symbol] ?: return themeStyleManager.activeTheme.lineColour
+        val colour = themeStyleManager.symbolColours[symbol] ?: return themeStyleManager.lineColour
         return colour
     }
 }

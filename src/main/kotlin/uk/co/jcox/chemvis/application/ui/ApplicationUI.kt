@@ -32,6 +32,7 @@ class ApplicationUI (
     private val welcomeUI = WelcomeUI()
     private var activeSession: OrganicEditorState? = null
     private var activeTarget: RenderTarget? = null
+    private val customThemeConfig: CustomThemeConfig = CustomThemeConfig(appManager)
 
     fun setup() {
 
@@ -110,6 +111,10 @@ class ApplicationUI (
 
         displayProbeInfo()
 
+        if (menuBar.drawThemeConfig) {
+            customThemeConfig.drawUI()
+        }
+
     }
 
     fun drawEditors(dockingID: Int) {
@@ -120,7 +125,7 @@ class ApplicationUI (
             val renderContext = engineManager.getAppStateRenderingContext(id)
 
 
-            renderTarget.clearColour = appManager.themeStyleManager.activeTheme.backgroundColour
+            renderTarget.clearColour = appManager.themeStyleManager.backgroundColour
 
             ImGui.setNextWindowDockID(dockingID, ImGuiCond.FirstUseEver)
 
@@ -199,6 +204,9 @@ class ApplicationUI (
         var takeScreenshot: () -> Unit = {}
 
         var getFormula: () -> String? = {"Waiting..."}
+
+        var drawThemeConfig = false
+        private set
 
 
         var enableProbe = false
@@ -311,6 +319,9 @@ class ApplicationUI (
             if (ImGui.menuItem("Screenshot White", selectedTheme == 3)) {
                 selectedTheme = 3
                 appManager.themeStyleManager.applyScreenshotWhite()
+            }
+            if (ImGui.menuItem("Theme Manager")) {
+                drawThemeConfig = true
             }
         }
 
