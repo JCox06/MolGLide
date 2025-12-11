@@ -6,6 +6,7 @@ import imgui.ImVec4
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
+import imgui.type.ImBoolean
 import imgui.type.ImInt
 import org.joda.time.LocalDateTime
 import org.joml.Vector2f
@@ -28,10 +29,14 @@ class ApplicationUI (
 ) {
 
 
+
+    //todo FIX - The wrong session ID is being reported here which means sometimes the incorrect tab is closed and sometimes the incorrect render target data is read when attempting to take a screenshot
+
     private val menuBar = MenuBar(appManager, engineManager)
     private val welcomeUI = WelcomeUI()
     private var activeSession: OrganicEditorState? = null
     private var activeTarget: RenderTarget? = null
+    private var activeSessionID: String? = null
     private val customThemeConfig: CustomThemeConfig = CustomThemeConfig(appManager)
 
     fun setup() {
@@ -64,6 +69,10 @@ class ApplicationUI (
             takeScreenshot()
         }
 
+        menuBar.closeCurrentTab = {
+            closeCurrentEditorWindow()
+        }
+
 
         welcomeUI.setup()
     }
@@ -76,6 +85,10 @@ class ApplicationUI (
         if (target != null && session != null) {
             showScreenshotExplorer(target, session)
         }
+    }
+
+    private fun closeCurrentEditorWindow() {
+        activeSessionID?.let { appManager.closeEditor(it) }
     }
 
     private fun showScreenshotExplorer(renderTarget: RenderTarget, session: OrganicEditorState) {
@@ -120,6 +133,8 @@ class ApplicationUI (
     fun drawEditors(dockingID: Int) {
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, ImVec2(0.0f, 0.0f))
 
+        val closeList = mutableListOf<String>()
+
         appManager.editors.forEach { id ->
             val renderTarget = engineManager.resourceManager().getRenderTarget(id)
             val renderContext = engineManager.getAppStateRenderingContext(id)
@@ -130,7 +145,15 @@ class ApplicationUI (
             ImGui.setNextWindowDockID(dockingID, ImGuiCond.FirstUseEver)
 
 
-            ImGui.begin(id)
+            //Adding true enables the X button to be present
+            val keepOpen = ImBoolean(true)
+            ImGui.begin(id, keepOpen)
+
+            if (! keepOpen.get()) {
+                closeList.add(id)
+            }
+
+
 
             val windowPos = ImGui.getWindowPos()
             renderContext?.setRelativeWindowPos(Vector2f(windowPos.x, windowPos.y))
@@ -139,6 +162,7 @@ class ApplicationUI (
             if (state is OrganicEditorState) {
                 activeSession = state
                 activeTarget = engineManager.resourceManager().getRenderTarget(id)
+                activeSessionID = id
 
                 if (state.currentTool == null) {
                     state.currentTool = menuBar.selectedToolset?.toolCreator(state)
@@ -165,6 +189,10 @@ class ApplicationUI (
         }
 
         ImGui.popStyleVar()
+
+        closeList.forEach {
+            appManager.closeEditor(it)
+        }
     }
 
     private fun displayProbeInfo() {
@@ -204,6 +232,8 @@ class ApplicationUI (
         var takeScreenshot: () -> Unit = {}
 
         var getFormula: () -> String? = {"Waiting..."}
+
+        var closeCurrentTab: () -> Unit = {}
 
         var drawThemeConfig = false
         private set
@@ -285,7 +315,7 @@ class ApplicationUI (
             }
 
             if (ImGui.menuItem("${Icons.CLOSE_ICON} Close Tab")) {
-                TODO()
+                closeCurrentTab()
             }
 
             if (ImGui.menuItem("${Icons.CLOSE_WINDOW_ICON} Close Window")) {

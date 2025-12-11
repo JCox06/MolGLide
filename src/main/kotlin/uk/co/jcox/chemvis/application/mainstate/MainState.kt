@@ -54,6 +54,9 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
     fun closeEditor(id: String) {
         services.destroyAppState(id)
         editors.remove(id)
+
+        //The enigne will handle cleaning up the associated render target
+        //Removing the render target here will cause a crash as its already been done at this point
     }
 
 
