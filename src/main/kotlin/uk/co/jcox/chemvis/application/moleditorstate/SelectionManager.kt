@@ -28,16 +28,18 @@ class SelectionManager {
      */
     private fun findPrimarySelection(levelContainer: LevelContainer, mouseWorld: Vector3f) : Type {
         var priSel: Type = Type.None
+        var lastDistance = 1000.0f
 
         levelContainer.sceneMolecules.forEach { mol ->
             mol.atoms.forEach { atom ->
                 val worldPos = atom.getWorldPosition()
 
                 val difference = worldPos - mouseWorld
+                val diffLen = difference.length()
 
-                if (difference.length() <= MIN_SELECTION_DISTANCE) {
+                if (diffLen <= MIN_SELECTION_DISTANCE && diffLen < lastDistance) {
                     priSel = Type.Active(atom)
-                    return@forEach
+                    lastDistance = diffLen
                 }
             }
         }
