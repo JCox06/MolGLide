@@ -65,4 +65,5 @@ interface IMoleculeManager {
     fun getStereoChem(bond: UUID) : StereoChem
 
     fun updateStereoChem(bond: UUID, stereoChem: StereoChem)
+    fun getMolecularWeight(moleculeID: UUID): Double
 }

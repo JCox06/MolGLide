@@ -65,6 +65,10 @@ class ApplicationUI (
             activeSession?.getFormula()
         }
 
+        menuBar.getMass = {
+            activeSession?.getWeight()
+        }
+
         menuBar.takeScreenshot = {
             takeScreenshot()
         }
@@ -215,145 +219,5 @@ class ApplicationUI (
 
 
         ImGui.setTooltip("Atom Symbol ${insert.symbol} \nImplicit H $implicitHydrogen \nBondCount ${bondCount}")
-    }
-
-    class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
-
-        var selectedToolset: ToolRegistry.ToolSetup? = null
-
-        private var selectedTheme = 0
-
-        var newWindow: () -> Unit = {}
-
-        var undo: () -> Unit = {}
-
-        var redo: () -> Unit = {}
-
-        var takeScreenshot: () -> Unit = {}
-
-        var getFormula: () -> String? = {"Waiting..."}
-
-        var closeCurrentTab: () -> Unit = {}
-
-        var drawThemeConfig = false
-        private set
-
-
-        var enableProbe = false
-        private set
-
-        fun draw() {
-
-            if (ImGui.beginMainMenuBar()) {
-
-                drawMenuLists()
-
-                ImGui.endMainMenuBar()
-            }
-        }
-
-
-        private fun drawMenuLists() {
-            if (ImGui.beginMenu("${Icons.FILE_ICON} File")) {
-                drawFileMenu()
-                ImGui.endMenu()
-            }
-
-            if (ImGui.beginMenu("${Icons.EDIT_ICON} Edit")) {
-                drawEditMenu()
-                ImGui.endMenu()
-            }
-
-            if (ImGui.beginMenu("${Icons.PAINT_BRUSH} Themes")) {
-                drawThemeMenu()
-                ImGui.endMenu()
-            }
-
-            if (ImGui.button("Take Screenshot")) {
-                takeScreenshot()
-            }
-
-            if (ImGui.beginMenu("${Icons.TOOLS_ICON} Tool Selection")) {
-                drawToolSelectionMenu()
-                ImGui.endMenu()
-            }
-
-            selectedToolset?.toolViewUI?.renderMenuButtons()
-
-            ImGui.text("Formula: ${getFormula()}")
-
-            if (ImGui.checkbox("Enable probe", enableProbe)) {
-                enableProbe = !enableProbe
-            }
-        }
-
-
-        private fun drawToolSelectionMenu() {
-            //Get the available tools from the app manager
-            appManager.toolRegistry.getEntries().forEach { toolSet ->
-                if (ImGui.menuItem(toolSet.value.name, toolSet.value == selectedToolset)) {
-                    selectedToolset = toolSet.value
-
-                    appManager.editors.forEach { id ->
-                        val state = engineManager.getState(id)
-                        if (state is OrganicEditorState) {
-                            state.currentTool = toolSet.value.toolCreator(state)
-                        }
-                    }
-                }
-            }
-        }
-
-        private fun drawFileMenu() {
-
-            if (ImGui.menuItem("${Icons.NEW_ICON} New Project")) {
-                newWindow()
-            }
-
-            if (ImGui.menuItem("${Icons.DATABASE_ICON} Load From Disc")) {
-                TODO()
-            }
-
-            if (ImGui.menuItem("${Icons.CLOSE_ICON} Close Tab")) {
-                closeCurrentTab()
-            }
-
-            if (ImGui.menuItem("${Icons.CLOSE_WINDOW_ICON} Close Window")) {
-                engineManager.shutdown()
-            }
-
-        }
-
-        private fun drawEditMenu() {
-            if (ImGui.menuItem("${Icons.UNDO_ICON} Undo")) {
-                undo()
-            }
-            if (ImGui.menuItem("${Icons.REDO_ICON} Redo")) {
-                redo()
-            }
-        }
-
-        private fun drawThemeMenu() {
-            if (ImGui.menuItem("MolGLide Edit Theme", selectedTheme == 0)) {
-                selectedTheme = 0
-                appManager.themeStyleManager.applyMolGLideEdit()
-            }
-            if (ImGui.menuItem("CPK Theme", selectedTheme == 1)) {
-                selectedTheme = 1
-                appManager.themeStyleManager.applyCPKTheme()
-            }
-            if (ImGui.menuItem("MolGLide Screenshot theme", selectedTheme == 2)) {
-                selectedTheme = 2
-                appManager.themeStyleManager.applyScreenshotMolGLide()
-            }
-            if (ImGui.menuItem("Screenshot White", selectedTheme == 3)) {
-                selectedTheme = 3
-                appManager.themeStyleManager.applyScreenshotWhite()
-            }
-            if (ImGui.menuItem("Theme Manager")) {
-                drawThemeConfig = true
-            }
-        }
-
     }
 }

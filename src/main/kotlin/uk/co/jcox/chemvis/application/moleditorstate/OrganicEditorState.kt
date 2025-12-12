@@ -4,6 +4,7 @@ import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.MolGLide
+import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.graph.LevelRenderer
 import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
@@ -122,14 +123,31 @@ class OrganicEditorState (
     }
 
     fun getFormula() : String {
+        val mol = getSelectedMolecule()
+        if (mol != null) {
+            return levelContainer.chemManager.getMolecularFormula(mol.molManagerLink)
+        }
+        return "Nothing Selected"
+    }
+
+    fun getWeight() : Double {
+        val mol = getSelectedMolecule()
+        if (mol != null) {
+            return levelContainer.chemManager.getMolecularWeight(mol.molManagerLink)
+        }
+        return 0.0
+    }
+
+
+    private fun getSelectedMolecule() : ChemMolecule? {
         val selection = selectionManager.primarySelection
         if (selection is SelectionManager.Type.Active) {
             val atom = selection.atom
             val molecule = atom.parent
-
-            return levelContainer.chemManager.getMolecularFormula(molecule.molManagerLink)
+            return molecule
         }
-        return "No molecule selected"
+
+        return null
     }
 
 

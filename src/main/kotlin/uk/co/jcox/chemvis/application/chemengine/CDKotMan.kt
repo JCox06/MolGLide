@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application.chemengine
 
+import org.checkerframework.checker.units.qual.mol
 import org.openscience.cdk.Atom
 import org.openscience.cdk.AtomContainer
 import org.openscience.cdk.Bond
@@ -11,6 +12,7 @@ import org.openscience.cdk.interfaces.IBond
 import org.openscience.cdk.io.SMILESWriter
 import org.openscience.cdk.smiles.SmilesGenerator
 import org.openscience.cdk.tools.CDKHydrogenAdder
+import org.openscience.cdk.tools.manipulator.AtomContainerManipulator
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator
 import org.tinylog.Logger
@@ -103,6 +105,17 @@ class CDKotMan (
 
         val formula = MolecularFormulaManipulator.getMolecularFormula(molecule)
         return MolecularFormulaManipulator.getString(formula)
+    }
+
+    override fun getMolecularWeight(moleculeID: UUID) : Double {
+        val molecule = molecules[moleculeID]
+
+        if (molecule == null) {
+            return 0.0
+        }
+        val mass = AtomContainerManipulator.getMass(molecule)
+
+        return mass
     }
 
     override fun getBondCount(moleculeID: UUID, atom: UUID): Int {
