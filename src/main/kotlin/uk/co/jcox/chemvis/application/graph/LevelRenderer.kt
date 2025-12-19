@@ -229,6 +229,7 @@ class LevelRenderer(
             }
         }
 
+
         GL11.glDisable(GL11.GL_BLEND)
     }
 
@@ -251,8 +252,12 @@ class LevelRenderer(
         var renderX = pos.x
         var renderY = pos.y
 
-        batcher.begin(Batch2D.Mode.TRIANGLES)
+        val character1 = label.first()
+        val metrics = fontData.glyphs[character1] ?: return
+        val dx = scale * metrics.glyphWidth / 2
+        val dy = scale * metrics.glyphHeight / 2
 
+        batcher.begin(Batch2D.Mode.TRIANGLES)
 
         for (c in label) {
             var character = c
@@ -261,22 +266,18 @@ class LevelRenderer(
                 character = fontData.glyphs.keys.first()
             }
 
-            val glyphMetrics = fontData.glyphs[character]
-
-            if (glyphMetrics == null) {
-                return
-            }
+            val glyphMetrics = fontData.glyphs[character] ?: return
 
             var scaleMod = 1.0f
 
             if (c.isDigit()) {
                 scaleMod = 0.75f
-                renderX -= glyphMetrics.glyphWidth * scale * scaleMod / 4
+                renderX -= glyphMetrics.glyphWidth * scale * scaleMod / 12
                 renderY -= glyphMetrics.glyphHeight * scale * scaleMod / 4
             }
 
-            val width = scaleMod * glyphMetrics.glyphWidth * scale / 2
-            val height = scaleMod * glyphMetrics.glyphHeight * scale / 2
+            val width = scaleMod * glyphMetrics.glyphWidth * scale
+            val height = scaleMod * glyphMetrics.glyphHeight * scale
 
             //Does not work!
 //            val meshToDraw = Shaper2D.rectangle(renderX + width, renderY + height, width, height, (Text rendering works fine If you use this line instead of the one below) - However then the text is uncentred
@@ -288,15 +289,17 @@ class LevelRenderer(
                 ),
                 Vector2f(glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
                 Vector2f(0.0f + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
-                Vector2f(0.0f + glyphMetrics.textureUnitX, glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY)
+                Vector2f(0.0f + glyphMetrics.textureUnitX, glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY), dx, dy
             )
 
             batcher.addBatch(meshToDraw.pack(), meshToDraw.indices)
-            renderX += width * 2
+
+            renderX += width
         }
 
         batcher.end()
     }
+
 
 
     private fun getSymbolColour(symbol: String): Vector3f {
