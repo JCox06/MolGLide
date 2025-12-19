@@ -38,13 +38,13 @@ object Shaper2D {
 
 
     fun rectangle(startX: Float, startY: Float, endX: Float, endY: Float,
-                  texTR: Vector2f, texBR: Vector2f, texBL: Vector2f, texTL: Vector2f) : Mesh {
+                  texTR: Vector2f, texBR: Vector2f, texBL: Vector2f, texTL: Vector2f, dx2: Float, dy2: Float) : Mesh {
 
         val positions = listOf(
-            Vector4f(startX + endX, startY + endY, -1.0f, W_COMP), //Top right
-            Vector4f(startX + endX, startY - endY, -1.0f, W_COMP), //Bottom Right
-            Vector4f(startX - endX, startY - endY, -1.0f, W_COMP), //Bottom Left
-            Vector4f(startX - endX, startY + endY, -1.0f, W_COMP) //Top Left
+            Vector4f(startX + endX - dx2, startY + endY - dy2, -1.0f, W_COMP), //Top right
+            Vector4f(startX + endX - dx2, startY - dy2, -1.0f, W_COMP), //Bottom Right
+            Vector4f(startX - dx2, startY - dy2, -1.0f, W_COMP), //Bottom Left
+            Vector4f(startX -dx2, startY + endY - dy2, -1.0f, W_COMP) //Top Left
         )
 
         val textCoord = listOf(
