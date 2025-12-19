@@ -177,9 +177,8 @@ class ResourceManager : IResourceManager{
 
 
         //Get the font metrics so we can get glyph size, etc
-        val font = Font(font.path, Font.PLAIN, size)
+        val font = Font.createFont(Font.TRUETYPE_FONT, font).deriveFont(Font.PLAIN, size.toFloat())
         val fontMetrics: FontMetrics = getFontMetrics(font)
-
 
         //Each char has a different width, but same height
         //To avoid a runtime error, assume they are all the largest size
