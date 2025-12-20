@@ -5,6 +5,7 @@ import imgui.type.ImString
 import org.tinylog.Level
 import uk.co.jcox.chemvis.application.graph.ChemBond
 import uk.co.jcox.chemvis.application.graph.LevelContainer
+import uk.co.jcox.chemvis.application.moleditorstate.action.AtomVisibilityAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.CentreBondAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeBondOrderAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
@@ -149,10 +150,20 @@ class ClickMenu (
             showAtomMenu = false
         }
 
+        val selection = selectionManager.primarySelection
+        if (selection !is SelectionManager.Type.ActiveAtom) {
+            return
+        }
+
         if (ImGui.beginPopup("AtomMenu")) {
 
             if (ImGui.menuItem("Edit Label")) {
                 showCustomLabelInput = true
+            }
+
+            if (ImGui.menuItem("Group Visible", selection.atom.visible)) {
+                val action = AtomVisibilityAction(selection.atom)
+                actionManager.executeAction(action)
             }
 
             ImGui.separator()
