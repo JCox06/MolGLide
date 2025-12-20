@@ -107,6 +107,8 @@ class ClickMenu (
                     actionManager.executeAction(action)
                 }
 
+                ImGui.separator()
+
                 if (ImGui.menuItem("Aromatic", false)) {
                     TODO("Create Aromatic Bond Order")
                 }
@@ -120,8 +122,9 @@ class ClickMenu (
                 ImGui.endMenu()
             }
 
-            if (ImGui.menuItem("Triple Bond", false)) {
-                TODO("Create Triple bond order")
+            if (ImGui.menuItem("Triple Bond", bondOrder == BondOrder.TRIPLE)) {
+                val action = ChangeBondOrderAction(bond, BondOrder.TRIPLE)
+                actionManager.executeAction(action)
             }
 
             ImGui.separator()
