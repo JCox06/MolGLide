@@ -114,8 +114,12 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
             newWindow()
         }
 
+        if (ImGui.menuItem("${Icons.SAVE_IMAGE_ICON} Save Document")) {
+            TODO("Implement Document Saving!")
+        }
+
         if (ImGui.menuItem("${Icons.DATABASE_ICON} Load From Disc")) {
-            TODO()
+            TODO("Implement Document Loading!")
         }
 
         if (ImGui.menuItem("${Icons.CLOSE_ICON} Close Tab")) {
