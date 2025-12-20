@@ -3,6 +3,7 @@ package uk.co.jcox.chemvis.application.moleditorstate
 enum class BondOrder (val number: Int) {
     SINGLE(1),
     DOUBLE(2),
+    TRIPLE(3),
     ;
 
 

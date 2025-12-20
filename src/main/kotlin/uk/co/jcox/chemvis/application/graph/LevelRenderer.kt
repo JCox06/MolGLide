@@ -87,7 +87,7 @@ class LevelRenderer(
     private fun renderLines(container: LevelContainer, camera2D: Camera2D, viewport: Vector2f, normalBonds: List<ChemBond>, wedgedBonds: List<ChemBond>, dashedBonds: List<ChemBond>) {
         val placeHolderVAO = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
         val lineColour = themeStyleManager.lineColour
-        //Render normal lines
+        //Render normal lines - Single bonds and double bonds
         val normalLine = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
         applyLineProgramUniforms(normalLine, camera2D, viewport, lineColour)
         renderNormalBondLines(container, normalBonds, placeHolderVAO)
@@ -146,7 +146,11 @@ class LevelRenderer(
             renderSingleBond(chemManager, line, renderData)
         }
         if (lineTypeOrder == BondOrder.DOUBLE) {
-            renderDoubleBond(chemManager, line, renderData)
+            renderExtraBonds(chemManager, line, renderData, false)
+        }
+        if (lineTypeOrder == BondOrder.TRIPLE) {
+            renderExtraBonds(chemManager, line, renderData, true)
+
         }
     }
 
@@ -156,7 +160,8 @@ class LevelRenderer(
         renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.lineThickness))
     }
 
-    private fun renderDoubleBond(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
+    //For double and triple bonds
+    private fun renderExtraBonds(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>, triple: Boolean) {
         val start = line.atomA.getWorldPosition()
         val end = line.atomB.getWorldPosition()
 
@@ -183,6 +188,12 @@ class LevelRenderer(
         val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, themeStyleManager.lineThickness)
         renderData.addAll(secondData)
 
+        if (triple) {
+            val thirdStart = start - orth
+            val thirdEnd = end - orth
+            val thirdData = listOf<Float>(thirdStart.x, thirdStart.y, thirdStart.z, thirdEnd.x, thirdEnd.y, thirdEnd.z, themeStyleManager.lineThickness)
+            renderData.addAll(thirdData)
+        }
     }
 
 
