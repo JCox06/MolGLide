@@ -31,7 +31,7 @@ class OrganicEditorState (
     val actionManager = ActionManager(levelContainer)
     val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
     val selectionManager = SelectionManager()
-    val clickMenu = ClickMenu()
+    val clickMenu = ClickMenu(selectionManager, actionManager, levelContainer)
 
 
     var currentTool: Tool<out ToolViewUI>? = null

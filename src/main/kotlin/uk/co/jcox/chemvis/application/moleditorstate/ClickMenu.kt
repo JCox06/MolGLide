@@ -2,8 +2,19 @@ package uk.co.jcox.chemvis.application.moleditorstate
 
 import imgui.ImGui
 import imgui.type.ImString
+import org.tinylog.Level
+import uk.co.jcox.chemvis.application.graph.ChemBond
+import uk.co.jcox.chemvis.application.graph.LevelContainer
+import uk.co.jcox.chemvis.application.moleditorstate.action.CentreBondAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeBondOrderAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.FlipBondAction
 
-class ClickMenu {
+class ClickMenu (
+    private val selectionManager: SelectionManager,
+    private val actionManager: ActionManager,
+    private val levelContainer: LevelContainer
+) {
 
     var showBondMenu = false
     var showAtomMenu = false
@@ -51,23 +62,39 @@ class ClickMenu {
             showBondMenu = false
         }
 
+        val selection = selectionManager.primarySelection
+        if (selection !is SelectionManager.Type.ActiveBond) {
+            return
+        }
+        val bond = selection.bond
+        val stereoChem = levelContainer.chemManager.getStereoChem(bond.molManagerLink)
+        val bondOrder = levelContainer.chemManager.getBondOrder(bond.molManagerLink)
+
         if (ImGui.beginPopup("BondMenu")) {
 
             if (ImGui.menuItem("Flip Bond")) {
-
+                val action = FlipBondAction(bond)
+                actionManager.executeAction(action)
             }
 
             ImGui.separator()
 
             if (ImGui.beginMenu("Single")) {
-                if (ImGui.menuItem("Plain", true)) {
-
+                //todo these actions should really be grouped so one undo does two actions at once
+                if (ImGui.menuItem("Plain", bondOrder == BondOrder.SINGLE && stereoChem == StereoChem.IN_PLANE)) {
+                    val action = ChangeStereoAction(bond, StereoChem.IN_PLANE)
+                    actionManager.executeAction(action)
+                    reduceToSingle(bond)
                 }
-                if (ImGui.menuItem("Wedged", false)) {
-
+                if (ImGui.menuItem("Wedged", bondOrder == BondOrder.SINGLE && stereoChem == StereoChem.FACING_VIEW)) {
+                    val action = ChangeStereoAction(bond, StereoChem.FACING_VIEW)
+                    actionManager.executeAction(action)
+                    reduceToSingle(bond)
                 }
-                if (ImGui.menuItem("Dashed", false)) {
-
+                if (ImGui.menuItem("Dashed", bondOrder == BondOrder.SINGLE && stereoChem == StereoChem.FACING_PAPER)) {
+                    val action = ChangeStereoAction(bond, StereoChem.FACING_PAPER)
+                    actionManager.executeAction(action)
+                    reduceToSingle(bond)
                 }
 
                 ImGui.endMenu()
@@ -75,36 +102,43 @@ class ClickMenu {
 
             if (ImGui.beginMenu("Double")) {
 
-                if (ImGui.menuItem("Plain", false)) {
-
+                if (ImGui.menuItem("Plain", bondOrder == BondOrder.DOUBLE)) {
+                    val action = ChangeBondOrderAction(bond, BondOrder.DOUBLE)
+                    actionManager.executeAction(action)
                 }
 
                 if (ImGui.menuItem("Aromatic", false)) {
-
+                    TODO("Create Aromatic Bond Order")
                 }
 
                 ImGui.separator()
 
-                if (ImGui.menuItem("Centre/Carbonyl Bond", false)) {
-
+                if (ImGui.menuItem("Centre/Carbonyl Bond", bond.centredBond)) {
+                    val action = CentreBondAction(bond)
+                    actionManager.executeAction(action)
                 }
                 ImGui.endMenu()
             }
 
             if (ImGui.menuItem("Triple Bond", false)) {
-
+                TODO("Create Triple bond order")
             }
 
             ImGui.separator()
 
             if (ImGui.menuItem("Delete")) {
-
+                TODO("Create Delete Option")
             }
 
             ImGui.endPopup()
         }
     }
 
+
+    private fun reduceToSingle(bond: ChemBond) {
+        val action = ChangeBondOrderAction(bond, BondOrder.SINGLE)
+        actionManager.executeAction(action)
+    }
 
     private fun displayAtomMenu() {
         if (showAtomMenu) {
@@ -118,14 +152,10 @@ class ClickMenu {
                 showCustomLabelInput = true
             }
 
-            if (ImGui.menuItem("Edit Properties")) {
-
-            }
-
             ImGui.separator()
 
             if (ImGui.menuItem("Delete")) {
-
+                TODO("Create Delete Action")
             }
 
             ImGui.endMenu()
