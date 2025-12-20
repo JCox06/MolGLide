@@ -93,4 +93,20 @@ abstract class Tool<T : ToolViewUI>(
         val mousePos = renderingContext.getMousePos(inputManager)
         return camera2D.screenToWorld(mousePos)
     }
+
+    /**
+     * May be optionally overridden to indicate to the OrganicEditorState whether the tool selected
+     * allows individual atom interactions.
+     *
+     * If returns true, the right click menu for the element type will be available and the
+     * selection marker will be drawn
+     */
+
+    open fun allowIndividualAtomInteractions() : Boolean {
+        return true
+    }
+
+    open fun allowIndividualBondInteractions() : Boolean {
+        return true
+    }
 }
