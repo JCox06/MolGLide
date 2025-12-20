@@ -53,20 +53,6 @@ class AtomBondTool(
     }
 
 
-    override fun renderTransients(resourceManager: IResourceManager) {
-        val primarySelection = selectionManager.primarySelection
-        if (primarySelection is SelectionManager.Type.ActiveAtom) {
-            renderTransientSelectionMarker(resourceManager, primarySelection.atom.getWorldPosition(), true)
-        }
-        if (primarySelection is SelectionManager.Type.ActiveBond) {
-            val bond = primarySelection.bond
-            val atomAPos = bond.atomA.getWorldPosition()
-            val atomBPos = bond.atomB.getWorldPosition()
-            val midpoint = (atomAPos + atomBPos) / 2f
-            renderTransientSelectionMarker(resourceManager, midpoint, false)
-        }
-    }
-
     private fun createNewMolecule(molCreation: Mode.MolCreation) {
         val atomCreationAction = AtomCreationAction(molCreation.xPos, molCreation.yPos, toolViewUI.getInsert())
         actionManager.executeAction(atomCreationAction)

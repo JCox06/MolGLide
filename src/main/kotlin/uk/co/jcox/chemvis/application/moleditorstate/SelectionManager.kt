@@ -3,8 +3,10 @@ package uk.co.jcox.chemvis.application.moleditorstate
 import org.joml.Vector3f
 import org.joml.minus
 import org.joml.plus
+import org.joml.unaryMinus
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemBond
+import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 
 class SelectionManager {
@@ -62,9 +64,22 @@ class SelectionManager {
             bonds.addAll(mol.bonds)
         }
 
-        val results = bonds.map { it to (((it.atomA.getWorldPosition() + it.atomB.getWorldPosition()) / 2f) - mouseWorld).length() }
+        val results = bonds.map { it to ((it.getMidpoint() - mouseWorld).length()) }
         val result = results.minByOrNull { it.second }
         return result
+    }
+
+
+    fun getMoleculeSelection() : ChemMolecule? {
+        val selection = primarySelection
+        if (selection is Type.ActiveAtom) {
+            return selection.atom.parent
+        }
+        if (selection is Type.ActiveBond) {
+            return selection.bond.atomA.parent
+        }
+
+        return null
     }
 
 

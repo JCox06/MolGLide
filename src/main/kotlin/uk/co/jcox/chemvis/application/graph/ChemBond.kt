@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application.graph
 
 import org.joml.Vector3f
+import org.joml.plus
 import java.util.UUID
 
 class ChemBond(
@@ -24,4 +25,14 @@ class ChemBond(
     var flipDoubleBond = false
 
 
+    fun getMidpoint() : Vector3f {
+        val atomAPos = atomA.getWorldPosition()
+        val atomBPos = atomB.getWorldPosition()
+
+        val midpoint = (atomAPos + atomBPos) /2f
+
+        val corrected = midpoint + localPos
+
+        return corrected
+    }
 }

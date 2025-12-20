@@ -36,40 +36,6 @@ abstract class Tool<T : ToolViewUI>(
 
     abstract fun onRelease(clickX: Float, clickY: Float)
 
-    abstract fun renderTransients(resourceManager: IResourceManager)
-
-
-    protected fun renderTransientSelectionMarker(resourceManager: IResourceManager, position: Vector3f, circle: Boolean) {
-        val objectProgram = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
-        objectProgram.uniform("uPerspective", camera2D.combined())
-        objectProgram.uniform("uIgnoreTextures", 1)
-
-        var drawingMode = GL11.GL_TRIANGLES
-        var meshID = MolGLide.BOND_MARKER_MESH
-        var scaleMod = 0.3f
-        if (circle) {
-            drawingMode = GL11.GL_TRIANGLE_FAN
-            meshID = MolGLide.SELECTION_MARKER_MESH
-            scaleMod = 0.7f
-        }
-
-        val mesh = resourceManager.getMesh(meshID)
-        val material = resourceManager.getMaterial(MolGLide.SELECTION_MARKER_MATERIAL)
-
-        objectProgram.uniform("uLight", material.colour)
-        objectProgram.uniform("uModel",
-            Matrix4f().translate(position.x, position.y, OrganicEditorState.MARKER_PLANE)
-                .scale(MolGLide.FONT_SIZE * MolGLide.GLOBAL_SCALE * scaleMod)
-        )
-
-        GL30.glBindVertexArray(mesh.vertexArray)
-        GL11.glDrawElements(drawingMode, mesh.vertices, GL11.GL_UNSIGNED_INT, 0)
-        GL30.glBindVertexArray(0)
-
-        objectProgram.uniform("uIgnoreTextures", 0)
-    }
-
-
     abstract fun update()
 
 

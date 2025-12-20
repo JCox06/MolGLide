@@ -42,17 +42,19 @@ class ImplicitAtomMoveTool(
 
     }
 
-    override fun renderTransients(resourceManager: IResourceManager) {
-        val primarySelection = selectionManager.primarySelection
-        if (primarySelection is SelectionManager.Type.ActiveAtom) {
-            renderTransientSelectionMarker(resourceManager, primarySelection.atom.getWorldPosition(), true)
-        }
-    }
-
     override fun update() {
 
     }
 
+
+    /**
+     * This tool does not affect the bonds only the atoms
+     * Therefore we do not want to draw selection markers over the bonds
+     * or allow the right click menu to show for bonds
+     */
+    override fun allowIndividualBondInteractions(): Boolean {
+        return false
+    }
 
     companion object {
         val implicitOrder = listOf(ChemAtom.RelationalPos.LEFT, ChemAtom.RelationalPos.RIGHT, ChemAtom.RelationalPos.ABOVE, ChemAtom.RelationalPos.BOTTOM)
