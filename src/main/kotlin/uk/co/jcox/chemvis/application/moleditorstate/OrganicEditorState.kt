@@ -1,22 +1,23 @@
 package uk.co.jcox.chemvis.application.moleditorstate
 
+import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.graph.LevelRenderer
-import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
-import uk.co.jcox.chemvis.application.moleditorstate.tool.CommonTemplateTool
-import uk.co.jcox.chemvis.application.moleditorstate.tool.ImplicitAtomMoveTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
 import uk.co.jcox.chemvis.application.ui.tool.ToolViewUI
 import uk.co.jcox.chemvis.cvengine.ApplicationState
+import uk.co.jcox.chemvis.cvengine.CVEngine
 import uk.co.jcox.chemvis.cvengine.Camera2D
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import uk.co.jcox.chemvis.cvengine.IInputSubscriber
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
+import uk.co.jcox.chemvis.cvengine.IResourceManager
 import uk.co.jcox.chemvis.cvengine.InputManager
 import uk.co.jcox.chemvis.cvengine.RawInput
 
@@ -30,6 +31,7 @@ class OrganicEditorState (
     val actionManager = ActionManager(levelContainer)
     val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
     val selectionManager = SelectionManager()
+    val clickMenu = ClickMenu()
 
 
     var currentTool: Tool<out ToolViewUI>? = null
@@ -52,9 +54,56 @@ class OrganicEditorState (
     override fun render(viewport: Vector2f) {
         GL11.glViewport(0, 0, renderTargetContext.getWidth().toInt(), renderTargetContext.getHeight().toInt())
 
-        currentTool?.renderTransients(services.resourceManager())
+        currentTool?.let { renderSelectionTransients(it) }
 
         renderer.renderLevel(this.levelContainer, camera, viewport)
+
+        clickMenu.renderMenu()
+    }
+
+    private fun renderSelectionTransients(transientTool: Tool<out ToolViewUI>) {
+
+        val selection = selectionManager.primarySelection
+
+        if (selection is SelectionManager.Type.ActiveAtom && transientTool.allowIndividualAtomInteractions()) {
+            renderTransientSelectionMarker(services.resourceManager(), selection.atom.getWorldPosition(), true)
+        }
+        if (selection is SelectionManager.Type.ActiveBond && transientTool.allowIndividualBondInteractions()) {
+            renderTransientSelectionMarker(services.resourceManager(), selection.bond.getMidpoint(), false)
+        }
+    }
+
+
+    //todo This should be moved into a separate transientUIRenderer at some point
+    //Its also a bit weird as it should go through the batch renderer rather than using pure OpenGL functions
+    private fun renderTransientSelectionMarker(resourceManager: IResourceManager, position: Vector3f, circle: Boolean) {
+        val objectProgram = resourceManager.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
+        objectProgram.uniform("uPerspective", camera.combined())
+        objectProgram.uniform("uIgnoreTextures", 1)
+
+        var drawingMode = GL11.GL_TRIANGLES
+        var meshID = MolGLide.BOND_MARKER_MESH
+        var scaleMod = 0.3f
+        if (circle) {
+            drawingMode = GL11.GL_TRIANGLE_FAN
+            meshID = MolGLide.SELECTION_MARKER_MESH
+            scaleMod = 0.7f
+        }
+
+        val mesh = resourceManager.getMesh(meshID)
+        val material = resourceManager.getMaterial(MolGLide.SELECTION_MARKER_MATERIAL)
+
+        objectProgram.uniform("uLight", material.colour)
+        objectProgram.uniform("uModel",
+            Matrix4f().translate(position.x, position.y, OrganicEditorState.MARKER_PLANE)
+                .scale(MolGLide.FONT_SIZE * MolGLide.GLOBAL_SCALE * scaleMod)
+        )
+
+        GL30.glBindVertexArray(mesh.vertexArray)
+        GL11.glDrawElements(drawingMode, mesh.vertices, GL11.GL_UNSIGNED_INT, 0)
+        GL30.glBindVertexArray(0)
+
+        objectProgram.uniform("uIgnoreTextures", 0)
     }
 
     override fun cleanup() {
@@ -76,6 +125,14 @@ class OrganicEditorState (
             val mousePos = camera.screenToWorld(mousePosScreen)
 
             currentTool?.onClick(mousePos.x, mousePos.y)
+        }
+
+        //Check to see if the click menu should be opened
+        if (selectionManager.primarySelection is SelectionManager.Type.ActiveBond && key == RawInput.MOUSE_2) {
+            clickMenu.showBondMenu = true
+        }
+        if (selectionManager.primarySelection is SelectionManager.Type.ActiveAtom && key == RawInput.MOUSE_2) {
+            clickMenu.showAtomMenu = true
         }
 
         //Check if CTRL key is being held down
@@ -140,15 +197,10 @@ class OrganicEditorState (
 
 
     private fun getSelectedMolecule() : ChemMolecule? {
-        val selection = selectionManager.primarySelection
-        if (selection is SelectionManager.Type.Active) {
-            val atom = selection.atom
-            val molecule = atom.parent
-            return molecule
-        }
-
-        return null
+        return selectionManager.getMoleculeSelection()
     }
+
+
 
 
     companion object {

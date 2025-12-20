@@ -38,7 +38,7 @@ class AtomInsertionAction (
         val newStructAtom = createNewStructAtom(levelContainer, srcMol.molManagerLink, atomInsert.symbol)
 
         //Create the new atom level view side
-        val newLevelAtom = ChemAtom(Vector3f(0.0f, 0.0f, 0.0f), newStructAtom, srcMol)
+        val newLevelAtom = ChemAtom(Vector3f(), newStructAtom, srcMol)
         srcMol.atoms.add(newLevelAtom)
 
         //Create the bonds struct side

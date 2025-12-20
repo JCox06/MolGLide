@@ -52,6 +52,9 @@ class MolGLide : IApplication, IInputSubscriber {
         val selectionMarkerMesh = Shaper2D.circle(0.0f, 0.0f, 1.0f)
         services.resourceManager().manageMesh(SELECTION_MARKER_MESH, selectionMarkerMesh, instancer)
 
+        val bondMarkerMesh = Shaper2D.rectangle(0.0f, 0.0f, 1.0f, 1.0f)
+        services.resourceManager().manageMesh(BOND_MARKER_MESH, bondMarkerMesh, instancer)
+
         val markerMaterial = Material(Vector3f(0.11f, 0.11f, 0.11f))
         services.resourceManager().manageMaterial(SELECTION_MARKER_MATERIAL, markerMaterial)
 
@@ -71,6 +74,7 @@ class MolGLide : IApplication, IInputSubscriber {
         const val FONT_SIZE = 140
         const val GLOBAL_SCALE: Float = 0.1f
         const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER_MESH"
+        const val BOND_MARKER_MESH: String = "BOND_MARKER_MESH"
         const val SELECTION_MARKER_MATERIAL: String = "SELECTION_MARKER_MATERIAL"
         const val VERSION = "v0.1.0"
         const val WEBSITE = "https://github.com/JCox06/MolGLide/tree/master"

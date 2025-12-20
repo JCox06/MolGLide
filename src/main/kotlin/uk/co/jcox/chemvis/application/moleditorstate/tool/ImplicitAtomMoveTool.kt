@@ -1,7 +1,5 @@
 package uk.co.jcox.chemvis.application.moleditorstate.tool
 
-import uk.co.jcox.chemvis.application.moleditorstate.BondOrder.Companion.standardIncrements
-import uk.co.jcox.chemvis.application.moleditorstate.BondOrder.SINGLE
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
@@ -28,7 +26,7 @@ class ImplicitAtomMoveTool(
 
         val selectedAtom = selectionManager.primarySelection
 
-        if (selectedAtom is SelectionManager.Type.Active) {
+        if (selectedAtom is SelectionManager.Type.ActiveAtom) {
             cycleGroupPosition(selectedAtom.atom)
         }
     }
@@ -44,17 +42,19 @@ class ImplicitAtomMoveTool(
 
     }
 
-    override fun renderTransients(resourceManager: IResourceManager) {
-        val primarySelection = selectionManager.primarySelection
-        if (primarySelection is SelectionManager.Type.Active) {
-            renderTransientSelectionMarker(resourceManager, primarySelection.atom)
-        }
-    }
-
     override fun update() {
 
     }
 
+
+    /**
+     * This tool does not affect the bonds only the atoms
+     * Therefore we do not want to draw selection markers over the bonds
+     * or allow the right click menu to show for bonds
+     */
+    override fun allowIndividualBondInteractions(): Boolean {
+        return false
+    }
 
     companion object {
         val implicitOrder = listOf(ChemAtom.RelationalPos.LEFT, ChemAtom.RelationalPos.RIGHT, ChemAtom.RelationalPos.ABOVE, ChemAtom.RelationalPos.BOTTOM)
