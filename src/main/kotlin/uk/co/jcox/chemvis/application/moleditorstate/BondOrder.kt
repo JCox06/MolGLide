@@ -8,7 +8,7 @@ enum class BondOrder (val number: Int) {
 
 
     companion object {
-        val standardIncrements = listOf(SINGLE, DOUBLE)
+        val standardIncrements = listOf(SINGLE, DOUBLE, TRIPLE)
 
         fun increment(current: BondOrder) : BondOrder {
             val index = standardIncrements.indexOf(current)
