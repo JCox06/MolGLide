@@ -7,9 +7,6 @@ import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.graph.LevelRenderer
-import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
-import uk.co.jcox.chemvis.application.moleditorstate.tool.CommonTemplateTool
-import uk.co.jcox.chemvis.application.moleditorstate.tool.ImplicitAtomMoveTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
 import uk.co.jcox.chemvis.application.ui.tool.ToolViewUI
 import uk.co.jcox.chemvis.cvengine.ApplicationState
@@ -141,7 +138,7 @@ class OrganicEditorState (
 
     private fun getSelectedMolecule() : ChemMolecule? {
         val selection = selectionManager.primarySelection
-        if (selection is SelectionManager.Type.Active) {
+        if (selection is SelectionManager.Type.ActiveAtom) {
             val atom = selection.atom
             val molecule = atom.parent
             return molecule

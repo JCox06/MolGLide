@@ -1,6 +1,5 @@
 package uk.co.jcox.chemvis.application.moleditorstate.tool
 
-import org.apache.jena.sparql.pfunction.library.container
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.minus
@@ -8,10 +7,8 @@ import org.joml.plus
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
-import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
-import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomCreationAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomInsertionAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomReplacementAction
@@ -58,8 +55,15 @@ class AtomBondTool(
 
     override fun renderTransients(resourceManager: IResourceManager) {
         val primarySelection = selectionManager.primarySelection
-        if (primarySelection is SelectionManager.Type.Active) {
-            renderTransientSelectionMarker(resourceManager, primarySelection.atom)
+        if (primarySelection is SelectionManager.Type.ActiveAtom) {
+            renderTransientSelectionMarker(resourceManager, primarySelection.atom.getWorldPosition(), true)
+        }
+        if (primarySelection is SelectionManager.Type.ActiveBond) {
+            val bond = primarySelection.bond
+            val atomAPos = bond.atomA.getWorldPosition()
+            val atomBPos = bond.atomB.getWorldPosition()
+            val midpoint = (atomAPos + atomBPos) / 2f
+            renderTransientSelectionMarker(resourceManager, midpoint, false)
         }
     }
 
@@ -83,7 +87,7 @@ class AtomBondTool(
             return Mode.MolCreation(clickX, clickY)
         }
 
-        if (selectionType is SelectionManager.Type.Active) {
+        if (selectionType is SelectionManager.Type.ActiveAtom) {
             return Mode.AtomInsertion(selectionType.atom,)
         }
 

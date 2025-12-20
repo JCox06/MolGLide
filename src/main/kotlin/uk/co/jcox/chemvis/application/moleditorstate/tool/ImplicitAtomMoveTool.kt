@@ -1,7 +1,5 @@
 package uk.co.jcox.chemvis.application.moleditorstate.tool
 
-import uk.co.jcox.chemvis.application.moleditorstate.BondOrder.Companion.standardIncrements
-import uk.co.jcox.chemvis.application.moleditorstate.BondOrder.SINGLE
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.ActionManager
@@ -28,7 +26,7 @@ class ImplicitAtomMoveTool(
 
         val selectedAtom = selectionManager.primarySelection
 
-        if (selectedAtom is SelectionManager.Type.Active) {
+        if (selectedAtom is SelectionManager.Type.ActiveAtom) {
             cycleGroupPosition(selectedAtom.atom)
         }
     }
@@ -46,8 +44,8 @@ class ImplicitAtomMoveTool(
 
     override fun renderTransients(resourceManager: IResourceManager) {
         val primarySelection = selectionManager.primarySelection
-        if (primarySelection is SelectionManager.Type.Active) {
-            renderTransientSelectionMarker(resourceManager, primarySelection.atom)
+        if (primarySelection is SelectionManager.Type.ActiveAtom) {
+            renderTransientSelectionMarker(resourceManager, primarySelection.atom.getWorldPosition(), true)
         }
     }
 

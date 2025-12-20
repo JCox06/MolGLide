@@ -2,23 +2,17 @@ package uk.co.jcox.chemvis.application.ui
 
 import imgui.ImGui
 import imgui.ImVec2
-import imgui.ImVec4
-import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import imgui.type.ImBoolean
-import imgui.type.ImInt
 import org.joda.time.LocalDateTime
 import org.joml.Vector2f
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
-import uk.co.jcox.chemvis.application.ToolRegistry
 import uk.co.jcox.chemvis.application.mainstate.MainState
-import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
-import uk.co.jcox.chemvis.application.moleditorstate.TemplateRingInsert
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import uk.co.jcox.chemvis.cvengine.RenderTarget
 import java.io.File
@@ -207,7 +201,7 @@ class ApplicationUI (
         val selection = activeSession?.selectionManager?.primarySelection
         val container = activeSession?.levelContainer
 
-        if (selection == null || container == null || selection !is SelectionManager.Type.Active) {
+        if (selection == null || container == null || selection !is SelectionManager.Type.ActiveAtom) {
             return
         }
 
