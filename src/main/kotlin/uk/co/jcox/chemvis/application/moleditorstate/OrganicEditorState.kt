@@ -31,6 +31,7 @@ class OrganicEditorState (
     val actionManager = ActionManager(levelContainer)
     val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
     val selectionManager = SelectionManager()
+    val clickMenu = ClickMenu()
 
 
     var currentTool: Tool<out ToolViewUI>? = null
@@ -56,6 +57,8 @@ class OrganicEditorState (
         currentTool?.let { renderSelectionTransients(it) }
 
         renderer.renderLevel(this.levelContainer, camera, viewport)
+
+        clickMenu.renderMenu()
     }
 
     private fun renderSelectionTransients(transientTool: Tool<out ToolViewUI>) {
@@ -124,6 +127,14 @@ class OrganicEditorState (
             currentTool?.onClick(mousePos.x, mousePos.y)
         }
 
+        //Check to see if the click menu should be opened
+        if (selectionManager.primarySelection is SelectionManager.Type.ActiveBond && key == RawInput.MOUSE_2) {
+            clickMenu.showBondMenu = true
+        }
+        if (selectionManager.primarySelection is SelectionManager.Type.ActiveAtom && key == RawInput.MOUSE_2) {
+            clickMenu.showAtomMenu = true
+        }
+
         //Check if CTRL key is being held down
         if (inputManager.keyClick(RawInput.LCTRL)) {
             if (key == RawInput.KEY_Z) {
@@ -188,6 +199,8 @@ class OrganicEditorState (
     private fun getSelectedMolecule() : ChemMolecule? {
         return selectionManager.getMoleculeSelection()
     }
+
+
 
 
     companion object {
