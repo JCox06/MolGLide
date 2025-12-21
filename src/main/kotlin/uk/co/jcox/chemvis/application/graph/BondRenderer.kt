@@ -6,6 +6,7 @@ import org.joml.Vector3f
 import org.joml.minus
 import org.joml.plus
 import org.joml.times
+import org.joml.unaryMinus
 import org.lwjgl.opengl.GL11
 import uk.co.jcox.chemvis.application.moleditorstate.BondOrder
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
@@ -15,6 +16,7 @@ import uk.co.jcox.chemvis.cvengine.GLMesh
 import uk.co.jcox.chemvis.cvengine.InstancedRenderer
 import uk.co.jcox.chemvis.cvengine.ShaderProgram
 import uk.co.jcox.chemvis.cvengine.Shaper2D
+import kotlin.math.abs
 
 class BondRenderer (
     private val instancedRenderer: InstancedRenderer,
@@ -42,12 +44,15 @@ class BondRenderer (
         bondProgram.uniform("uLight", lineColour)
     }
 
+
+    //Todo - Find a proper way to distingish between different bond types
+
     private fun prepareRenderData(bonds: List<ChemBond>, renderData: MutableList<Float>, thickness: Float, container: LevelContainer, allowExtraLines: Boolean) {
         bonds.forEach { bond ->
 
             var nudge = Vector3f()
             if (bond.centredBond) {
-                nudge = bond.bisectorNudge * 2.0f
+                nudge = bond.bisectorNudge
                 //First render a single bond - No Offset Required
                 addBond(bond, renderData, -1.0f, thickness, nudge)
             } else {
@@ -75,10 +80,21 @@ class BondRenderer (
         val bondStart = bond.atomA.getWorldPosition()
         val bondEnd = bond.atomB.getWorldPosition()
         val diff = bondStart - bondEnd
+
         val orth = Vector3f(diff.y, -diff.x, diff.z).normalize() * OrganicEditorState.MULTI_BOND_DISTANCE * offsetFactor * flip
 
-        val start = bondStart + orth + bisectorNudge
-        val end = bondEnd + orth + bisectorNudge
+        if (! (bisectorNudge.x == 0f && bisectorNudge.y == 0f && bisectorNudge.z == 0f)) {
+            orth.div(2f)
+        }
+
+        val newNudge = Vector3f(bisectorNudge)
+
+        if (diff.y > 0) {
+            newNudge.y = -newNudge.y
+        }
+
+        val start = bondStart + orth + newNudge
+        val end = bondEnd + orth + newNudge
         renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, thickness))
     }
     

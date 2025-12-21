@@ -8,7 +8,7 @@ class ThemeStyleManager {
     var backgroundColour = Vector4f(0.15f, 0.16f, 0.16f, 1.0f)
     var defaultAtomColour = Vector3f(1.0f, 1.0f, 1.0f)
     var lineColour = Vector3f(1.0f, 1.0f, 1.0f)
-    var lineThickness = 2.0f
+    var lineThickness = 1.25f
     var symbolColours = mapOf(
         "H" to Vector3f(1.0f, 1.0f, 1.0f),
         "N" to Vector3f(1.0f, 1.0f, 1.0f),
@@ -32,7 +32,7 @@ class ThemeStyleManager {
             "Br" to Vector3f(1.0f, 1.0f, 1.0f),
         )
         lineColour = Vector3f(1.0f, 1.0f, 1.0f)
-        lineThickness = 2.0f
+        lineThickness = 1.25f
     }
 
     fun applyScreenshotWhite() {
@@ -49,7 +49,7 @@ class ThemeStyleManager {
         defaultAtomColour = Vector3f(0.0f, 0.0f, 0.0f)
 
         lineColour = Vector3f(0.0f, 0.0f, 0.0f)
-        lineThickness = 2.0f
+        lineThickness = 1.25f
     }
 
     fun applyScreenshotMolGLide() {
@@ -70,7 +70,7 @@ class ThemeStyleManager {
 
         defaultAtomColour = Vector3f(0.0f, 0.0f, 0.0f)
         lineColour = Vector3f(0.0f, 0.0f, 0.0f)
-        lineThickness = 2.0f
+        lineThickness = 1.25f
     }
 
     fun applyCPKTheme() {
@@ -90,7 +90,7 @@ class ThemeStyleManager {
 
         defaultAtomColour = Vector3f(0.0f, 0.0f, 0.0f)
         lineColour = Vector3f(0.0f, 0.0f, 0.0f)
-        lineThickness = 2.0f
+        lineThickness = 1.25f
     }
 
 }
