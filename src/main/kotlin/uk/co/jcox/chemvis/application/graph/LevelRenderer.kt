@@ -33,9 +33,9 @@ class LevelRenderer(
         atomRenderer.renderAtoms(container, atomEntities, camera2D, program)
 
         //Render the bonds
-        renderNormalLines(normalBondsFound, viewport, camera2D, container)
-        renderWedgedLines(wedgedBondsFound, viewport, camera2D, container)
-        renderDashedLines(dashedBondsFound, viewport, camera2D, container)
+        renderNormalLines(normalBondsFound, viewport, camera2D, container, StereoChem.IN_PLANE)
+        renderNormalLines(wedgedBondsFound, viewport, camera2D, container, StereoChem.FACING_VIEW)
+        renderNormalLines(dashedBondsFound, viewport, camera2D, container, StereoChem.FACING_PAPER)
     }
 
     private fun traverseAndCollect(
@@ -67,21 +67,23 @@ class LevelRenderer(
         }
     }
 
-    private fun renderNormalLines(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer) {
-        val program = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
+    private fun renderNormalLines(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer, stereoChem: StereoChem) {
+        val program = resources.useProgram(MolGLide.SHADER_LINE)
         val vertexArray = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
-        bondRenderer.renderBonds(bonds, viewport, camera2D, program, vertexArray, container, true)
+
+        if (stereoChem == StereoChem.IN_PLANE) {
+            program.uniform("uWidthMod", 0)
+            program.uniform("uDashed", 0)
+        }
+        if (stereoChem == StereoChem.FACING_VIEW) {
+            program.uniform("uWidthMod", 1)
+            program.uniform("uDashed", 0)
+        }
+        if (stereoChem == StereoChem.FACING_PAPER) {
+            program.uniform("uWidthMod", 1)
+            program.uniform("uDashed", 1)
+        }
+        bondRenderer.renderBonds(bonds, viewport, camera2D, program, vertexArray, container, stereoChem == StereoChem.IN_PLANE)
     }
 
-    private fun renderWedgedLines(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer) {
-        val program = resources.useProgram(MolGLide.SHADER_WEDGED_LINE)
-        val vertexArray = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
-        bondRenderer.renderBonds(bonds, viewport, camera2D, program, vertexArray, container, false)
-    }
-
-    private fun renderDashedLines(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer) {
-        val program = resources.useProgram(MolGLide.SHADER_DASHED_LINE)
-        val vertexArray = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
-        bondRenderer.renderBonds(bonds, viewport, camera2D, program, vertexArray, container, false)
-    }
 }

@@ -113,7 +113,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private fun initialiseIntegratedResources() {
         Logger.info{"Loading integrated resources..."}
         this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_TEXTURE, File("data/integrated/shaders/simpleTexture.vert"), File("data/integrated/shaders/simpleTexture.frag"), null)
-        this.resourceManager.loadShadersFromDisc(SHADER_INSTANCED_LINE, File("data/integrated/shaders/instanceLine.vert"), File(("data/integrated/shaders/instanceLine.frag")), File("data/integrated/shaders/instanceLine.geom"))
 
         this.resourceManager.manageMesh(MESH_HOLDER_LINE, Shaper2D.line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f), instancer)
     }
@@ -398,12 +397,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     companion object {
         const val SHADER_SIMPLE_TEXTURE: String = "integrated/simple_font"
-        const val SHADER_INSTANCED_LINE: String = "integrated/simple_line"
-
         const val STD_CHARACTER_SET: String = "@!?- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12345678"
-
         const val MESH_HOLDER_LINE: String = "integrated/unit_line"
-
 
         //[3 float pos] [2 float texture] = 5 floats
         //Application-Wide standard vertex set
