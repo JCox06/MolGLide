@@ -27,7 +27,7 @@ class ApplicationUI (
     //todo FIX - The wrong session ID is being reported here which means sometimes the incorrect tab is closed and sometimes the incorrect render target data is read when attempting to take a screenshot
 
     private val menuBar = MenuBar(appManager, engineManager)
-    private val welcomeUI = WelcomeUI()
+    private val welcomeUI = WelcomeUI(engineManager)
     private var activeSession: OrganicEditorState? = null
     private var activeTarget: RenderTarget? = null
     private var activeSessionID: String? = null

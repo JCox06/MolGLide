@@ -395,6 +395,10 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         return appRenderStates[stateID]
     }
 
+    override fun getPlatformMSAAMaxSamples(): Int {
+        return GL11.glGetInteger(GL30.GL_MAX_SAMPLES)
+    }
+
     companion object {
         const val SHADER_SIMPLE_TEXTURE: String = "integrated/simple_font"
         const val STD_CHARACTER_SET: String = "@!?- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12345678"

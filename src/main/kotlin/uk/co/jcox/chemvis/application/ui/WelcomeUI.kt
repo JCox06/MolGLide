@@ -7,8 +7,11 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
 import imgui.type.ImString
 import uk.co.jcox.chemvis.application.MolGLide
+import uk.co.jcox.chemvis.cvengine.ICVServices
 
-class WelcomeUI {
+class WelcomeUI (
+    private val services: ICVServices,
+) {
 
     var newWindow: () -> Unit = {}
 
@@ -18,7 +21,7 @@ class WelcomeUI {
 
     fun setup() {
         scale[0] = ImGui.getIO().fontGlobalScale
-        msaaSamples[0] = 1
+        msaaSamples[0] = 4.coerceIn(1, services.getPlatformMSAAMaxSamples())
     }
 
     fun draw(dockingID: Int) {
@@ -48,7 +51,7 @@ class WelcomeUI {
             ImGui.getIO().fontGlobalScale = scale[0]
         }
 
-        ImGui.sliderInt("MSAA Samples", msaaSamples, 1, 16)
+        ImGui.sliderInt("MSAA Samples", msaaSamples, 1, services.getPlatformMSAAMaxSamples())
 
         ImGui.end()
     }
