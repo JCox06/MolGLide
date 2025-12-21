@@ -22,6 +22,9 @@ import uk.co.jcox.chemvis.cvengine.InstancedRenderer
 import uk.co.jcox.chemvis.cvengine.ShaderProgram
 import uk.co.jcox.chemvis.cvengine.Shaper2D
 
+
+//Todo - While this class works it needs an urgent re-write
+
 class LevelRenderer(
     private val batcher: Batch2D,
     private val instancer: InstancedRenderer,
@@ -101,6 +104,30 @@ class LevelRenderer(
         val dashedLine = resources.useProgram(MolGLide.SHADER_DASHED_LINE)
         applyLineProgramUniforms(dashedLine, camera2D, viewport, lineColour)
         renderDashedLines(container, dashedBonds, placeHolderVAO)
+
+
+        val textureProgram = resources.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
+        textureProgram.uniform("uPerspective", camera2D.combined())
+        textureProgram.uniform("uIgnoreTextures", 1)
+        textureProgram.uniform("uLight", lineColour)
+        textureProgram.uniform("uModel", Matrix4f())
+
+        //Also to fix seams at the vertices - You need to draw circles at the lines
+        batcher.begin(Batch2D.Mode.FAN)
+        normalBonds.forEach { bond ->
+
+            val atomAPos = bond.atomA.getWorldPosition()
+            val atomBPos = bond.atomB.getWorldPosition()
+            //Slightly random 1/10 value?
+            val meshA = Shaper2D.circle(atomAPos.x, atomAPos.y, themeStyleManager.lineThickness * 1/10f)
+            val meshB = Shaper2D.circle(atomBPos.x, atomBPos.y, themeStyleManager.lineThickness * 1/10f)
+
+            batcher.addBatch(meshA.pack(), meshA.indices)
+            batcher.addBatch(meshB.pack(), meshB.indices)
+        }
+        batcher.end()
+
+        textureProgram.uniform("uIgnoreTextures", 0)
     }
 
     private fun applyLineProgramUniforms(program: ShaderProgram, camera2D: Camera2D, viewport: Vector2f, lineColour: Vector3f) {
