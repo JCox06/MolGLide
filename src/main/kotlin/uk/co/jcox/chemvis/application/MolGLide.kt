@@ -60,9 +60,7 @@ class MolGLide : IApplication, IInputSubscriber {
 
 
         //Shaders for dashed and wedged line
-        services.resourceManager().loadShadersFromDisc(SHADER_WEDGED_LINE, File("data/integrated/shaders/instanceLine.vert"), File("data/integrated/shaders/instanceLine.frag"), File("data/chemvis/shaders/wedgedInstanceLine.geom"))
-        services.resourceManager().loadShadersFromDisc(SHADER_DASHED_LINE, File("data/integrated/shaders/instanceLine.vert"), File("data/chemvis/shaders/dashedInstanceLine.frag"), File("data/chemvis/shaders/dashedInstanceLine.geom"))
-
+        services.resourceManager().loadShadersFromDisc(SHADER_LINE, File("data/chemvis/shaders/instanceLine.vert"), File("data/chemvis/shaders/instanceLine.frag"), File("data/chemvis/shaders/instanceLine.geom"))
     }
 
     override fun cleanup() {
@@ -79,7 +77,6 @@ class MolGLide : IApplication, IInputSubscriber {
         const val VERSION = "v0.1.0"
         const val WEBSITE = "https://github.com/JCox06/MolGLide/tree/master"
 
-        const val SHADER_WEDGED_LINE = "SHADER_WEDGED_LINE"
-        const val SHADER_DASHED_LINE = "SHADER_DASHED_LINE"
+       const val SHADER_LINE = "SHADER_LINE"
     }
 }

@@ -207,7 +207,7 @@ class OrganicEditorState (
         const val ATOM_PLANE = -3.0f
         const val MARKER_PLANE = -2.0f
         const val CONNECTION_DISTANCE = 30.0f
-        const val IMPLICIT_SCALE = 0.75f * MolGLide.FONT_SIZE * MolGLide.GLOBAL_SCALE
+        const val IMPLICIT_SCALE = 1.0f * MolGLide.FONT_SIZE * MolGLide.GLOBAL_SCALE
 
         const val MULTI_BOND_DISTANCE = 3.5f
 

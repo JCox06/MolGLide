@@ -45,4 +45,6 @@ interface ICVServices {
     fun getAppStateRenderingContext(stateID: String) : IRenderTargetContext?
 
     fun getState(stateID: String) : ApplicationState?
+
+    fun getPlatformMSAAMaxSamples() : Int
 }
