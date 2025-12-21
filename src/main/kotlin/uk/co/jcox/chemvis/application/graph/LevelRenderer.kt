@@ -10,13 +10,13 @@ import uk.co.jcox.chemvis.cvengine.*
 //Todo - While this class works it needs an urgent re-write
 
 class LevelRenderer(
-    private val batcher: Batch2D,
-    private val instancer: InstancedRenderer,
+    batcher: Batch2D,
+    instancer: InstancedRenderer,
+    private val themeStyleManager: ThemeStyleManager,
     private val resources: IResourceManager,
-    private val themeStyleManager: ThemeStyleManager
 ) {
 
-    private val bondRenderer = BondRenderer(instancer, themeStyleManager)
+    private val bondRenderer = BondRenderer(instancer, batcher, themeStyleManager)
     private val atomRenderer = AtomRenderer(batcher, themeStyleManager, resources)
 
     fun renderLevel(container: LevelContainer, camera2D: Camera2D, viewport: Vector2f) {
@@ -33,9 +33,12 @@ class LevelRenderer(
         atomRenderer.renderAtoms(container, atomEntities, camera2D, program)
 
         //Render the bonds
-        renderNormalLines(normalBondsFound, viewport, camera2D, container, StereoChem.IN_PLANE)
-        renderNormalLines(wedgedBondsFound, viewport, camera2D, container, StereoChem.FACING_VIEW)
-        renderNormalLines(dashedBondsFound, viewport, camera2D, container, StereoChem.FACING_PAPER)
+        renderBonds(normalBondsFound, viewport, camera2D, container, StereoChem.IN_PLANE)
+        renderBonds(wedgedBondsFound, viewport, camera2D, container, StereoChem.FACING_VIEW)
+        renderBonds(dashedBondsFound, viewport, camera2D, container, StereoChem.FACING_PAPER)
+
+        //Make the normal bonds have smooth edges
+        bondRenderer.renderBondCircles(normalBondsFound, themeStyleManager.lineThickness * LINE_FACTOR, program, camera2D)
     }
 
     private fun traverseAndCollect(
@@ -67,7 +70,7 @@ class LevelRenderer(
         }
     }
 
-    private fun renderNormalLines(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer, stereoChem: StereoChem) {
+    private fun renderBonds(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer, stereoChem: StereoChem) {
         val program = resources.useProgram(MolGLide.SHADER_LINE)
         val vertexArray = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
 
@@ -83,7 +86,13 @@ class LevelRenderer(
             program.uniform("uWidthMod", 1)
             program.uniform("uDashed", 1)
         }
+
+        program.uniform("camWidthFactor", (viewport.x / camera2D.camWidth ) * LINE_FACTOR)
         bondRenderer.renderBonds(bonds, viewport, camera2D, program, vertexArray, container, stereoChem == StereoChem.IN_PLANE)
     }
 
+
+    companion object {
+        const val LINE_FACTOR = 0.4f
+    }
 }

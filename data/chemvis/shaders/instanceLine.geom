@@ -16,6 +16,8 @@ out float lLineDist;
 
 uniform vec2 u_viewport;
 
+uniform float camWidthFactor;
+
 uniform int uWidthMod;
 
 void main() {
@@ -32,7 +34,7 @@ void main() {
     vec2 ndc_direction = normalize(ndc_lineEnd - ndc_lineStart);
 
     //Have to take into account the scale of the viewport - Comes in later
-    float ndc_lineScale = lThickness[0];
+    float ndc_lineScale = lThickness[0] * camWidthFactor;
 
     vec2 ndc_dir_perp = vec2(ndc_direction.y, -ndc_direction.x);
 
