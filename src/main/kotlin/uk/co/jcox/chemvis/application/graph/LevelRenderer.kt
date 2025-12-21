@@ -1,26 +1,10 @@
 package uk.co.jcox.chemvis.application.graph
 
-import org.joml.Matrix4f
 import org.joml.Vector2f
-import org.joml.Vector3f
-import org.joml.minus
-import org.joml.plus
-import org.joml.times
-import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.moleditorstate.BondOrder
-import uk.co.jcox.chemvis.application.chemengine.IMoleculeManager
-import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
-import uk.co.jcox.chemvis.cvengine.Batch2D
-import uk.co.jcox.chemvis.cvengine.CVEngine
-import uk.co.jcox.chemvis.cvengine.Camera2D
-import uk.co.jcox.chemvis.cvengine.GLMesh
-import uk.co.jcox.chemvis.cvengine.IResourceManager
-import uk.co.jcox.chemvis.cvengine.InstancedRenderer
-import uk.co.jcox.chemvis.cvengine.ShaderProgram
-import uk.co.jcox.chemvis.cvengine.Shaper2D
+import uk.co.jcox.chemvis.cvengine.*
 
 
 //Todo - While this class works it needs an urgent re-write
@@ -32,32 +16,27 @@ class LevelRenderer(
     private val themeStyleManager: ThemeStyleManager
 ) {
 
+    private val bondRenderer = BondRenderer(instancer, themeStyleManager)
+    private val atomRenderer = AtomRenderer(batcher, themeStyleManager, resources)
 
-    /**
-     * As with the old system, rendering a level hasn't changed.
-     * 1) Group entities by their rendering type (Text, Other Mesh, etc)
-     * 2) Render them with the instanced Renderer or the batch renderer
-     * @param container the level to render
-     * @param camera2D the position of the camera in the scene
-     * @param viewport the viewport of the current window - used for some shaders
-     * */
     fun renderLevel(container: LevelContainer, camera2D: Camera2D, viewport: Vector2f) {
-
         //Group everything together
         val atomEntities: MutableList<ChemAtom> = mutableListOf()
         val normalBondsFound: MutableList<ChemBond> = mutableListOf()
         val wedgedBondsFound: MutableList<ChemBond> = mutableListOf()
         val dashedBondsFound: MutableList<ChemBond> = mutableListOf()
-
-
         traverseAndCollect(container, atomEntities, normalBondsFound, wedgedBondsFound, dashedBondsFound)
 
-        //Now Render
-        renderAtomSymbols(container, atomEntities, camera2D)
 
-        renderLines(container, camera2D, viewport, normalBondsFound, wedgedBondsFound, dashedBondsFound)
+        //Render the atoms
+        val program = resources.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
+        atomRenderer.renderAtoms(container, atomEntities, camera2D, program)
+
+        //Render the bonds
+        renderNormalLines(normalBondsFound, viewport, camera2D, container)
+        renderWedgedLines(wedgedBondsFound, viewport, camera2D, container)
+        renderDashedLines(dashedBondsFound, viewport, camera2D, container)
     }
-
 
     private fun traverseAndCollect(
         container: LevelContainer,
@@ -66,17 +45,20 @@ class LevelRenderer(
         wedgedBondsFound: MutableList<ChemBond>,
         dashedBondsFound: MutableList<ChemBond>,
     ) {
-
         //Go through every molecule, noting down the molecule position
         container.sceneMolecules.forEach { mol ->
-
             //Now go through every atom
             mol.atoms.forEach { atom ->
                 atomsFound.add(atom)
             }
-
             mol.bonds.forEach { bond ->
-                when (container.chemManager.getStereoChem(bond.molManagerLink)) {
+                val order = container.chemManager.getBondOrder(bond.molManagerLink)
+                if (order == BondOrder.DOUBLE || order == BondOrder.TRIPLE) {
+                    normalBondsFound.add(bond)
+                    return@forEach
+                }
+                val stereochem = container.chemManager.getStereoChem(bond.molManagerLink)
+                when (stereochem) {
                     StereoChem.IN_PLANE -> normalBondsFound.add(bond)
                     StereoChem.FACING_VIEW -> wedgedBondsFound.add(bond)
                     StereoChem.FACING_PAPER -> dashedBondsFound.add(bond)
@@ -85,263 +67,21 @@ class LevelRenderer(
         }
     }
 
-    //TODO - THE FOLLOWING METHODS NEED TO BE MERGED!
-
-    private fun renderLines(container: LevelContainer, camera2D: Camera2D, viewport: Vector2f, normalBonds: List<ChemBond>, wedgedBonds: List<ChemBond>, dashedBonds: List<ChemBond>) {
-        val placeHolderVAO = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
-        val lineColour = themeStyleManager.lineColour
-        //Render normal lines - Single bonds and double bonds
-        val normalLine = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
-        applyLineProgramUniforms(normalLine, camera2D, viewport, lineColour)
-        renderNormalBondLines(container, normalBonds, placeHolderVAO)
-
-        //Render Wedged Lines
-        val wedgedLine = resources.useProgram(MolGLide.SHADER_WEDGED_LINE)
-        applyLineProgramUniforms(wedgedLine, camera2D, viewport, lineColour)
-        renderWedgedLines(container, wedgedBonds, placeHolderVAO)
-
-        //Render Dashed Lines
-        val dashedLine = resources.useProgram(MolGLide.SHADER_DASHED_LINE)
-        applyLineProgramUniforms(dashedLine, camera2D, viewport, lineColour)
-        renderDashedLines(container, dashedBonds, placeHolderVAO)
-
-
-        val textureProgram = resources.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
-        textureProgram.uniform("uPerspective", camera2D.combined())
-        textureProgram.uniform("uIgnoreTextures", 1)
-        textureProgram.uniform("uLight", lineColour)
-        textureProgram.uniform("uModel", Matrix4f())
-
-        //Also to fix seams at the vertices - You need to draw circles at the lines
-        batcher.begin(Batch2D.Mode.FAN)
-        normalBonds.forEach { bond ->
-
-            val atomAPos = bond.atomA.getWorldPosition()
-            val atomBPos = bond.atomB.getWorldPosition()
-            //Slightly random 1/10 value?
-            val meshA = Shaper2D.circle(atomAPos.x, atomAPos.y, themeStyleManager.lineThickness * 1/10f)
-            val meshB = Shaper2D.circle(atomBPos.x, atomBPos.y, themeStyleManager.lineThickness * 1/10f)
-
-            batcher.addBatch(meshA.pack(), meshA.indices)
-            batcher.addBatch(meshB.pack(), meshB.indices)
-        }
-        batcher.end()
-
-        textureProgram.uniform("uIgnoreTextures", 0)
+    private fun renderNormalLines(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer) {
+        val program = resources.useProgram(CVEngine.SHADER_INSTANCED_LINE)
+        val vertexArray = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
+        bondRenderer.renderBonds(bonds, viewport, camera2D, program, vertexArray, container, true)
     }
 
-    private fun applyLineProgramUniforms(program: ShaderProgram, camera2D: Camera2D, viewport: Vector2f, lineColour: Vector3f) {
-        program.uniform("uPerspective", camera2D.combined())
-        program.uniform("u_viewport", viewport)
-        program.uniform("uModel", Matrix4f())
-        program.uniform("uLight", lineColour)
+    private fun renderWedgedLines(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer) {
+        val program = resources.useProgram(MolGLide.SHADER_WEDGED_LINE)
+        val vertexArray = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
+        bondRenderer.renderBonds(bonds, viewport, camera2D, program, vertexArray, container, false)
     }
 
-    private fun renderNormalBondLines(container: LevelContainer, bonds: List<ChemBond>, glMesh: GLMesh) {
-        val instanceData = mutableListOf<Float>()
-        for (line in bonds) {
-            prepareLineRenderData(container.chemManager, line, instanceData)
-        }
-        instancer.drawLines(glMesh, instanceData)
-    }
-
-
-    private fun renderWedgedLines(container: LevelContainer, bonds: List<ChemBond>, glMesh: GLMesh) {
-        val instanceData = mutableListOf<Float>()
-        for (line in bonds) {
-            renderSingleBond(container.chemManager, line, instanceData)
-        }
-        instancer.drawLines(glMesh, instanceData)
-    }
-
-
-    private fun renderDashedLines(container: LevelContainer, bonds: List<ChemBond>, glMesh: GLMesh) {
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        val instanceData = mutableListOf<Float>()
-        for (line in bonds) {
-            renderSingleBond(container.chemManager, line, instanceData)
-        }
-        instancer.drawLines(glMesh, instanceData)
-        GL11.glDisable(GL11.GL_BLEND)
-    }
-
-
-    private fun prepareLineRenderData(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
-        val lineTypeOrder = chemManager.getBondOrder(line.molManagerLink)
-        if (lineTypeOrder == BondOrder.SINGLE) {
-            renderSingleBond(chemManager, line, renderData)
-        }
-        if (lineTypeOrder == BondOrder.DOUBLE) {
-            renderExtraBonds(chemManager, line, renderData, false)
-        }
-        if (lineTypeOrder == BondOrder.TRIPLE) {
-            renderExtraBonds(chemManager, line, renderData, true)
-
-        }
-    }
-
-    private fun renderSingleBond(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>) {
-        val start = line.atomA.getWorldPosition()
-        val end = line.atomB.getWorldPosition()
-        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.lineThickness))
-    }
-
-    //For double and triple bonds
-    private fun renderExtraBonds(chemManager: IMoleculeManager, line: ChemBond, renderData: MutableList<Float>, triple: Boolean) {
-        val start = line.atomA.getWorldPosition()
-        val end = line.atomB.getWorldPosition()
-
-
-        val diff = start - end
-        val orth = Vector3f(diff.y, -diff.x, diff.z).normalize() * OrganicEditorState.MULTI_BOND_DISTANCE
-
-        if (line.flipDoubleBond) {
-            orth.negate()
-        }
-
-        if (line.centredBond) {
-            val newOffset = orth.div(-2.0f, Vector3f())
-            newOffset.add(line.bisectorNudge)
-            start.add(newOffset)
-            end.add(newOffset)
-        }
-
-        val newStart = start + orth
-        val newEnd = end + orth
-
-        renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, themeStyleManager.lineThickness))
-
-        val secondData = listOf<Float>(newStart.x, newStart.y, newStart.z, newEnd.x, newEnd.y, newEnd.z, themeStyleManager.lineThickness)
-        renderData.addAll(secondData)
-
-        if (triple) {
-            val thirdStart = start - orth
-            val thirdEnd = end - orth
-            val thirdData = listOf<Float>(thirdStart.x, thirdStart.y, thirdStart.z, thirdEnd.x, thirdEnd.y, thirdEnd.z, themeStyleManager.lineThickness)
-            renderData.addAll(thirdData)
-        }
-    }
-
-
-    private fun renderAtomSymbols(leveLContainer: LevelContainer, atoms: List<ChemAtom>, camera2D: Camera2D) {
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        val textProgram = resources.useProgram(CVEngine.SHADER_SIMPLE_TEXTURE)
-        textProgram.uniform("uPerspective", camera2D.combined())
-
-        atoms.forEach { atom ->
-            //Render the atom symbol
-            val worldPos = atom.getWorldPosition()
-            if (atom.visible) {
-                renderString(leveLContainer.chemManager.getAtomInsert(atom.molManagerLink).symbol, worldPos, textProgram)
-            }
-
-            val hydrogen = leveLContainer.chemManager.getImplicitHydrogens(atom.molManagerLink)
-
-            //Check to see if this atom has any implicit hydrogens
-            if (hydrogen >= 1 && atom.visible) {
-
-                var numberString = "$hydrogen"
-
-                if (hydrogen == 1) {
-                    numberString = ""
-                }
-
-                if (atom.implicitHydrogenPos != ChemAtom.RelationalPos.LEFT) {
-
-
-                    val implicitHPos = atom.implicitHydrogenPos.mod * OrganicEditorState.IMPLICIT_SCALE
-
-                    if(atom.implicitHydrogenPos == ChemAtom.RelationalPos.ABOVE || atom.implicitHydrogenPos == ChemAtom.RelationalPos.BOTTOM) {
-                        implicitHPos.mul(4/3f)
-                    }
-
-                    renderString("H${numberString}", implicitHPos + worldPos, textProgram)
-
-                } else {
-                    val implicitHPos = atom.implicitHydrogenPos.mod * OrganicEditorState.IMPLICIT_SCALE * (numberString.length.toFloat() + 1.0f)
-                    renderString("H${numberString}", implicitHPos + worldPos, textProgram)
-                }
-
-            }
-        }
-
-
-        GL11.glDisable(GL11.GL_BLEND)
-    }
-
-    //todo rewrite but it works for now
-    private fun renderString(label: String, pos: Vector3f, program: ShaderProgram) {
-
-        val fontID = MolGLide.FONT
-        val scale = MolGLide.GLOBAL_SCALE
-        val colour = getSymbolColour(label)
-
-        val fontData = resources.getFont(fontID)
-
-
-        resources.useTexture(fontID, GL30.GL_TEXTURE0)
-        program.uniform("uTexture0", 0)
-        program.uniform("uLight", colour)
-        program.uniform("uModel", Matrix4f())
-
-
-        var renderX = pos.x
-        var renderY = pos.y
-
-        val character1 = label.first()
-        val metrics = fontData.glyphs[character1] ?: return
-        val dx = scale * metrics.glyphWidth / 2
-        val dy = scale * metrics.glyphHeight / 2
-
-        batcher.begin(Batch2D.Mode.TRIANGLES)
-
-        for (c in label) {
-            var character = c
-
-            if (!fontData.glyphs.keys.contains(c)) {
-                character = fontData.glyphs.keys.first()
-            }
-
-            val glyphMetrics = fontData.glyphs[character] ?: return
-
-            var scaleMod = 1.0f
-
-            if (c.isDigit()) {
-                scaleMod = 0.75f
-                renderX -= glyphMetrics.glyphWidth * scale * scaleMod / 12
-                renderY -= glyphMetrics.glyphHeight * scale * scaleMod / 4
-            }
-
-            val width = scaleMod * glyphMetrics.glyphWidth * scale
-            val height = scaleMod * glyphMetrics.glyphHeight * scale
-
-            //Does not work!
-//            val meshToDraw = Shaper2D.rectangle(renderX + width, renderY + height, width, height, (Text rendering works fine If you use this line instead of the one below) - However then the text is uncentred
-            val meshToDraw = Shaper2D.rectangle(
-                renderX, renderY, width, height,
-                Vector2f (
-                    glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX,
-                    glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY
-                ),
-                Vector2f(glyphMetrics.textureUnitAddX + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
-                Vector2f(0.0f + glyphMetrics.textureUnitX, 0.0f - glyphMetrics.textureUnitY),
-                Vector2f(0.0f + glyphMetrics.textureUnitX, glyphMetrics.textureUnitAddY - glyphMetrics.textureUnitY), dx, dy
-            )
-
-            batcher.addBatch(meshToDraw.pack(), meshToDraw.indices)
-
-            renderX += width
-        }
-
-        batcher.end()
-    }
-
-
-
-    private fun getSymbolColour(symbol: String): Vector3f {
-        val colour = themeStyleManager.symbolColours[symbol] ?: return themeStyleManager.lineColour
-        return colour
+    private fun renderDashedLines(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer) {
+        val program = resources.useProgram(MolGLide.SHADER_DASHED_LINE)
+        val vertexArray = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
+        bondRenderer.renderBonds(bonds, viewport, camera2D, program, vertexArray, container, false)
     }
 }
