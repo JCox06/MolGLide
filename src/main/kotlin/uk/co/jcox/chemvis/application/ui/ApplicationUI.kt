@@ -11,6 +11,7 @@ import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.application.mainstate.MainState
+import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -207,9 +208,9 @@ class ApplicationUI (
 
         val atom = selection.atom
 
-        val insert = container.chemManager.getAtomInsert(atom.molManagerLink)
-        val implicitHydrogen = container.chemManager.getImplicitHydrogens(atom.molManagerLink)
-        val bondCount = container.chemManager.getBondCount(atom.parent.molManagerLink, atom.molManagerLink)
+        val insert = AtomInsert.fromSymbol(atom.getSymbol())
+        val implicitHydrogen = atom.iAtom.implicitHydrogenCount
+        val bondCount = atom.iAtom.bondCount
 
 
         ImGui.setTooltip("Atom Symbol ${insert.symbol} \nImplicit H $implicitHydrogen \nBondCount ${bondCount}")

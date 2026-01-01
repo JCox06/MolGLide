@@ -22,7 +22,7 @@ class AtomRenderer (
             if (! atom.visible) {
                 continue
             }
-            val atomSymbol = levelContainer.chemManager.getAtomInsert(atom.molManagerLink).symbol
+            val atomSymbol = atom.getSymbol()
             val length = drawFormulaString(atomSymbol, atom.getWorldPosition(), textProgram, camera2D)
 
             drawAssociatedAtomGroup(atom, levelContainer, length, textProgram, camera2D)
@@ -139,7 +139,7 @@ class AtomRenderer (
      */
     private fun drawAssociatedAtomGroup(chemAtom: ChemAtom, levelContainer: LevelContainer, widthTransform: Float, textProgram: ShaderProgram, camera2D: Camera2D) : Float {
         //Right now this will only draw implicit hydrogens - But once custom insertion through typing is implemented, this will handle that as well!
-        val protons = levelContainer.chemManager.getImplicitHydrogens(chemAtom.molManagerLink)
+        val protons = chemAtom.iAtom.implicitHydrogenCount
         if (protons == 0) {
             return 0.0f
         }

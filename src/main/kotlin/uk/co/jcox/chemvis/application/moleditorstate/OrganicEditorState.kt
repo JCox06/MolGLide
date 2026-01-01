@@ -182,7 +182,7 @@ class OrganicEditorState (
     fun getFormula() : String {
         val mol = getSelectedMolecule()
         if (mol != null) {
-            return levelContainer.chemManager.getMolecularFormula(mol.molManagerLink)
+            return mol.getFormulaString()
         }
         return "Nothing Selected"
     }
@@ -190,7 +190,7 @@ class OrganicEditorState (
     fun getWeight() : Double {
         val mol = getSelectedMolecule()
         if (mol != null) {
-            return levelContainer.chemManager.getMolecularWeight(mol.molManagerLink)
+            return mol.getMolecularWeight()
         }
         return 0.0
     }

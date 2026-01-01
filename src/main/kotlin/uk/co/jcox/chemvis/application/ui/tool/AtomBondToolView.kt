@@ -2,8 +2,8 @@ package uk.co.jcox.chemvis.application.ui.tool
 
 import imgui.ImGui
 import imgui.type.ImInt
+import org.openscience.cdk.interfaces.IBond
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
-import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 
 class AtomBondToolView : ToolViewUI() {
 
@@ -11,7 +11,7 @@ class AtomBondToolView : ToolViewUI() {
     val activeInsert: ImInt = ImInt(0)
 
 
-    var stereoChem = StereoChem.IN_PLANE
+    var stereoChem = IBond.Display.Solid
     private set
 
     override fun renderMenuButtons() {
@@ -21,14 +21,14 @@ class AtomBondToolView : ToolViewUI() {
 
         if (ImGui.beginMenu("StereoChem")) {
 
-            if (ImGui.menuItem("Normal", stereoChem == StereoChem.IN_PLANE)) {
-                stereoChem = StereoChem.IN_PLANE
+            if (ImGui.menuItem("Normal", stereoChem == IBond.Display.Solid)) {
+                stereoChem = IBond.Display.Solid
             }
-            if (ImGui.menuItem("Wedged", stereoChem == StereoChem.FACING_VIEW)) {
-                stereoChem = StereoChem.FACING_VIEW
+            if (ImGui.menuItem("Wedged", stereoChem ==IBond.Display.WedgeEnd)) {
+                stereoChem = IBond.Display.WedgeEnd
             }
-            if (ImGui.menuItem("Dashed", stereoChem == StereoChem.FACING_PAPER)) {
-                stereoChem = StereoChem.FACING_PAPER
+            if (ImGui.menuItem("Dashed", stereoChem == IBond.Display.WedgedHashEnd)) {
+                stereoChem = IBond.Display.WedgedHashEnd
             }
 
             ImGui.endMenu()

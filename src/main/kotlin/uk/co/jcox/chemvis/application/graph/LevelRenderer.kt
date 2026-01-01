@@ -1,9 +1,9 @@
 package uk.co.jcox.chemvis.application.graph
 
 import org.joml.Vector2f
+import org.openscience.cdk.interfaces.IBond
+import org.openscience.cdk.isomorphism.TransformOp
 import uk.co.jcox.chemvis.application.MolGLide
-import uk.co.jcox.chemvis.application.moleditorstate.BondOrder
-import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 import uk.co.jcox.chemvis.cvengine.*
 
 
@@ -33,9 +33,9 @@ class LevelRenderer(
         atomRenderer.renderAtoms(container, atomEntities, camera2D, program)
 
         //Render the bonds
-        renderBonds(normalBondsFound, viewport, camera2D, container, StereoChem.IN_PLANE)
-        renderBonds(wedgedBondsFound, viewport, camera2D, container, StereoChem.FACING_VIEW)
-        renderBonds(dashedBondsFound, viewport, camera2D, container, StereoChem.FACING_PAPER)
+        renderBonds(normalBondsFound, viewport, camera2D, container, IBond.Display.Solid)
+        renderBonds(wedgedBondsFound, viewport, camera2D, container, IBond.Display.WedgeEnd)
+        renderBonds(dashedBondsFound, viewport, camera2D, container, IBond.Display.WedgedHashEnd)
 
         //Make the normal bonds have smooth edges
         bondRenderer.renderBondCircles(normalBondsFound, themeStyleManager.lineThickness * LINE_FACTOR, program, camera2D)
@@ -55,40 +55,41 @@ class LevelRenderer(
                 atomsFound.add(atom)
             }
             mol.bonds.forEach { bond ->
-                val order = container.chemManager.getBondOrder(bond.molManagerLink)
-                if (order == BondOrder.DOUBLE || order == BondOrder.TRIPLE) {
+                val order = bond.iBond.order
+                if (order == IBond.Order.DOUBLE || order == IBond.Order.TRIPLE) {
                     normalBondsFound.add(bond)
                     return@forEach
                 }
-                val stereochem = container.chemManager.getStereoChem(bond.molManagerLink)
+                val stereochem = bond.getStereo()
                 when (stereochem) {
-                    StereoChem.IN_PLANE -> normalBondsFound.add(bond)
-                    StereoChem.FACING_VIEW -> wedgedBondsFound.add(bond)
-                    StereoChem.FACING_PAPER -> dashedBondsFound.add(bond)
+                    IBond.Display.Solid -> normalBondsFound.add(bond)
+                    IBond.Display.WedgeEnd -> wedgedBondsFound.add(bond)
+                    IBond.Display.WedgedHashEnd -> dashedBondsFound.add(bond)
+                    else -> normalBondsFound.add(bond)
                 }
             }
         }
     }
 
-    private fun renderBonds(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer, stereoChem: StereoChem) {
+    private fun renderBonds(bonds: List<ChemBond>, viewport: Vector2f, camera2D: Camera2D, container: LevelContainer, stereoChem: IBond.Display) {
         val program = resources.useProgram(MolGLide.SHADER_LINE)
         val vertexArray = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
 
-        if (stereoChem == StereoChem.IN_PLANE) {
+        if (stereoChem == IBond.Display.Solid) {
             program.uniform("uWidthMod", 0)
             program.uniform("uDashed", 0)
         }
-        if (stereoChem == StereoChem.FACING_VIEW) {
+        if (stereoChem == IBond.Display.WedgeEnd) {
             program.uniform("uWidthMod", 1)
             program.uniform("uDashed", 0)
         }
-        if (stereoChem == StereoChem.FACING_PAPER) {
+        if (stereoChem == IBond.Display.WedgedHashEnd) {
             program.uniform("uWidthMod", 1)
             program.uniform("uDashed", 1)
         }
 
         program.uniform("camWidthFactor", (viewport.x / camera2D.camWidth ) * LINE_FACTOR)
-        bondRenderer.renderBonds(bonds, viewport, camera2D, program, vertexArray, container, stereoChem == StereoChem.IN_PLANE)
+        bondRenderer.renderBonds(bonds, viewport, camera2D, program, vertexArray, container, stereoChem == IBond.Display.Solid)
     }
 
 

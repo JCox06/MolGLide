@@ -2,6 +2,8 @@ package uk.co.jcox.chemvis.application.moleditorstate
 
 import imgui.ImGui
 import imgui.type.ImString
+import org.openscience.cdk.interfaces.IBond
+import org.openscience.cdk.isomorphism.TransformOp
 import org.tinylog.Level
 import uk.co.jcox.chemvis.application.graph.ChemBond
 import uk.co.jcox.chemvis.application.graph.LevelContainer
@@ -68,8 +70,8 @@ class ClickMenu (
             return
         }
         val bond = selection.bond
-        val stereoChem = levelContainer.chemManager.getStereoChem(bond.molManagerLink)
-        val bondOrder = levelContainer.chemManager.getBondOrder(bond.molManagerLink)
+        val stereoChem = bond.getStereo()
+        val bondOrder = bond.iBond.order
 
         if (ImGui.beginPopup("BondMenu")) {
 
@@ -82,18 +84,18 @@ class ClickMenu (
 
             if (ImGui.beginMenu("Single")) {
                 //todo these actions should really be grouped so one undo does two actions at once
-                if (ImGui.menuItem("Plain", bondOrder == BondOrder.SINGLE && stereoChem == StereoChem.IN_PLANE)) {
-                    val action = ChangeStereoAction(bond, StereoChem.IN_PLANE)
+                if (ImGui.menuItem("Plain", bondOrder == IBond.Order.SINGLE && stereoChem == IBond.Display.Solid)) {
+                    val action = ChangeStereoAction(bond, IBond.Display.Solid)
                     actionManager.executeAction(action)
                     reduceToSingle(bond)
                 }
-                if (ImGui.menuItem("Wedged", bondOrder == BondOrder.SINGLE && stereoChem == StereoChem.FACING_VIEW)) {
-                    val action = ChangeStereoAction(bond, StereoChem.FACING_VIEW)
+                if (ImGui.menuItem("Wedged", bondOrder == IBond.Order.SINGLE && stereoChem == IBond.Display.WedgeEnd)) {
+                    val action = ChangeStereoAction(bond, IBond.Display.WedgeEnd)
                     actionManager.executeAction(action)
                     reduceToSingle(bond)
                 }
-                if (ImGui.menuItem("Dashed", bondOrder == BondOrder.SINGLE && stereoChem == StereoChem.FACING_PAPER)) {
-                    val action = ChangeStereoAction(bond, StereoChem.FACING_PAPER)
+                if (ImGui.menuItem("Dashed", bondOrder == IBond.Order.SINGLE && stereoChem ==IBond.Display.WedgedHashEnd)) {
+                    val action = ChangeStereoAction(bond, IBond.Display.WedgedHashEnd)
                     actionManager.executeAction(action)
                     reduceToSingle(bond)
                 }
@@ -103,8 +105,8 @@ class ClickMenu (
 
             if (ImGui.beginMenu("Double")) {
 
-                if (ImGui.menuItem("Plain", bondOrder == BondOrder.DOUBLE)) {
-                    val action = ChangeBondOrderAction(bond, BondOrder.DOUBLE)
+                if (ImGui.menuItem("Plain", bondOrder == IBond.Order.DOUBLE)) {
+                    val action = ChangeBondOrderAction(bond, IBond.Order.DOUBLE)
                     actionManager.executeAction(action)
                 }
 
@@ -123,8 +125,8 @@ class ClickMenu (
                 ImGui.endMenu()
             }
 
-            if (ImGui.menuItem("Triple Bond", bondOrder == BondOrder.TRIPLE)) {
-                val action = ChangeBondOrderAction(bond, BondOrder.TRIPLE)
+            if (ImGui.menuItem("Triple Bond", bondOrder == IBond.Order.TRIPLE)) {
+                val action = ChangeBondOrderAction(bond, IBond.Order.TRIPLE)
                 actionManager.executeAction(action)
             }
 
@@ -140,7 +142,7 @@ class ClickMenu (
 
 
     private fun reduceToSingle(bond: ChemBond) {
-        val action = ChangeBondOrderAction(bond, BondOrder.SINGLE)
+        val action = ChangeBondOrderAction(bond, IBond.Order.SINGLE)
         actionManager.executeAction(action)
     }
 

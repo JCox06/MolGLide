@@ -1,24 +1,24 @@
 package uk.co.jcox.chemvis.application.moleditorstate.action
 
+import org.checkerframework.checker.units.qual.mol
+import org.openscience.cdk.interfaces.IBond
 import uk.co.jcox.chemvis.application.graph.ChemBond
 import uk.co.jcox.chemvis.application.graph.LevelContainer
-import uk.co.jcox.chemvis.application.moleditorstate.BondOrder
-import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 
-class ChangeBondOrderAction (val bond: ChemBond, val newOrder: BondOrder) : IAction {
+class ChangeBondOrderAction (val bond: ChemBond, val newOrder: IBond.Order) : IAction {
 
-    var oldOrder: BondOrder? = null
+    var oldOrder: IBond.Order? = null
 
     override fun execute(levelContainer: LevelContainer) {
-        oldOrder = levelContainer.chemManager.getBondOrder(bond.molManagerLink)
-        levelContainer.chemManager.updateBondOrder(bond.atomA.parent.molManagerLink, bond.molManagerLink, newOrder)
-        levelContainer.chemManager.recalculate(bond.atomA.parent.molManagerLink)
+        oldOrder = bond.iBond.order
+        val molecule = bond.atomA.parent
+        molecule.updateBondOrder(bond, newOrder)
     }
 
     override fun undo(levelContainer: LevelContainer) {
         oldOrder?.let {
-            levelContainer.chemManager.updateBondOrder(bond.atomA.parent.molManagerLink, bond.molManagerLink, it)
-            levelContainer.chemManager.recalculate(bond.atomA.parent.molManagerLink)
+            val molecule = bond.atomA.parent
+            molecule.updateBondOrder(bond, it)
         }
     }
 }
