@@ -3,7 +3,6 @@ package uk.co.jcox.chemvis.application.moleditorstate.action
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
-import java.util.*
 
 class AtomCreationAction (
     private val newAtomX: Float,

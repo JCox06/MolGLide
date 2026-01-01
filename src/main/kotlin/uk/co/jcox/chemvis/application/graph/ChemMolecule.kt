@@ -7,6 +7,7 @@ import org.openscience.cdk.AtomContainer
 import org.openscience.cdk.CDK
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher
 import org.openscience.cdk.exception.CDKException
+import org.openscience.cdk.interfaces.IAtom
 import org.openscience.cdk.interfaces.IAtomContainer
 import org.openscience.cdk.interfaces.IBond
 import org.openscience.cdk.silent.MolecularFormula
@@ -36,6 +37,22 @@ class ChemMolecule (
 
         calculateAtomTypes()
         return chemAtom
+    }
+
+    fun addAtom(iAtom: IAtom) : ChemAtom {
+        val chemAtom = ChemAtom(AtomInsert.CARBON, iAtom)
+        atoms.add(chemAtom)
+        chemAtom.parent = this
+        iContainer.addAtom(iAtom)
+        calculateAtomTypes()
+        return chemAtom
+    }
+
+    fun addBond(atomA: ChemAtom, atomB: ChemAtom, iBond: IBond) {
+        val chemBond = ChemBond(atomA, atomB, iBond)
+        bonds.add(chemBond)
+        iContainer.addBond(iBond)
+        calculateAtomTypes()
     }
 
     fun removeAtom(chemAtom: ChemAtom) {
