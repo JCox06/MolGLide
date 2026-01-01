@@ -1,6 +1,9 @@
 package uk.co.jcox.chemvis.application.moleditorstate.action
 
+import org.openscience.cdk.AtomContainer
 import org.openscience.cdk.Ring
+import org.openscience.cdk.interfaces.IAtom
+import org.openscience.cdk.interfaces.IBond
 import org.openscience.cdk.interfaces.IRing
 import org.openscience.cdk.layout.RingPlacer
 import uk.co.jcox.chemvis.application.graph.ChemAtom
@@ -11,6 +14,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.RingInsert
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import javax.vecmath.Point2d
+import javax.vecmath.Vector2d
 
 class RingCreatorAction (
     private val clickX: Float,
@@ -22,43 +26,54 @@ class RingCreatorAction (
     private val ringBuilder: RingPlacer = RingPlacer()
 
     override fun execute(levelContainer: LevelContainer) {
-        val tempRing: IRing = Ring(templateInsert.size, "C")
-        ringBuilder.placeRing(tempRing, Point2d(0.0, 0.0), OrganicEditorState.CONNECTION_DISTANCE.toDouble())
-
-        val permRing = getChemMolecule(clickX, clickY)
-
-        tempRing.atoms().forEach { atom ->
-            val chemAtom = permRing.addAtom(atom)
-            chemAtom.visible = false
-            atom.setProperty("LINK", chemAtom)
+        //Add isolated Ring
+        if (primarySelection is SelectionManager.Type.None) {
+            addIsolatedRing(levelContainer, templateInsert.size)
         }
 
-        tempRing.bonds().forEach {bond ->
-            val atomA = bond.getAtom(0).getProperty<ChemAtom>("LINK")
-            val atomB = bond.getAtom(1).getProperty<ChemAtom>("LINK")
-            val chemBond = permRing.addBond(atomA, atomB, bond)
+
+        //Add ring through common bond
+        if (primarySelection is SelectionManager.Type.ActiveBond) {
+            addBondedRing(levelContainer, templateInsert.size, primarySelection.bond)
         }
+    }
+
+
+    private fun addBondedRing(levelContainer: LevelContainer, size: Int, bond: ChemBond) {
+        //todo - Dont know how CDKs fusion bond work so write own implementation
+    }
+
+    private fun addIsolatedRing(levelContainer: LevelContainer, size: Int) {
+
+        val tempRing: IRing = Ring(size, "C")
+
+        ringBuilder.placeRing(tempRing, Point2d(0.0, 1.0), OrganicEditorState.CONNECTION_DISTANCE.toDouble())
+
+        val permRing = ChemMolecule()
+        permRing.positionOffset.x = clickX
+        permRing.positionOffset.y = clickY
+
+        copyNewData(permRing, tempRing.atoms(), tempRing.bonds())
 
         levelContainer.sceneMolecules.add(permRing)
     }
 
-    private fun getChemMolecule(clickX: Float, clickY: Float) : ChemMolecule {
 
-        //Insert Isolated Ring
-        if (primarySelection is SelectionManager.Type.None) {
-            val permRing = ChemMolecule()
-            permRing.positionOffset.x = clickX
-            permRing.positionOffset.y = clickY
-            return permRing
+
+    private fun copyNewData(permRing: ChemMolecule, iAtoms: Iterable<IAtom>, iBonds: Iterable<IBond>) {
+        iAtoms.forEach { iAtom ->
+            val chemAtom = permRing.addAtom(iAtom)
+            chemAtom.visible = false
+            iAtom.setProperty("LINK", chemAtom)
         }
 
-        //Insert a Ring through a common bond
-        if (primarySelection is SelectionManager.Type.ActiveBond) {
-
+        iBonds.forEach { iBond ->
+            val atomA = iBond.getAtom(0).getProperty<ChemAtom>("LINK")
+            val atomB = iBond.getAtom(1).getProperty<ChemAtom>("LINK")
+            val chemBond = permRing.addBond(atomA, atomB, iBond)
         }
-
-        throw Exception("sdfjksdhf")
     }
+
 
     override fun undo(levelContainer: LevelContainer) {
     }

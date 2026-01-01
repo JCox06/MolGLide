@@ -13,6 +13,9 @@ import uk.co.jcox.chemvis.cvengine.InputManager
 
 
 class CommonTemplateTool(commonTemplateToolView: CommonTemplateToolView, renderingContext: IRenderTargetContext, inputManager: InputManager, camera2D: Camera2D, levelContainer: LevelContainer, selectionManager: SelectionManager, actionManager: ActionManager) : Tool<CommonTemplateToolView>( commonTemplateToolView, renderingContext, inputManager, camera2D, levelContainer, selectionManager, actionManager) {
+
+
+
     override fun onClick(clickX: Float, clickY: Float) {
 
         val action = RingCreatorAction(clickX, clickY, toolViewUI.getTemplate(), selectionManager.primarySelection)

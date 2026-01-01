@@ -21,7 +21,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import java.util.UUID
 
 class ChemMolecule (
-    private val iContainer: IAtomContainer = AtomContainer()
+    val iContainer: IAtomContainer = AtomContainer()
 ) {
 
     val positionOffset = Vector3f(0.0f, 0.0f, OrganicEditorState.ATOM_PLANE)
