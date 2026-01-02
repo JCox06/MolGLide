@@ -18,9 +18,13 @@ class CommonTemplateTool(commonTemplateToolView: CommonTemplateToolView, renderi
 
     override fun onClick(clickX: Float, clickY: Float) {
 
-        val action = RingCreatorAction(clickX, clickY, toolViewUI.getTemplate(), selectionManager.primarySelection)
-        actionManager.executeAction(action)
 
+        if (selectionManager.primarySelection is SelectionManager.Type.None) {
+            val action = RingCreatorAction(clickX, clickY, toolViewUI.getTemplate(), selectionManager.primarySelection)
+            actionManager.executeAction(action)
+        }
+
+        //todo Handle when fusing to an existing bond
     }
 
     override fun onRelease(clickX: Float, clickY: Float) {

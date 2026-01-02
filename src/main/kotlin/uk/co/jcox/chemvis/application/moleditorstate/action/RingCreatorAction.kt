@@ -25,27 +25,10 @@ class RingCreatorAction (
 
     private val ringBuilder: RingPlacer = RingPlacer()
 
+    private var placedRing: ChemMolecule? = null
+
     override fun execute(levelContainer: LevelContainer) {
-        //Add isolated Ring
-        if (primarySelection is SelectionManager.Type.None) {
-            addIsolatedRing(levelContainer, templateInsert.size)
-        }
-
-
-        //Add ring through common bond
-        if (primarySelection is SelectionManager.Type.ActiveBond) {
-            addBondedRing(levelContainer, templateInsert.size, primarySelection.bond)
-        }
-    }
-
-
-    private fun addBondedRing(levelContainer: LevelContainer, size: Int, bond: ChemBond) {
-        //todo - Dont know how CDKs fusion bond work so write own implementation
-    }
-
-    private fun addIsolatedRing(levelContainer: LevelContainer, size: Int) {
-
-        val tempRing: IRing = Ring(size, "C")
+        val tempRing: IRing = Ring(templateInsert.size, "C")
 
         ringBuilder.placeRing(tempRing, Point2d(0.0, 1.0), OrganicEditorState.CONNECTION_DISTANCE.toDouble())
 
@@ -56,7 +39,10 @@ class RingCreatorAction (
         copyNewData(permRing, tempRing.atoms(), tempRing.bonds())
 
         levelContainer.sceneMolecules.add(permRing)
+
+        placedRing = permRing
     }
+
 
 
 
@@ -76,5 +62,10 @@ class RingCreatorAction (
 
 
     override fun undo(levelContainer: LevelContainer) {
+        placedRing?.let { levelContainer.sceneMolecules.remove(it) }
+    }
+
+    override fun redo(levelContainer: LevelContainer) {
+        placedRing?.let { levelContainer.sceneMolecules.add(it) }
     }
 }

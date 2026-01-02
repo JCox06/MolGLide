@@ -2,16 +2,21 @@ package uk.co.jcox.chemvis.application.moleditorstate
 
 import imgui.ImGui
 import imgui.type.ImString
+import org.checkerframework.checker.units.qual.mol
+import org.openscience.cdk.depict.DepictionGenerator
 import org.openscience.cdk.interfaces.IBond
+import org.openscience.cdk.io.MDLRXNWriter
 import org.openscience.cdk.isomorphism.TransformOp
 import org.tinylog.Level
 import uk.co.jcox.chemvis.application.graph.ChemBond
+import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomVisibilityAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.CentreBondAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeBondOrderAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.FlipBondAction
+import java.io.File
 
 class ClickMenu (
     private val selectionManager: SelectionManager,
@@ -136,6 +141,10 @@ class ClickMenu (
                 TODO("Create Delete Option")
             }
 
+            ImGui.separator()
+
+            displayGenericMoleculeMenu(bond.atomA.parent)
+
             ImGui.endPopup()
         }
     }
@@ -174,9 +183,35 @@ class ClickMenu (
                 TODO("Create Delete Action")
             }
 
+            ImGui.separator()
+
+            displayGenericMoleculeMenu(selection.atom.parent)
+
             ImGui.endMenu()
         }
 
+
+
+    }
+
+    private fun displayGenericMoleculeMenu(molecule: ChemMolecule) {
+
+
+        //todo Multi-thread CDK actions where required
+
+        if (ImGui.beginMenu("CDK Tools")) {
+            if (ImGui.menuItem("SVG Molecule Export")) {
+                val dg = DepictionGenerator()
+                    .withSize(500.0, 500.0)
+                    .withFillToFit()
+
+                val depiction = dg.depict(molecule.iContainer)
+
+                val file = File("image.svg")
+                file.writeText(depiction.toSvgStr())
+            }
+            ImGui.endMenu()
+        }
     }
 
     fun closeWindows() {

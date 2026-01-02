@@ -13,6 +13,7 @@ class AtomReplacementAction (
 
     override fun execute(levelContainer: LevelContainer) {
         val parent = atom.parent
+        oldAtom = AtomInsert.fromSymbol(atom.getSymbol())
         parent.updateSymbol(atom, toReplace.symbol)
         atom.visible = toReplace != AtomInsert.CARBON
     }
