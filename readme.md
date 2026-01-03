@@ -1,22 +1,26 @@
 # MolGLide (v0.1.0 - ALPHA)
 **MolGLide is an open source simple molecular editor. You can draw simple molecules, and export them _for free_ to png image files.**
 
->[!Note]
->PROJECT ON HOLD UNTIL LATE DECEMBER!
-
 >MolGLide is alpha software and is unstable!
 
-The application is intended for easy, simple and experimental use, for instance, drawing molecules to be used in lab write-ups and other non/semi-professional work.
+MolGLide is a molecular editor or sketcher, written in OpenGL. It is powered by, and interfaces directly with the CDK (Chemistry Development kit). 
+It's a fun little project, that while doesn't have an end goal, I would like to create an actually useful piece of software. See the checklist!
 
-Despite being _alpha_ software, MolGLide is able to draw simple molecules and supports:
-- An array of commonly used atoms (C, H, O, N, P, F, Cl, Br, I, Mg, Li, S)
-- Automatically determines the number of implicit hydrogens each atom should have in a molecule
-- Automatically determines the molecular formula of a molecule's sketch
-- Supports single and double bonds
-- Supports stereochemistry bonds
-- Exporting molecules as png image files (These can then be copied into applications like Word or Libre Office)
-- Undo and Redo support
-- [COMING SOON] Insert commonly used molecules as templates
+-  [x] Create basic molecules by connecting atoms through bonds
+-  [x] Create molecules from common templates (Benzene, Other Rings)
+-  [ ] Fusing rings and other templates to existing molecules through a custom bond
+-  [x] Basic Molecule Manipulation
+-  [x] CDK SVG molecule exports
+-  [x] Custom PNG Image export*
+-  [ ] Custom SVG export*
+-  [ ] Custom group insertion (Editing a label of an atom and changing it to something like CH2CH3)
+-  [x] Molecular Formula and Molecular Weight calculation
+-  [ ] Saving, loading, and exporting the level
+-  [ ] Reaction Arrows, Curly Arrows, Custom Text boxes
+
+\* The reason for needing writing a custom SVG/PNG export is so it remains consistent with the OpenGL rendering system - And 
+so it supports extra level information that you would expect from a molecular editor/sketcher that the CDK doesn't support. 
+However, I have decided to allow users to alternatively directly use the CDK tools/export functions.
 
 **_Please scroll down to see some screenshots of the editor and the png files the program can produce_**
 

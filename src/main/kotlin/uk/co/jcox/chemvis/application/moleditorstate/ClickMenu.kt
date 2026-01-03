@@ -3,6 +3,10 @@ package uk.co.jcox.chemvis.application.moleditorstate
 import imgui.ImGui
 import imgui.type.ImString
 import org.checkerframework.checker.units.qual.mol
+import org.lwjgl.BufferUtils
+import org.lwjgl.PointerBuffer
+import org.lwjgl.system.MemoryStack
+import org.lwjgl.util.nfd.NativeFileDialog
 import org.openscience.cdk.depict.DepictionGenerator
 import org.openscience.cdk.interfaces.IBond
 import org.openscience.cdk.io.MDLRXNWriter
@@ -17,6 +21,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeBondOrderActio
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.FlipBondAction
 import java.io.File
+import java.nio.ByteBuffer
 
 class ClickMenu (
     private val selectionManager: SelectionManager,
@@ -196,11 +201,20 @@ class ClickMenu (
 
     private fun displayGenericMoleculeMenu(molecule: ChemMolecule) {
 
-
         //todo Multi-thread CDK actions where required
-
         if (ImGui.beginMenu("CDK Tools")) {
             if (ImGui.menuItem("SVG Molecule Export")) {
+
+                //Todo - Fix this, mulithread it, ask the user where to save it
+
+//                MemoryStack.stackPush().use { memoryStack ->
+//
+//                    val buff = memoryStack.mallocPointer(1)
+//
+//                    NativeFileDialog.NFD_Init()
+//                    NativeFileDialog.NFD_OpenDialog(buff, null, null as ByteBuffer?)
+//                }
+
                 val dg = DepictionGenerator()
                     .withSize(500.0, 500.0)
                     .withFillToFit()
@@ -211,6 +225,7 @@ class ClickMenu (
                 file.writeText(depiction.toSvgStr())
             }
             ImGui.endMenu()
+
         }
     }
 
