@@ -1,21 +1,39 @@
 package uk.co.jcox.chemvis.application.graph
 
+import org.joml.Vector2f
 import org.joml.Vector3f
 import org.joml.plus
+import org.openscience.cdk.Atom
+import org.openscience.cdk.interfaces.IAtom
+import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import java.util.UUID
+import javax.vecmath.Point2d
 
 class ChemAtom (
-    localPos: Vector3f,
-    linker: UUID,
-    val parent: ChemMolecule
-) : ChemObject(localPos, linker) {
+    insert: AtomInsert,
+    val iAtom: IAtom = Atom(insert.symbol)
+) {
 
     var visible = true
     var implicitHydrogenPos: RelationalPos = RelationalPos.RIGHT
+    lateinit var parent: ChemMolecule
+
 
     fun getWorldPosition() : Vector3f {
-        val worldPos = localPos + parent.localPos
+        val atomX = iAtom.point2d.x.toFloat()
+        val atomY = iAtom.point2d.y.toFloat()
+        val parentPos = parent.positionOffset
+
+        val worldPos = parentPos + Vector3f(atomX, atomY, 0.0f)
         return worldPos
+    }
+
+    fun getSymbol() : String {
+        return iAtom.symbol
+    }
+
+    fun setInnerPosition(x: Float, y: Float) {
+        iAtom.point2d = Point2d(x.toDouble(), y.toDouble())
     }
 
     enum class RelationalPos(val mod: Vector3f) {

@@ -1,22 +1,23 @@
 package uk.co.jcox.chemvis.application.moleditorstate.action
 
+import org.openscience.cdk.interfaces.IBond
 import uk.co.jcox.chemvis.application.graph.ChemBond
 import uk.co.jcox.chemvis.application.graph.LevelContainer
-import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
 
-class ChangeStereoAction (val bond: ChemBond, val newStereo: StereoChem) : IAction {
+class ChangeStereoAction (val bond: ChemBond, val newStereo: IBond.Display) : IAction {
 
-    var oldStereo: StereoChem? = null
+    var oldStereo: IBond.Display? = null
 
     override fun execute(levelContainer: LevelContainer) {
-        oldStereo = levelContainer.chemManager.getStereoChem(bond.molManagerLink)
-
-        levelContainer.chemManager.updateStereoChem(bond.molManagerLink, newStereo)
+        oldStereo = bond.iBond.display
+        val parent = bond.atomA.parent
+        parent.updateStereoDisplay(bond, newStereo)
     }
 
     override fun undo(levelContainer: LevelContainer) {
         oldStereo?.let {
-            levelContainer.chemManager.updateStereoChem(bond.molManagerLink, it)
+            val parent = bond.atomA.parent
+            parent.updateStereoDisplay(bond, it)
         }
     }
 }

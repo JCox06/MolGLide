@@ -34,6 +34,7 @@ class AtomBondTool(
     var toolMode: Mode = Mode.None
 
     override fun onClick(clickX: Float, clickY: Float) {
+
         toolMode = prepareCorrectMode(clickX, clickY)
 
         when (val mode = toolMode) {
@@ -54,6 +55,7 @@ class AtomBondTool(
 
 
     private fun createNewMolecule(molCreation: Mode.MolCreation) {
+
         val atomCreationAction = AtomCreationAction(molCreation.xPos, molCreation.yPos, toolViewUI.getInsert())
         actionManager.executeAction(atomCreationAction)
     }
@@ -112,10 +114,9 @@ class AtomBondTool(
             OrganicEditorState.CONNECTION_DISTANCE
         )
 
-        val localTransform = mode.srcAtom.parent.localPos
+        val localTransform = mode.srcAtom.parent.positionOffset
         val localAtomTransform = Vector3f(newAtomPos.x, newAtomPos.y, 0.0f) - localTransform
-        mode.destAtom.localPos.x = localAtomTransform.x
-        mode.destAtom.localPos.y = localAtomTransform.y
+        mode.destAtom.setInnerPosition(localAtomTransform.x, localAtomTransform.y)
     }
 
 
@@ -198,7 +199,7 @@ class AtomBondTool(
                 //Form a ring
                 val action = RingCyclisationAction(commonMolecule, draggingMode.srcAtom, atom)
                 actionManager.executeAction(action)
-            } else if (levelContainer.chemManager.getStereoChem(bond.molManagerLink) == toolViewUI.stereoChem) {
+            } else if (bond.getStereo() == toolViewUI.stereoChem) {
                 val action = IncrementBondOrderAction(commonMolecule, bond)
                 actionManager.executeAction(action)
                 if (bond.atomA == draggingMode.srcAtom) {
@@ -230,7 +231,7 @@ class AtomBondTool(
             //Uno the atom replace action
             actionManager.undoLastAction()
 
-            val atomInsertionAction = AtomInsertionAction(toolViewUI.getInsert(), toolViewUI.stereoChem, mode.srcAtom)
+            val atomInsertionAction = AtomInsertionAction(toolViewUI.getInsert(), toolViewUI.stereoChem, mode.srcAtom, mouseWorld.x, mouseWorld.y)
             actionManager.executeAction(atomInsertionAction)
 
             atomInsertionAction.newLevelAtom?.let {

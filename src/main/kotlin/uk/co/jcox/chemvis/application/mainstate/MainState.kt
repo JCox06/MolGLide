@@ -6,8 +6,6 @@ import uk.co.jcox.chemvis.application.graph.LevelRenderer
 import uk.co.jcox.chemvis.application.graph.ThemeStyleManager
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
-import uk.co.jcox.chemvis.application.moleditorstate.StereoChem
-import uk.co.jcox.chemvis.application.moleditorstate.TemplateRingInsert
 import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.CommonTemplateTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ImplicitAtomMoveTool

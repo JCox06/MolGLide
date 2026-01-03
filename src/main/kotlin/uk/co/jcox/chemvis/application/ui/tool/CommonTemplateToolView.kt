@@ -2,23 +2,21 @@ package uk.co.jcox.chemvis.application.ui.tool
 
 import imgui.ImGui
 import imgui.type.ImInt
-import uk.co.jcox.chemvis.application.moleditorstate.TemplateRingInsert
+import org.apache.jena.sparql.syntax.Template
+import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
+import uk.co.jcox.chemvis.application.moleditorstate.RingInsert
 
 class CommonTemplateToolView : ToolViewUI() {
 
+    private val atomTemplateStrings = RingInsert.entries.map { it.friendlyName }
+    private val activeInsert: ImInt = ImInt(0)
 
-    private val templateSelections = TemplateRingInsert.entries.map { it.template }
-    private val activeTemplate = ImInt(0)
+    fun getTemplate() : RingInsert {
+        return RingInsert.entries[activeInsert.get()]
+    }
 
     override fun renderMenuButtons() {
-        renderButtons(templateSelections, activeTemplate, false)
+        renderButtons(atomTemplateStrings, activeInsert, false)
     }
 
-    fun getTemplateInsert() : TemplateRingInsert {
-        val found = TemplateRingInsert.entries.find { it.ordinal == activeTemplate.get() }
-        if (found == null) {
-            return TemplateRingInsert.BENZENE
-        }
-        return found
-    }
 }

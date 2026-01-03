@@ -8,7 +8,8 @@ import org.joml.plus
 import org.joml.times
 import org.joml.unaryMinus
 import org.lwjgl.opengl.GL11
-import uk.co.jcox.chemvis.application.moleditorstate.BondOrder
+import org.openscience.cdk.interfaces.IBond
+import org.openscience.cdk.isomorphism.TransformOp
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.Batch2D
 import uk.co.jcox.chemvis.cvengine.Camera2D
@@ -53,22 +54,22 @@ class BondRenderer (
             var nudge = Vector3f()
             if (bond.centredBond) {
                 nudge = bond.bisectorNudge
-                //First render a single bond - No Offset Required
+                //First render a single bond
                 addBond(bond, renderData, -1.0f, thickness, nudge)
             } else {
                 //First render a single bond - No Offset Required
                 addBond(bond, renderData, 0.0f, thickness, nudge)
             }
 
-            val bondOrder = container.chemManager.getBondOrder(bond.molManagerLink)
+            val bondOrder = bond.iBond.order
             if (! allowExtraLines) {
                 return
             }
 
-            if (bondOrder == BondOrder.DOUBLE || bondOrder == BondOrder.TRIPLE) {
+            if (bondOrder == IBond.Order.DOUBLE || bondOrder == IBond.Order.TRIPLE) {
                 addBond(bond, renderData, 1.0f, thickness, nudge)
             }
-            if (bondOrder == BondOrder.TRIPLE) {
+            if (bondOrder == IBond.Order.TRIPLE) {
                 addBond(bond, renderData, -1.0f, thickness, nudge)
             }
         }
@@ -95,6 +96,7 @@ class BondRenderer (
 
         val start = bondStart + orth + newNudge
         val end = bondEnd + orth + newNudge
+
         renderData.addAll(listOf(start.x, start.y, start.z, end.x, end.y, end.z, thickness))
     }
     

@@ -12,25 +12,16 @@ class AtomReplacementAction (
     private var oldAtom = AtomInsert.CARBON
 
     override fun execute(levelContainer: LevelContainer) {
-
-        oldAtom = levelContainer.chemManager.getAtomInsert(atom.molManagerLink)
-
-        levelContainer.chemManager.replace(atom.molManagerLink, toReplace)
-
-        levelContainer.chemManager.recalculate(atom.parent.molManagerLink)
-
+        val parent = atom.parent
+        oldAtom = AtomInsert.fromSymbol(atom.getSymbol())
+        parent.updateSymbol(atom, toReplace.symbol)
         atom.visible = toReplace != AtomInsert.CARBON
-
     }
 
     override fun undo(levelContainer: LevelContainer) {
-        levelContainer.chemManager.replace(atom.molManagerLink, oldAtom)
-
-        levelContainer.chemManager.recalculate(atom.parent.molManagerLink)
-
+        val parent = atom.parent
+        parent.updateSymbol(atom, oldAtom.symbol)
 
         atom.visible = oldAtom != AtomInsert.CARBON
     }
-
-
 }

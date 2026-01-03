@@ -269,7 +269,15 @@
             <artifactId>imgui-java-app</artifactId>
             <version>1.90.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-nfd</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-nfd</artifactId>
+            <classifier>${lwjgl.natives}</classifier>
+        </dependency>
 
 <!--        Chemistry Development Kit-->
         <dependency>
