@@ -17,6 +17,7 @@ import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomVisibilityAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.CentreBondAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeAromacityAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeBondOrderAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.FlipBondAction
@@ -122,8 +123,9 @@ class ClickMenu (
 
                 ImGui.separator()
 
-                if (ImGui.menuItem("Aromatic", false)) {
-                    TODO("Create Aromatic Bond Order")
+                if (ImGui.menuItem("Aromatic", bond.iBond.isAromatic)) {
+                    val action = ChangeAromacityAction(bond)
+                    actionManager.executeAction(action)
                 }
 
                 ImGui.separator()

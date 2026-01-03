@@ -53,10 +53,21 @@ class RingCreatorAction (
             iAtom.setProperty("LINK", chemAtom)
         }
 
+        var double = false
+
         iBonds.forEach { iBond ->
             val atomA = iBond.getAtom(0).getProperty<ChemAtom>("LINK")
             val atomB = iBond.getAtom(1).getProperty<ChemAtom>("LINK")
+
             val chemBond = permRing.addBond(atomA, atomB, iBond)
+            if (templateInsert == RingInsert.BENZENE) {
+                chemBond.flipDoubleBond = true
+                if (double) {
+                    permRing.updateBondOrder(chemBond, IBond.Order.DOUBLE)
+                }
+                permRing.setAromaticity(chemBond, true)
+            }
+            double = !double
         }
     }
 

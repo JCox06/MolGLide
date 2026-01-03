@@ -48,10 +48,18 @@ class ChemMolecule (
         return chemAtom
     }
 
-    fun addBond(atomA: ChemAtom, atomB: ChemAtom, iBond: IBond) {
+    fun addBond(atomA: ChemAtom, atomB: ChemAtom, iBond: IBond) : ChemBond {
         val chemBond = ChemBond(atomA, atomB, iBond)
         bonds.add(chemBond)
         iContainer.addBond(iBond)
+        calculateAtomTypes()
+
+        return chemBond
+    }
+
+
+    fun setAromaticity(bond: ChemBond, aromatic: Boolean) {
+        bond.iBond.setIsAromatic(aromatic)
         calculateAtomTypes()
     }
 
