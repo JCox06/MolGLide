@@ -1,7 +1,9 @@
 package uk.co.jcox.chemvis.application.moleditorstate
 
 import imgui.ImGui
+import imgui.type.ImBoolean
 import imgui.type.ImString
+import jdk.internal.org.jline.keymap.KeyMap.display
 import org.checkerframework.checker.units.qual.mol
 import org.lwjgl.BufferUtils
 import org.lwjgl.PointerBuffer
@@ -21,6 +23,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeAromacityActio
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeBondOrderAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.FlipBondAction
+import java.awt.Desktop
 import java.io.File
 import java.nio.ByteBuffer
 
@@ -33,20 +36,22 @@ class ClickMenu (
     var showBondMenu = false
     var showAtomMenu = false
 
-
-    var showCustomLabelInput = false
+    private var activePopup: ActivePopup = ActivePopup.None
 
     fun renderMenu() {
         displayBondMenu()
         displayAtomMenu()
 
-        if (showCustomLabelInput) {
-            displayCustomInput()
+
+        when (val popup = activePopup) {
+            is ActivePopup.CDKSVGExporter -> displayCDKSVGExporter(popup)
+            is ActivePopup.CustomInput -> displayCustomInput(popup)
+            ActivePopup.None -> {}
         }
     }
 
 
-    private fun displayCustomInput() {
+    private fun displayCustomInput(popup: ActivePopup.CustomInput) {
         ImGui.begin("Custom Input")
 
         ImGui.text("Enter a custom group")
@@ -56,13 +61,13 @@ class ClickMenu (
         ImGui.sameLine()
 
         if (ImGui.button("Cancel")) {
-            showCustomLabelInput = false
+            activePopup = ActivePopup.None
         }
 
         ImGui.sameLine()
 
         if (ImGui.button("Accept")) {
-            showCustomLabelInput = false
+            activePopup = ActivePopup.None
             //todo actually add the group to the atom (The atom being the first letter in the input)
         }
 
@@ -150,12 +155,23 @@ class ClickMenu (
 
             ImGui.separator()
 
-            displayGenericMoleculeMenu(bond.atomA.parent)
+            displayGenericMoleculeMenu(selection.bond.atomA.parent)
 
             ImGui.endPopup()
         }
     }
 
+
+    private fun displayGenericMoleculeMenu(molecule: ChemMolecule) {
+
+        //todo Multi-thread CDK actions where required
+        if (ImGui.beginMenu("CDK Tools")) {
+            if (ImGui.menuItem("SVG Molecule Export")) {
+                activePopup = ActivePopup.CDKSVGExporter(molecule)
+                }
+            ImGui.endMenu()
+            }
+        }
 
     private fun reduceToSingle(bond: ChemBond) {
         val action = ChangeBondOrderAction(bond, IBond.Order.SINGLE)
@@ -176,7 +192,7 @@ class ClickMenu (
         if (ImGui.beginPopup("AtomMenu")) {
 
             if (ImGui.menuItem("Edit Label")) {
-                showCustomLabelInput = true
+                activePopup = ActivePopup.CustomInput()
             }
 
             if (ImGui.menuItem("Group Visible", selection.atom.visible)) {
@@ -193,7 +209,6 @@ class ClickMenu (
             ImGui.separator()
 
             displayGenericMoleculeMenu(selection.atom.parent)
-
             ImGui.endMenu()
         }
 
@@ -201,39 +216,63 @@ class ClickMenu (
 
     }
 
-    private fun displayGenericMoleculeMenu(molecule: ChemMolecule) {
+    private fun displayCDKSVGExporter(popup: ActivePopup.CDKSVGExporter) {
+        ImGui.begin("CDK SVG Exporter")
 
-        //todo Multi-thread CDK actions where required
-        if (ImGui.beginMenu("CDK Tools")) {
-            if (ImGui.menuItem("SVG Molecule Export")) {
+        ImGui.textWrapped("Export this molecule using CDK. Note: CDK might interpet your molecule slightly differently!")
 
-                //Todo - Fix this, mulithread it, ask the user where to save it
 
-//                MemoryStack.stackPush().use { memoryStack ->
-//
-//                    val buff = memoryStack.mallocPointer(1)
-//
-//                    NativeFileDialog.NFD_Init()
-//                    NativeFileDialog.NFD_OpenDialog(buff, null, null as ByteBuffer?)
-//                }
+        ImGui.checkbox("Terminal Carbon Display", popup.terminalCarbons)
+        ImGui.checkbox("Aromatic Display", popup.aromaticDisplay)
+        ImGui.checkbox("Carbon Symbols", popup.carbonDisplay)
 
-                val dg = DepictionGenerator()
-                    .withSize(500.0, 500.0)
-                    .withFillToFit()
+        if (ImGui.button("Export")) {
+            var dg = DepictionGenerator()
+                .withSize(500.0, 500.0)
+                .withFillToFit()
 
-                val depiction = dg.depict(molecule.iContainer)
-
-                val file = File("image.svg")
-                file.writeText(depiction.toSvgStr())
+            if (popup.aromaticDisplay.get()) {
+                dg = dg.withAromaticDisplay()
             }
-            ImGui.endMenu()
+            if (popup.carbonDisplay.get()) {
+                dg = dg.withCarbonSymbols()
+            }
+            if (popup.terminalCarbons.get()) {
+                dg = dg.withTerminalCarbons()
+            }
 
+            val depiction = dg.depict(popup.molecule.iContainer)
+            val file = File("image.svg")
+
+            val task = Runnable {
+                file.writeText(depiction.toSvgStr())
+                Desktop.getDesktop().open(file)
+            }
+            val thread = Thread(task)
+            thread.start()
+
+            activePopup = ActivePopup.None
         }
+
+        ImGui.sameLine()
+        if (ImGui.button("Close")) {
+            activePopup = ActivePopup.None
+        }
+        ImGui.end()
     }
+
 
     fun closeWindows() {
         showAtomMenu = false
         showBondMenu = false
-        showCustomLabelInput = false
+        activePopup = ActivePopup.None
+    }
+
+    private sealed class ActivePopup {
+        object None: ActivePopup()
+
+        class CustomInput() : ActivePopup()
+
+        class CDKSVGExporter(val molecule: ChemMolecule, val terminalCarbons: ImBoolean = ImBoolean(false), val aromaticDisplay: ImBoolean = ImBoolean(false), val carbonDisplay: ImBoolean = ImBoolean(false)): ActivePopup()
     }
 }

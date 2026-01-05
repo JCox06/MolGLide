@@ -9,6 +9,7 @@ import java.awt.Color
 import java.awt.Font
 import java.awt.FontMetrics
 import java.awt.Graphics
+import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.IOException
@@ -204,6 +205,8 @@ class ResourceManager : IResourceManager{
         val g2d = atlasImage.createGraphics()
         g2d.font = font
         g2d.color = Color.WHITE
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
 
         var glyphXPlacement = 0
         var glyphYPlacement = charHeight
@@ -236,7 +239,7 @@ class ResourceManager : IResourceManager{
 
         //Now load this as an image into OpenGL
         val textureData: ByteBuffer = convertImageData(atlasImage)
-        val glTextureObject: Int = loadTextureToOpenGL(textureData, squareTextureSize, squareTextureSize, GL11.GL_NEAREST, GL11.GL_NEAREST, false)
+        val glTextureObject: Int = loadTextureToOpenGL(textureData, squareTextureSize, squareTextureSize, GL11.GL_LINEAR_MIPMAP_LINEAR, GL11.GL_NEAREST, false)
 
         textures[id] = glTextureObject
 

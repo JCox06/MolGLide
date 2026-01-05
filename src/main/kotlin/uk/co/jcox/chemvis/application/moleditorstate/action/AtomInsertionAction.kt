@@ -16,8 +16,8 @@ class AtomInsertionAction (
     private val atomInsert: AtomInsert,
     private val stereoChem: IBond.Display,
     private val srcAtom: ChemAtom,
-    private val clickX: Float,
-    private val clickY: Float,
+    private var clickX: Float,
+    private var clickY: Float,
 ) : IAction {
 
     private val srcMol = srcAtom.parent
@@ -33,8 +33,8 @@ class AtomInsertionAction (
 
         val pos = srcMol.positionOffset
 
-        val newAtom = srcMol.addAtom(atomInsert, clickX - pos.x, clickY - pos.y)
-        val newBond = srcMol.formBasicConnection(srcAtom, newAtom)
+        val newAtom = addAtom(atomInsert, clickX - pos.x, clickY - pos.y,)
+        val newBond = addBond(srcAtom, newAtom)
 
         if (atomInsert == AtomInsert.CARBON) {
             newAtom.visible = false
@@ -42,6 +42,23 @@ class AtomInsertionAction (
 
         newLevelAtom = newAtom
         newLevelBond = newBond
+    }
+
+
+    private fun addAtom(atomInsert: AtomInsert, innerX: Float, innerY: Float) : ChemAtom {
+        val old = newLevelAtom
+        if (old != null) {
+            return srcMol.addAtom(old.iAtom)
+        }
+        return srcMol.addAtom(atomInsert, innerX, innerY)
+    }
+
+    private fun addBond(srcAtom: ChemAtom, newAtom: ChemAtom) : ChemBond {
+        val old = newLevelBond
+        if (old != null) {
+            return srcMol.addBond(srcAtom, newAtom, old.iBond)
+        }
+        return srcMol.formBasicConnection(srcAtom, newAtom)
     }
 
     override fun undo(levelContainer: LevelContainer) {
@@ -53,7 +70,12 @@ class AtomInsertionAction (
         if (atomToRemove != null && bondToRemove != null) {
             srcMol.removeAtom(atomToRemove)
             srcMol.removeBond(bondToRemove)
+
+            val pos = atomToRemove.getWorldPosition()
+            clickX = pos.x
+            clickY = pos.y
         }
+
     }
 
 
