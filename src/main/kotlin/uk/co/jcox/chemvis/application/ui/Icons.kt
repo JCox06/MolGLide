@@ -16,4 +16,6 @@ object Icons {
     const val DATABASE_ICON ="\uf1c0"
     const val MOVE_ICON = "\uf0b2"
     const val PAINT_BRUSH = "\uf1fc"
+    const val ABOUT_ICON = "\uf2bb"
+    const val GITHUB_ICON = "\uf126"
 }

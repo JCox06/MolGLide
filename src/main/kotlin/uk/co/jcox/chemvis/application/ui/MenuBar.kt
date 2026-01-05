@@ -2,11 +2,15 @@ package uk.co.jcox.chemvis.application.ui
 
 import imgui.ImGui
 import imgui.ImGuiViewport
+import org.lwjgl.system.Platform
+import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.ToolRegistry
 import uk.co.jcox.chemvis.application.mainstate.MainState
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.ICVServices
 import uk.co.jcox.chemvis.application.ui.ImGuiUtils
+import java.awt.Desktop
+import java.net.URI
 
 class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
@@ -35,6 +39,9 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
     var enableProbe = false
         private set
 
+    private var showMolAbout = false
+    private var showImGuiAbout = false
+
     fun draw() {
 
         if (ImGui.beginMainMenuBar()) {
@@ -55,6 +62,54 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
             ImGui.text(" | ")
         }
+
+        if (showImGuiAbout) {
+            ImGui.showAboutWindow()
+        }
+        if (showMolAbout) {
+            drawMolAbout()
+        }
+    }
+
+    private fun drawMolAbout() {
+        ImGui.begin("About")
+
+        ImGui.text("MolGLide ${MolGLide.VERSION}")
+
+        ImGui.separator()
+
+        ImGui.textWrapped("Libraries used:")
+
+        ImGui.beginTable("About", 2)
+
+        ImGui.tableNextColumn()
+        ImGui.bulletText("LWJGL")
+        ImGui.tableNextColumn()
+        ImGui.bulletText("GLFW")
+        ImGui.tableNextColumn()
+        ImGui.bulletText("OpenGL")
+        ImGui.tableNextColumn()
+        ImGui.bulletText("STB Image")
+        ImGui.tableNextColumn()
+        ImGui.bulletText("JOML")
+        ImGui.tableNextColumn()
+        ImGui.bulletText("Spair ImGui")
+        ImGui.tableNextColumn()
+        ImGui.bulletText("NFD Extended")
+        ImGui.tableNextColumn()
+        ImGui.bulletText("CDK")
+        ImGui.tableNextColumn()
+        ImGui.bulletText("TinyLog")
+        ImGui.tableNextColumn()
+
+
+        ImGui.endTable()
+
+        if (ImGui.button("Close")) {
+            showMolAbout = false
+        }
+
+        ImGui.end()
     }
 
 
@@ -71,6 +126,11 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
         if (ImGui.beginMenu("${Icons.PAINT_BRUSH} Themes")) {
             drawThemeMenu()
+            ImGui.endMenu()
+        }
+
+        if (ImGui.beginMenu("${Icons.ABOUT_ICON} Help")) {
+            drawAboutMenu()
             ImGui.endMenu()
         }
 
@@ -138,6 +198,20 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
         }
         if (ImGui.menuItem("${Icons.REDO_ICON} Redo")) {
             redo()
+        }
+    }
+
+
+    private fun drawAboutMenu() {
+        if (ImGui.menuItem("${Icons.GITHUB_ICON} Visit Repository")) {
+            Desktop.getDesktop().browse(URI(MolGLide.WEBSITE))
+        }
+
+        if (ImGui.menuItem("About MolGLide")) {
+            showMolAbout = !showMolAbout
+        }
+        if (ImGui.menuItem("About ImGui")) {
+            showImGuiAbout = !showImGuiAbout
         }
     }
 

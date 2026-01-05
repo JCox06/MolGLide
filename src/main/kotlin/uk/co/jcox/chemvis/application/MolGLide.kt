@@ -74,7 +74,7 @@ class MolGLide : IApplication, IInputSubscriber {
         const val SELECTION_MARKER_MESH: String = "SELECTION_MARKER_MESH"
         const val BOND_MARKER_MESH: String = "BOND_MARKER_MESH"
         const val SELECTION_MARKER_MATERIAL: String = "SELECTION_MARKER_MATERIAL"
-        const val VERSION = "v0.1.0"
+        const val VERSION = "v0.2.0"
         const val WEBSITE = "https://github.com/JCox06/MolGLide/tree/master"
 
        const val SHADER_LINE = "SHADER_LINE"
