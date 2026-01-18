@@ -25,13 +25,13 @@ class OrganicEditorState (
     val services: ICVServices,
     val renderingContext: IRenderTargetContext,
     val renderer: LevelRenderer,
+    val levelContainer: LevelContainer = LevelContainer()
 ) : ApplicationState(renderingContext), IInputSubscriber {
 
-    val levelContainer = LevelContainer()
     val actionManager = ActionManager(levelContainer)
     val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
     val selectionManager = SelectionManager()
-    val clickMenu = ClickMenu(selectionManager, actionManager, levelContainer)
+    val clickMenu = ClickMenu(selectionManager, actionManager, levelContainer, services.getMainEngineScope())
 
 
     var currentTool: Tool<out ToolViewUI>? = null

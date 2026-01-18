@@ -25,7 +25,7 @@ class ChemBond(
 
     var flipDoubleBond = false
 
-    val bondOffset = Vector3f()
+    var bondOffset = Vector3f()
 
 
     fun getMidpoint() : Vector3f {

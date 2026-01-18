@@ -6,6 +6,7 @@ import org.joml.plus
 import org.openscience.cdk.Atom
 import org.openscience.cdk.interfaces.IAtom
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
+import java.io.Serializable
 import java.util.UUID
 import javax.vecmath.Point2d
 
@@ -36,10 +37,11 @@ class ChemAtom (
         iAtom.point2d = Point2d(x.toDouble(), y.toDouble())
     }
 
-    enum class RelationalPos(val mod: Vector3f) {
+    enum class RelationalPos(val mod: Vector3f) : Serializable {
         ABOVE(Vector3f(0.0f, 1.0f, 0.0f)),
         LEFT(Vector3f(-1.0f, 0.0f, 0.0f)),
         RIGHT(Vector3f(1.0f, 0.0f, 0.0f)),
         BOTTOM(Vector3f(0.0f, -1.0f, 0.0f)),
+
     }
 }

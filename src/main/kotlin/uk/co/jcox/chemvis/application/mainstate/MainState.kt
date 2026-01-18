@@ -1,7 +1,15 @@
 package uk.co.jcox.chemvis.application.mainstate
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.apache.commons.logging.Log
 import org.joml.Vector2f
+import org.tinylog.Logger
 import uk.co.jcox.chemvis.application.ToolRegistry
+import uk.co.jcox.chemvis.application.data.LevelLoader
+import uk.co.jcox.chemvis.application.data.LevelSerializer
+import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.graph.LevelRenderer
 import uk.co.jcox.chemvis.application.graph.ThemeStyleManager
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
@@ -18,6 +26,11 @@ import uk.co.jcox.chemvis.cvengine.ICVServices
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.ImGuiRenderingContext
 import uk.co.jcox.chemvis.cvengine.InputManager
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.IOError
+import java.io.IOException
+import java.io.ObjectOutputStream
 
 class MainState (val services: ICVServices, renderContext: IRenderTargetContext) : ApplicationState(renderContext) {
 
@@ -26,13 +39,16 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
 
     private var idCount = 0
     val editors = mutableListOf<String>()
+    private val levelSerializer = LevelSerializer()
+
+    var bulkOperationMode = false
 
 
     val themeStyleManager = ThemeStyleManager()
     private val levelRenderer = LevelRenderer(services.batchRenderer(), services.instancedRenderer(), themeStyleManager, services.resourceManager())
 
-    fun createNewEditor(samples: Int) : String {
-       val newEditor = OrganicEditorState(services, ImGuiRenderingContext(), levelRenderer)
+    fun createNewEditor(samples: Int, levelContainer: LevelContainer = LevelContainer()) : String {
+       val newEditor = OrganicEditorState(services, ImGuiRenderingContext(), levelRenderer, levelContainer)
         val stateRenderID = "Editor#${idCount++}"
 
         if (samples > 1) {
@@ -57,6 +73,51 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
         //Removing the render target here will cause a crash as its already been done at this point
     }
 
+
+    fun saveProjectToFile(session: OrganicEditorState, file: File) {
+        bulkOperationMode = true
+        Logger.info { "Saving project to ${file.absoluteFile}" }
+
+        val levelContainerToSave = session.levelContainer
+        val dataContainer = levelSerializer.getDataLevel(levelContainerToSave)
+
+        val bytesOut = ByteArrayOutputStream()
+        val outputObject = ObjectOutputStream(bytesOut).use { it.writeObject(dataContainer) }
+        val data = bytesOut.toByteArray()
+
+        services.getMainEngineScope().launch(Dispatchers.IO) {
+            try {
+                file.outputStream().use { it.write(data) }
+                Logger.info { "Successfully saved file to disc at ${file.absoluteFile}" }
+            } catch (e: IOException) {
+                Logger.error { "Could not save file ${file.absoluteFile}"}
+                e.printStackTrace()
+            } finally {
+                bytesOut.close()
+            }
+            services.getMainEngineScope().launch { bulkOperationMode = false }
+        }
+    }
+
+
+    fun openProject(file: File, samples: Int) {
+
+        bulkOperationMode = true
+
+        val levelLoader = LevelLoader()
+        if (!file.exists()) {
+            return
+        }
+
+        services.getMainEngineScope().launch(Dispatchers.IO) {
+            val levelContainer = levelLoader.loadLevel(file)
+            services.getMainEngineScope().launch {
+                Logger.info { "Creating OrganicEditorState and associated RenderTarget" }
+                createNewEditor(samples, levelContainer)
+                bulkOperationMode = false
+            }
+        }
+    }
 
     override fun init() {
         themeStyleManager.applyMolGLideEdit()

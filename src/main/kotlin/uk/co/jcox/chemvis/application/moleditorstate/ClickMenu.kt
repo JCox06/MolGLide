@@ -4,6 +4,9 @@ import imgui.ImGui
 import imgui.type.ImBoolean
 import imgui.type.ImString
 import jdk.internal.org.jline.keymap.KeyMap.display
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.checkerframework.checker.units.qual.mol
 import org.lwjgl.BufferUtils
 import org.lwjgl.PointerBuffer
@@ -30,7 +33,8 @@ import java.nio.ByteBuffer
 class ClickMenu (
     private val selectionManager: SelectionManager,
     private val actionManager: ActionManager,
-    private val levelContainer: LevelContainer
+    private val levelContainer: LevelContainer,
+    private val engineScope: CoroutineScope,
 ) {
 
     var showBondMenu = false
@@ -244,12 +248,10 @@ class ClickMenu (
             val depiction = dg.depict(popup.molecule.iContainer)
             val file = File("image.svg")
 
-            val task = Runnable {
+            engineScope.launch(Dispatchers.IO) {
                 file.writeText(depiction.toSvgStr())
                 Desktop.getDesktop().open(file)
             }
-            val thread = Thread(task)
-            thread.start()
 
             activePopup = ActivePopup.None
         }

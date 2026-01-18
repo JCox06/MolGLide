@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.cvengine
 
+import kotlinx.coroutines.CoroutineScope
 import org.joml.Vector2i
 
 /**
@@ -47,4 +48,8 @@ interface ICVServices {
     fun getState(stateID: String) : ApplicationState?
 
     fun getPlatformMSAAMaxSamples() : Int
+
+    fun getMainEngineScope(): CoroutineScope
+
+    fun getFileServices() : IFileServices
 }

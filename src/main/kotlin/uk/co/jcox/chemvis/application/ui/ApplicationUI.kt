@@ -72,6 +72,18 @@ class ApplicationUI (
             closeCurrentEditorWindow()
         }
 
+        menuBar.saveProjectAs = { file ->
+            val session = activeSession
+
+            session?.let { appManager.saveProjectToFile(it, file)}
+        }
+
+        menuBar.openProject = {file ->
+            appManager.openProject(file, welcomeUI.msaaSamples[0])
+            if (menuBar.selectedToolset == null) {
+                menuBar.selectedToolset = appManager.toolRegistry.getEntries().values.firstOrNull()
+            }
+        }
 
         welcomeUI.setup()
     }
