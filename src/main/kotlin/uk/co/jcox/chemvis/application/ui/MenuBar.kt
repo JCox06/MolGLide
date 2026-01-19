@@ -52,6 +52,7 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
     private var showMolAbout = false
     private var showImGuiAbout = false
+    private var showMetrics = false
 
     fun draw() {
 
@@ -85,6 +86,9 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
         }
         if (showMolAbout) {
             drawMolAbout()
+        }
+        if (showMetrics) {
+            ImGui.showMetricsWindow()
         }
     }
 
@@ -238,6 +242,11 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
         if (ImGui.menuItem("About ImGui")) {
             showImGuiAbout = !showImGuiAbout
         }
+
+        if (ImGui.menuItem("Show Metrics")) {
+            showMetrics = !showMetrics
+        }
+
     }
 
     private fun drawThemeMenu() {

@@ -16,7 +16,7 @@ It's a fun little project, that while doesn't have an end goal, I would like to 
 -  [ ] Custom SVG export*
 -  [ ] Custom group insertion (Editing a label of an atom and changing it to something like CH2CH3)
 -  [x] Molecular Formula and Molecular Weight calculation
--  [ ] Saving, loading, and exporting the level
+-  [ ] Exporting molecules to other sketcher software
 -  [ ] Reaction Arrows, Curly Arrows, Custom Text boxes
 
 \* The reason for needing writing a custom SVG/PNG export is so it remains consistent with the OpenGL rendering system - And 
