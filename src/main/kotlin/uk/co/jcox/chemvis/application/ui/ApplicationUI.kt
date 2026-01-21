@@ -16,6 +16,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.cvengine.ICVServices
+import uk.co.jcox.chemvis.cvengine.IInputSubscriber
 import uk.co.jcox.chemvis.cvengine.RenderTarget
 import java.io.File
 
@@ -25,8 +26,6 @@ class ApplicationUI (
 ) {
 
 
-
-    //todo FIX - The wrong session ID is being reported here which means sometimes the incorrect tab is closed and sometimes the incorrect render target data is read when attempting to take a screenshot
 
     private val menuBar = MenuBar(appManager, engineManager)
     private val welcomeUI = WelcomeUI(engineManager)
@@ -178,18 +177,17 @@ class ApplicationUI (
             renderContext?.setRelativeWindowPos(Vector2f(windowPos.x, windowPos.y))
 
             val state = engineManager.getState(id)
-            if (state is OrganicEditorState) {
-                activeSession = state
-                activeTarget = engineManager.resourceManager().getRenderTarget(id)
-                activeSessionID = id
-
-                if (state.currentTool == null) {
-                    state.currentTool = menuBar.selectedToolset?.toolCreator(state)
-                }
-            }
-
             if (ImGui.isWindowHovered()) {
                 engineManager.resumeAppState(id)
+                if (state is OrganicEditorState) {
+                    activeSession = state
+                    activeTarget = engineManager.resourceManager().getRenderTarget(id)
+                    activeSessionID = id
+
+                    if (state.currentTool == null) {
+                        state.currentTool = menuBar.selectedToolset?.toolCreator(state)
+                    }
+                }
             } else {
                 engineManager.pauseAppState(id)
             }
