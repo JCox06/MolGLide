@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.ImVec2
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiStyleVar
+import imgui.flag.ImGuiWindowFlags
 import imgui.type.ImBoolean
 import org.joda.time.LocalDateTime
 import org.joml.Vector2f
@@ -72,10 +73,15 @@ class ApplicationUI (
             closeCurrentEditorWindow()
         }
 
+        menuBar.getSaveFile = {
+            activeSession?.projectFile
+        }
+
         menuBar.saveProjectAs = { file ->
             val session = activeSession
 
             session?.let { appManager.saveProjectToFile(it, file)}
+            session?.projectFile = file
         }
 
         menuBar.openProject = {file ->
@@ -158,7 +164,9 @@ class ApplicationUI (
 
             //Adding true enables the X button to be present
             val keepOpen = ImBoolean(true)
-            ImGui.begin(id, keepOpen)
+            val dirty = activeSession?.actionManager?.isDirty
+            val flags = if (dirty == true) ImGuiWindowFlags.UnsavedDocument else 0
+            ImGui.begin(id, keepOpen, flags)
 
             if (! keepOpen.get()) {
                 closeList.add(id)

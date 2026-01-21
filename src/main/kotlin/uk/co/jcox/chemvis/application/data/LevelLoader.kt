@@ -77,11 +77,11 @@ class LevelLoader {
         var dataSaveFile: DataSaveFile? = null
 
         try {
-            val fileInputStream = FileInputStream(mgf)
-            val objectInputStream = ObjectInputStream(fileInputStream)
-            dataSaveFile = objectInputStream.readObject() as DataSaveFile
+            val fileInput = FileInputStream(mgf)
+            ObjectInputStream(fileInput).use {
+                dataSaveFile = it.readObject() as DataSaveFile
+            }
         } catch (e: IOException) {
-            Logger.error { "Error during file loading to DataSaveFile" }
             e.printStackTrace()
         }
         return dataSaveFile

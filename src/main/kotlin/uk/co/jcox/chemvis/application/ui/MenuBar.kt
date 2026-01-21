@@ -1,19 +1,12 @@
 package uk.co.jcox.chemvis.application.ui
 
 import imgui.ImGui
-import imgui.ImGuiViewport
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.lwjgl.system.Platform
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.ToolRegistry
 import uk.co.jcox.chemvis.application.mainstate.MainState
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.ICVServices
-import uk.co.jcox.chemvis.application.ui.ImGuiUtils
 import uk.co.jcox.chemvis.cvengine.IFileServices
-import uk.co.jcox.chemvis.cvengine.NativeFIleService
 import java.awt.Desktop
 import java.io.File
 import java.net.URI
@@ -40,7 +33,11 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
     var saveProjectAs: (file: File) -> Unit = {}
 
+    var saveProject: () -> Unit = {}
+
     var openProject: (file: File) -> Unit = {}
+
+    var getSaveFile: () -> File? = {null}
 
 
     var drawThemeConfig = false
@@ -196,11 +193,17 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
         }
 
         if (ImGui.menuItem("${Icons.SAVE_IMAGE_ICON} Save Document")) {
-            val fileOperations: IFileServices = engineManager.getFileServices()
-            val file = fileOperations.askUserSaveFile("mgf", "MolGLide Graph File")
-            if (file is IFileServices.FileOperation.FileRetrieved) {
-                saveProjectAs(file.file)
+            val saveFile = getSaveFile()
+
+            if (saveFile == null) {
+                askAndSave()
+            } else {
+                saveProjectAs(saveFile)
             }
+        }
+
+        if (ImGui.menuItem("${Icons.SAVE_IMAGE_ICON} Save Document As")) {
+            askAndSave()
         }
 
         if (ImGui.menuItem("${Icons.DATABASE_ICON} Load From Disc")) {
@@ -219,6 +222,15 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
             engineManager.shutdown()
         }
 
+    }
+
+
+    private fun askAndSave() {
+        val fileOperations: IFileServices = engineManager.getFileServices()
+        val file = fileOperations.askUserSaveFile("mgf", "MolGLide Graph File")
+        if (file is IFileServices.FileOperation.FileRetrieved) {
+            saveProjectAs(file.file)
+        }
     }
 
     private fun drawEditMenu() {

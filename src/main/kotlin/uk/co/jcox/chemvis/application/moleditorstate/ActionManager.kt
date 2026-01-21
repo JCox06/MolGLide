@@ -9,10 +9,13 @@ class ActionManager (
 
     private val pastActions = ArrayDeque<IAction>()
     private val discardedActions = ArrayDeque<IAction>()
+    var isDirty = false
+    private set
 
     fun executeAction(action: IAction) {
         action.execute(levelContainer)
         pastActions.addLast(action)
+        isDirty = true
     }
 
 
@@ -21,6 +24,7 @@ class ActionManager (
             val last = pastActions.removeLast()
             last.undo(levelContainer)
             discardedActions.addLast(last)
+            isDirty = true
         }
     }
 
@@ -29,6 +33,16 @@ class ActionManager (
             val last = discardedActions.removeLast()
             last.redo(levelContainer)
             pastActions.addLast(last)
+            isDirty = true
         }
+    }
+
+    fun markNotDirty() {
+        isDirty = false
+    }
+
+    fun clearHistory() {
+        pastActions.clear()
+        discardedActions.clear()
     }
 }

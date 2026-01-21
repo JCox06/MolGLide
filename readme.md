@@ -1,4 +1,4 @@
-# MolGLide (v0.1.0 - ALPHA)
+# MolGLide (v0.2.0 - ALPHA)
 **MolGLide is an open source simple molecular editor. You can draw simple molecules, and export them _for free_ to png image files.**
 
 >MolGLide is alpha software and is unstable!
@@ -31,11 +31,8 @@ If you need any help, there is a [tutorial.md](tutorial.md) webpage.
 
 ## Screenshots
 
-![MolGLide Screenshot](screenshots/v0.1.0/document.png)
+![MolGLide Screenshot](screenshots/v0.2.0/img.png)
 
-|   |   |
-|---|---|
-|![MolGLide Screenshot](screenshots/v0.1.0/screenshot.png)|![MolGLide Editor image](screenshots/v0.1.0/editor.png)|
 
 ## Building
 To build the project make sure you have Java 23 installed.
