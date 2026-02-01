@@ -9,6 +9,7 @@ It's a fun little project, that while doesn't have an end goal, I would like to 
 -  [x] Create basic molecules by connecting atoms through bonds
 -  [x] Create molecules from common templates (Benzene, Other Rings)
 -  [x] Save and load your project using MolGLide's custom file format: MolGLide graph file (.mgf)
+-  [x] High performance OpenGL foundation with Batch Rendering and Instanced Rendering
 -  [ ] Fusing rings and other templates to existing molecules through a custom bond
 -  [x] Basic Molecule Manipulation
 -  [x] CDK SVG molecule exports
