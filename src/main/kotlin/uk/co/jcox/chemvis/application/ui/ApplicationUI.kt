@@ -163,10 +163,17 @@ class ApplicationUI (
 
             //Adding true enables the X button to be present
             val keepOpen = ImBoolean(true)
-            val dirty = activeSession?.actionManager?.isDirty
-            val flags = if (dirty == true) ImGuiWindowFlags.UnsavedDocument else 0
-            ImGui.begin(id, keepOpen, flags)
-
+            var windowName = id
+            val selectedState = engineManager.getState(id)
+            var flags = 0
+            if (selectedState is OrganicEditorState) {
+                val projectName = selectedState.projectFile?.name
+                projectName?.let { windowName = it }
+                if (selectedState.actionManager.isDirty) {
+                    flags = ImGuiWindowFlags.UnsavedDocument
+                }
+            }
+            ImGui.begin(windowName, keepOpen, flags)
             if (! keepOpen.get()) {
                 closeList.add(id)
             }

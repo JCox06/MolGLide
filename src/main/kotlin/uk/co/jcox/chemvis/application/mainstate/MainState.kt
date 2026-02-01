@@ -50,7 +50,7 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
     private val levelRenderer = LevelRenderer(services.batchRenderer(), services.instancedRenderer(), themeStyleManager, services.resourceManager())
 
     fun createNewEditor(samples: Int, levelContainer: LevelContainer = LevelContainer(), projectFile: File? = null) : String {
-       val newEditor = OrganicEditorState(services, ImGuiRenderingContext(), levelRenderer, levelContainer)
+       val newEditor = OrganicEditorState(services, ImGuiRenderingContext(), levelRenderer, themeStyleManager, levelContainer)
         val stateRenderID = "Editor#${idCount++}"
 
         newEditor.projectFile = projectFile

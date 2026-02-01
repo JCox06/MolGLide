@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application.graph
 
 import org.joml.Vector3f
+import org.joml.minus
 import org.joml.plus
 import org.openscience.cdk.Bond
 import org.openscience.cdk.interfaces.IBond
@@ -45,5 +46,23 @@ class ChemBond(
 
     fun getStereo() : IBond.Display {
         return iBond.display
+    }
+
+    fun getVector() : Vector3f {
+        return (atomA.getWorldPosition() - atomB.getWorldPosition()).normalize()
+    }
+
+    fun getOrth() : Vector3f {
+        val walk = getVector()
+        return Vector3f(walk.y, -walk.x, walk.z).normalize()
+    }
+
+    fun getSharedAtom(other: ChemBond): ChemAtom? {
+        return when {
+            other == this -> null
+            atomA == other.atomA || atomA == other.atomB -> atomA
+            atomB == other.atomA || atomB == other.atomB -> atomB
+            else -> null
+        }
     }
 }

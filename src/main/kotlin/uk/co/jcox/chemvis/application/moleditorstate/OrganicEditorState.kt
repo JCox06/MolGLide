@@ -7,8 +7,10 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL30
 import uk.co.jcox.chemvis.application.MolGLide
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
+import uk.co.jcox.chemvis.application.graph.CommonRenderer
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.graph.LevelRenderer
+import uk.co.jcox.chemvis.application.graph.ThemeStyleManager
 import uk.co.jcox.chemvis.application.moleditorstate.tool.Tool
 import uk.co.jcox.chemvis.application.ui.tool.ToolViewUI
 import uk.co.jcox.chemvis.cvengine.ApplicationState
@@ -26,6 +28,7 @@ class OrganicEditorState (
     val services: ICVServices,
     val renderingContext: IRenderTargetContext,
     val renderer: LevelRenderer,
+    val themeStyleManager: ThemeStyleManager,
     val levelContainer: LevelContainer = LevelContainer()
 ) : ApplicationState(renderingContext), IInputSubscriber {
 
@@ -33,6 +36,8 @@ class OrganicEditorState (
     val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
     val selectionManager = SelectionManager()
     val clickMenu = ClickMenu(selectionManager, actionManager, levelContainer, services.getMainEngineScope())
+
+    private val commonRenderer = CommonRenderer(levelContainer, themeStyleManager)
 
     var projectFile: File? = null
 
@@ -51,6 +56,11 @@ class OrganicEditorState (
         }
 
         currentTool?.update()
+
+        if (this.actionManager.isDirty) {
+            this.commonRenderer.calculatePrimitiveData()
+        }
+
     }
 
     override fun render(viewport: Vector2f) {
@@ -58,8 +68,10 @@ class OrganicEditorState (
 
         currentTool?.let { renderSelectionTransients(it) }
 
-        renderer.renderLevel(this.levelContainer, camera, viewport)
-
+        if (!services.inputs().keyClick(RawInput.KEY_K)) {
+            renderer.renderLevel(this.commonRenderer, camera, viewport)
+        }
+        
         clickMenu.renderMenu()
     }
 
