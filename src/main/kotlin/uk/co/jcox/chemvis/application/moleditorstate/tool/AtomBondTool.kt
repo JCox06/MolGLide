@@ -61,7 +61,7 @@ class AtomBondTool(
     }
 
     private fun addAtomToMolecule(molInsertion: Mode.AtomInsertion) {
-        val atomReplacementAction = AtomReplacementAction(molInsertion.srcAtom, toolViewUI.getInsert())
+        val atomReplacementAction = AtomReplacementAction(molInsertion.srcAtom, toolViewUI.getInsert().symbol)
         actionManager.executeAction(atomReplacementAction)
         toolMode = Mode.PostReplacement(molInsertion.srcAtom)
     }

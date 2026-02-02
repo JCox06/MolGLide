@@ -22,7 +22,7 @@ class ChemBond(
      */
     var centredBond = false
 
-    var bisectorNudge = Vector3f(0.0f, -1.0f, 0.0f)
+    var bisectorNudge = Vector3f(0.0f, -0.5f, 0.0f)
 
     var flipDoubleBond = false
 

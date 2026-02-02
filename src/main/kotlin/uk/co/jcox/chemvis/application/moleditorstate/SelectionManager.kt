@@ -14,8 +14,13 @@ class SelectionManager {
     var primarySelection: Type = Type.None
         private set
 
+    var lock = false
+
 
     fun update(levelContainer: LevelContainer, xPos: Float, yPos: Float) {
+        if (lock) {
+            return
+        }
         primarySelection = findPrimarySelection(levelContainer, Vector3f(xPos, yPos, OrganicEditorState.ATOM_PLANE))
     }
 

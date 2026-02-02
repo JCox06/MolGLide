@@ -6,22 +6,22 @@ import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 
 class AtomReplacementAction (
     private val atom: ChemAtom,
-    private val toReplace: AtomInsert,
+    private val toReplace: String,
 ) : IAction {
 
-    private var oldAtom = AtomInsert.CARBON
+    private var oldAtom = "C"
 
     override fun execute(levelContainer: LevelContainer) {
         val parent = atom.parent
-        oldAtom = AtomInsert.fromSymbol(atom.getSymbol())
-        parent.updateSymbol(atom, toReplace.symbol)
-        atom.visible = toReplace != AtomInsert.CARBON
+        oldAtom = atom.getSymbol()
+        parent.updateSymbol(atom, toReplace)
+        atom.visible = toReplace != "C"
     }
 
     override fun undo(levelContainer: LevelContainer) {
         val parent = atom.parent
-        parent.updateSymbol(atom, oldAtom.symbol)
+        parent.updateSymbol(atom, oldAtom)
 
-        atom.visible = oldAtom != AtomInsert.CARBON
+        atom.visible = oldAtom != "C"
     }
 }
