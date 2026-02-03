@@ -33,6 +33,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeAromacityActio
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeBondOrderAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.FlipBondAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.InsertExplicitMethylAction
 import java.awt.Desktop
 import java.io.File
 import java.nio.ByteBuffer
@@ -71,7 +72,9 @@ class ClickMenu (
 
         ImGui.text("Enter a custom group")
 
-        ImGui.setKeyboardFocusHere()
+        if (ImGui.isWindowAppearing()) {
+            ImGui.setKeyboardFocusHere()
+        }
         ImGui.inputText("##", popup.text)
 
         ImGui.sameLine()
@@ -97,11 +100,18 @@ class ClickMenu (
 
         val selection = selectionManager.primarySelection
         if (selection is SelectionManager.Type.ActiveAtom) {
-            val element = Elements.ofString(customInput)
 
-            if (element != Elements.Unknown || customInput == "R") {
+            if (customInput == "Me") {
+                val action = InsertExplicitMethylAction(selection.atom)
+                actionManager.executeAction(action)
+                return
+            }
+
+            val element = Elements.ofString(customInput)
+            if (element != Elements.Unknown) {
                 val replacement = AtomReplacementAction(selection.atom, customInput)
                 actionManager.executeAction(replacement)
+                return
             }
         }
     }

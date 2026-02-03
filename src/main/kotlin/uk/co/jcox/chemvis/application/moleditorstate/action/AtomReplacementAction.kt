@@ -4,7 +4,7 @@ import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.LevelContainer
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 
-class AtomReplacementAction (
+open class AtomReplacementAction (
     private val atom: ChemAtom,
     private val toReplace: String,
 ) : IAction {

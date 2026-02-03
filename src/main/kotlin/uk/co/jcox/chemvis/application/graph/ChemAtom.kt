@@ -20,6 +20,14 @@ class ChemAtom (
     lateinit var parent: ChemMolecule
 
 
+    /**
+     * This is to allow methyl groups to be optionally labeled as Me
+     * For other groups such as Et, Pr, I don' think this method is required
+     * I can't seem to find a way to do this directly on the CDK so this is one example where the Depiction Generator will not respect the choice of the Me group
+     */
+    var priorityName: String? = null
+
+
     fun getWorldPosition() : Vector3f {
         val atomX = iAtom.point2d.x.toFloat()
         val atomY = iAtom.point2d.y.toFloat()

@@ -9,7 +9,7 @@ class ActionManager (
 
     private val pastActions = ArrayDeque<IAction>()
     private val discardedActions = ArrayDeque<IAction>()
-    var isDirty = false
+    var isDirty = true
     private set
 
     fun executeAction(action: IAction) {

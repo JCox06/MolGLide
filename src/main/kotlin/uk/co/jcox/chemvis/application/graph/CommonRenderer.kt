@@ -171,19 +171,28 @@ class CommonRenderer (
             if (! atom.visible) {
                 return@forEach
             }
-            val symbol = atom.getSymbol()
-            val position = atom.getWorldPosition()
-
-            var relationalElement: RelationalFormulaStringElement? = null
-            val groupString = createProtonFormulaString(atom)
-            val groupPos = atom.implicitHydrogenPos
-            if (groupString != "") {
-                relationalElement = RelationalFormulaStringElement(groupString, groupPos)
-            }
-            val textElement = FormulaStringElement(symbol, position, relationalElement)
-            textElements += textElement
-
+            atom.priorityName?.let { overrideAtomString(atom, it) } ?: run {createNormalAtomString(atom)}
         }
+    }
+
+
+    private fun createNormalAtomString(atom: ChemAtom) {
+        val symbol = atom.getSymbol()
+        val position = atom.getWorldPosition()
+
+        var relationalElement: RelationalFormulaStringElement? = null
+        val groupString = createProtonFormulaString(atom)
+        val groupPos = atom.implicitHydrogenPos
+        if (groupString != "") {
+            relationalElement = RelationalFormulaStringElement(groupString, groupPos)
+        }
+        val textElement = FormulaStringElement(symbol, position, relationalElement)
+        textElements += textElement
+    }
+
+    private fun overrideAtomString(atom: ChemAtom, label: String) {
+        val textElement = FormulaStringElement(label, atom.getWorldPosition(), null)
+        textElements += textElement
     }
 
     private fun createProtonFormulaString(chemAtom: ChemAtom) : String {

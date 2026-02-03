@@ -245,6 +245,6 @@ class LevelRenderer(
 
 
     companion object {
-        const val LINE_FACTOR = 0.5f
+        const val LINE_FACTOR = 0.40f
     }
 }
