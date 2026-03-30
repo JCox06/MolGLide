@@ -75,4 +75,7 @@ abstract class Tool<T : ToolViewUI>(
     open fun allowIndividualBondInteractions() : Boolean {
         return true
     }
+
+    @Deprecated("Temp method while I think of somethign better to handle compelx transient UI")
+    open fun onCustomTransientUIRender() {}
 }

@@ -18,6 +18,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.tool.AtomBondTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.CommonTemplateTool
 import uk.co.jcox.chemvis.application.moleditorstate.tool.ImplicitAtomMoveTool
+import uk.co.jcox.chemvis.application.moleditorstate.tool.SelectionTool
 import uk.co.jcox.chemvis.application.ui.Icons
 import uk.co.jcox.chemvis.application.ui.tool.AtomBondToolView
 import uk.co.jcox.chemvis.application.ui.tool.CommonTemplateToolView
@@ -143,6 +144,11 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
         val implicitGroupMoveView = ToolViewUI()
         toolRegistry.registerTool("implicit_group_move_tool", "${Icons.MOVE_ICON} Implicit Move Tool", implicitGroupMoveView) { state ->
             return@registerTool ImplicitAtomMoveTool(commonTemplateToolView, state.renderingContext, services.inputs(), state.camera, state.levelContainer, state.selectionManager, state.actionManager)
+        }
+
+
+        toolRegistry.registerTool("select_tool", "Selection Tool", implicitGroupMoveView) { state ->
+            return@registerTool SelectionTool(implicitGroupMoveView, state.renderingContext, services.inputs(), state.camera, state.levelContainer, state.selectionManager, state.actionManager)
         }
     }
 

@@ -33,7 +33,7 @@ class ChemAtom (
         val atomY = iAtom.point2d.y.toFloat()
         val parentPos = parent.positionOffset
 
-        val worldPos = parentPos + Vector3f(atomX, atomY, 0.0f)
+        val worldPos = parentPos + Vector3f(atomX, atomY,0.0f)
         return worldPos
     }
 
@@ -43,6 +43,12 @@ class ChemAtom (
 
     fun setInnerPosition(x: Float, y: Float) {
         iAtom.point2d = Point2d(x.toDouble(), y.toDouble())
+    }
+
+    fun getInnerPosition() : Vector2f {
+        val atomX = iAtom.point2d.x.toFloat()
+        val atomY = iAtom.point2d.y.toFloat()
+        return Vector2f(atomX, atomY)
     }
 
     enum class RelationalPos(val mod: Vector3f) : Serializable {
