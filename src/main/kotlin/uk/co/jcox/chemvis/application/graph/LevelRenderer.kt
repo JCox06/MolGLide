@@ -34,7 +34,7 @@ class LevelRenderer(
 
     private fun renderLines(commonRenderer: CommonRenderer, camera2D: Camera2D, viewport: Vector2f) {
         val program = resources.useProgram(MolGLide.SHADER_LINE)
-        val vertexArray = resources.getMesh(CVEngine.MESH_HOLDER_LINE)
+        val vertexArray = resources.getMesh(MolGLide.MESH_HOLDER_LINE)
         program.uniform("uPerspective", camera2D.combined())
         program.uniform("u_viewport", viewport)
         program.uniform("uModel", Matrix4f())
@@ -47,7 +47,7 @@ class LevelRenderer(
         commonRenderer.getLineData().forEach { line ->
             packLineData(line, lineData)
         }
-        instancer.drawLines(vertexArray, lineData)
+        instancer.drawMeshes(vertexArray, lineData)
 
         lineData.clear()
         
@@ -56,7 +56,7 @@ class LevelRenderer(
         commonRenderer.getWedgeData().forEach { line ->
             packLineData(line, lineData)
         }
-        instancer.drawLines(vertexArray, lineData)
+        instancer.drawMeshes(vertexArray, lineData)
         
         lineData.clear()
         
@@ -64,7 +64,7 @@ class LevelRenderer(
         commonRenderer.getDashedData().forEach { line ->
             packLineData(line, lineData)
         }
-        instancer.drawLines(vertexArray, lineData)
+        instancer.drawMeshes(vertexArray, lineData)
 
         lineData.clear()
 
