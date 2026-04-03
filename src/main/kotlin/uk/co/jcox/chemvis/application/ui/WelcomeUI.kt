@@ -19,6 +19,8 @@ class WelcomeUI (
 
     val msaaSamples = IntArray(1)
 
+    private var showCVMetrics = false
+
     fun setup() {
         scale[0] = ImGui.getIO().fontGlobalScale
         msaaSamples[0] = 4.coerceIn(1, services.getPlatformMSAAMaxSamples())
@@ -53,6 +55,28 @@ class WelcomeUI (
 
         ImGui.sliderInt("MSAA Samples", msaaSamples, 1, services.getPlatformMSAAMaxSamples())
 
+        if (ImGui.button("Show CV Metrics")) {
+            showCVMetrics = true
+        }
+
+        if (showCVMetrics) {
+            drawMetrics()
+        }
+
+        ImGui.end()
+    }
+
+    private fun drawMetrics() {
+        ImGui.begin("CVMetrics")
+
+        ImGui.text("Average Draw Calls / Frame: ${services.getMetrics().getAverageDrawPerFrame()}")
+        if (ImGui.button("Reset")) {
+            services.getMetrics().resetMetrics()
+        }
+        ImGui.sameLine()
+        if (ImGui.button("Close")) {
+            showCVMetrics = false
+        }
         ImGui.end()
     }
 }

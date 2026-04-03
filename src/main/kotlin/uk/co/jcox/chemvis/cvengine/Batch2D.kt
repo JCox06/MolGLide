@@ -11,7 +11,8 @@ class Batch2D (
     //[3 float pos] [2 float texture] = 5 floats = (Standard Vertex Set)
     //todo there is an error if during one #addToBatch call it overloads the whole buffer everthing breaks
     //so for the meantime the capacity has been increased
-    private val vertexCapacity: Int = 500
+    private val metrics: CVMetrics,
+    private val vertexCapacity: Int = 500,
 ) : AutoCloseable {
 
     private val batchSizeBytes = vertexCapacity * VERTEX_SIZE_BYTES
@@ -50,9 +51,9 @@ class Batch2D (
     }
 
     private var ready = false
-    private var mode = Mode.TRIANGLES
+    private var mode = PrimitiveMode.TRIANGLES
 
-    fun begin(mode: Mode) {
+    fun begin(mode: PrimitiveMode) {
         if (this.ready) {
             throw RuntimeException("Begin called twice - Batcher was already ready")
         }
@@ -89,7 +90,7 @@ class Batch2D (
     }
 
 
-    fun end() : Mode {
+    fun end() : PrimitiveMode {
         if (!this.ready) {
             throw RuntimeException("End called twice - Batcher has already finished")
         }
@@ -121,7 +122,7 @@ class Batch2D (
 
         GL30.glBindVertexArray(0)
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
-
+        metrics.completeDraw()
         return mode
     }
 
@@ -138,9 +139,5 @@ class Batch2D (
         GL30.glDeleteVertexArrays(this.glVertexArray)
     }
 
-    enum class Mode (val openGlID: Int) {
-        TRIANGLES(GL11.GL_TRIANGLES),
-        FAN(GL11.GL_TRIANGLE_FAN),
-        LINE(GL11.GL_LINES),
-    }
+
 }

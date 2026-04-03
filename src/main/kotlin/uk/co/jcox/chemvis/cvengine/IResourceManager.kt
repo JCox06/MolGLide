@@ -32,7 +32,7 @@ interface IResourceManager {
      * @param mesh the cpu side mesh to manage
      * @param instancedRenderer An instance renderer - Usually the Engine's Instance Renderer
      */
-    fun manageMesh(id: String, mesh: Mesh, instancedRenderer: InstancedRenderer)
+    fun manageMesh(id: String, mesh: Mesh, instancedRenderer: InstancedRenderer, mode: PrimitiveMode,  attributeMapper: () -> Int)
 
     fun manageMaterial(id: String, material: Material)
 

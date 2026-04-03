@@ -18,7 +18,9 @@ import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
+import org.lwjgl.opengl.GL33
 import org.lwjgl.opengl.GL43
 import org.lwjgl.opengl.GLDebugMessageCallback
 import org.lwjgl.system.Callback
@@ -49,6 +51,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     private var callback: GLDebugMessageCallback? = null
 
+    private val metrics = CVMetrics()
 
     private val mainTaskDispatcher = SynchronousTaskDispatcher()
     private val workerJobs = SupervisorJob()
@@ -116,8 +119,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private fun initialiseCoreServices() {
         Logger.info{"Initialising CV3D core services..."}
         this.inputManager = GLFWInputManager(windowHandle)
-        this.batcher = Batch2D()
-        this.instancer = InstancedRenderer()
+        this.batcher = Batch2D(metrics)
+        this.instancer = InstancedRenderer(metrics)
         this.resourceManager = ResourceManager()
         this.fileService = NativeFIleService()
         this.fileService.init(windowHandle)
@@ -128,8 +131,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private fun initialiseIntegratedResources() {
         Logger.info{"Loading integrated resources..."}
         this.resourceManager.loadShadersFromDisc(SHADER_SIMPLE_TEXTURE, File("data/integrated/shaders/simpleTexture.vert"), File("data/integrated/shaders/simpleTexture.frag"), null)
-
-        this.resourceManager.manageMesh(MESH_HOLDER_LINE, Shaper2D.line(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f), instancer)
     }
 
 
@@ -199,7 +200,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
             if (inputManager.keyClick(RawInput.KEY_Q) && inputManager.keyClick(RawInput.LCTRL)) {
                 shutdown()
             }
-
             inputManager.update()
             glfwImGui.newFrame()
             openGlImGui.newFrame()
@@ -240,6 +240,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
             GLFW.glfwSwapBuffers(this.windowHandle)
             GLFW.glfwPollEvents()
+            metrics.completeFrame()
+
         }
         application.cleanup()
     }
@@ -427,14 +429,30 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         return this.fileService
     }
 
+    override fun getMetrics(): CVMetrics {
+        return metrics
+    }
+
     companion object {
         const val SHADER_SIMPLE_TEXTURE: String = "integrated/simple_font"
         const val STD_CHARACTER_SET: String = "@!?- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12345678"
-        const val MESH_HOLDER_LINE: String = "integrated/unit_line"
 
         //[3 float pos] [2 float texture] = 5 floats
         //Application-Wide standard vertex set
         const val VERTEX_SIZE = 5
         const val VERTEX_SIZE_BYTES = 5 * Float.SIZE_BYTES
+
+        val NO_MAP: () -> Int = {0}
+
+
+        val POS_SCALE_MAP: () -> Int = {
+            GL20.glVertexAttribPointer(2, 3, GL11.GL_FLOAT, false, 4 * Float.SIZE_BYTES, 0L)
+            GL20.glVertexAttribPointer(3, 1, GL11.GL_FLOAT, false, 4 * Float.SIZE_BYTES, 3L * Float.SIZE_BYTES)
+            GL20.glEnableVertexAttribArray(2)
+            GL20.glEnableVertexAttribArray(3)
+            GL33.glVertexAttribDivisor(2, 1)
+            GL33.glVertexAttribDivisor(3, 1)
+            4
+        }
     }
 }

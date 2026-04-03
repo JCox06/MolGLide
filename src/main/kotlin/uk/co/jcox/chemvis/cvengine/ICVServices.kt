@@ -52,4 +52,6 @@ interface ICVServices {
     fun getMainEngineScope(): CoroutineScope
 
     fun getFileServices() : IFileServices
+
+    fun getMetrics() : CVMetrics
 }
