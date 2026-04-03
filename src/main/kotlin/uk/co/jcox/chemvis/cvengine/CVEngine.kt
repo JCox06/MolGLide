@@ -49,6 +49,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     private var callback: GLDebugMessageCallback? = null
 
+    private val metrics = CVMetrics()
 
     private val mainTaskDispatcher = SynchronousTaskDispatcher()
     private val workerJobs = SupervisorJob()
@@ -116,8 +117,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private fun initialiseCoreServices() {
         Logger.info{"Initialising CV3D core services..."}
         this.inputManager = GLFWInputManager(windowHandle)
-        this.batcher = Batch2D()
-        this.instancer = InstancedRenderer()
+        this.batcher = Batch2D(metrics)
+        this.instancer = InstancedRenderer(metrics)
         this.resourceManager = ResourceManager()
         this.fileService = NativeFIleService()
         this.fileService.init(windowHandle)
@@ -197,7 +198,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
             if (inputManager.keyClick(RawInput.KEY_Q) && inputManager.keyClick(RawInput.LCTRL)) {
                 shutdown()
             }
-
             inputManager.update()
             glfwImGui.newFrame()
             openGlImGui.newFrame()
@@ -238,6 +238,8 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
             GLFW.glfwSwapBuffers(this.windowHandle)
             GLFW.glfwPollEvents()
+            metrics.completeFrame()
+
         }
         application.cleanup()
     }
@@ -423,6 +425,10 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     override fun getFileServices(): IFileServices {
         return this.fileService
+    }
+
+    override fun getMetrics(): CVMetrics {
+        return metrics
     }
 
     companion object {

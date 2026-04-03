@@ -6,7 +6,7 @@ import org.lwjgl.opengl.GL30
 import org.lwjgl.opengl.GL33
 import java.lang.AutoCloseable
 
-class InstancedRenderer : AutoCloseable {
+class InstancedRenderer(private val metrics: CVMetrics) : AutoCloseable {
 
     private var sharedVertexBuffer: Int = 0
 
@@ -33,6 +33,7 @@ class InstancedRenderer : AutoCloseable {
             if (instancedData.size - loopRun * packed > packed) {
                 val splice = instancedData.slice(loopRun * packed..<packed * (1 + loopRun))
                 drawInstancedMesh(sharedVertexBuffer, splice.toFloatArray(), mesh.vertices, packed / mesh.openGLMappings)
+                metrics.completeDraw()
                 loopRun++
             } else {
                 val data = instancedData.slice(loopRun * packed..<instancedData.size)
@@ -40,6 +41,7 @@ class InstancedRenderer : AutoCloseable {
                 //If the count parameter is wrong, it looks like the level view and the struct view get out of the sync
                 //Because I can only assume data is left on the GPU and it just renders the data there
                 drawInstancedMesh(sharedVertexBuffer, data.toFloatArray(), mesh.vertices, data.size / mesh.openGLMappings)
+                metrics.completeDraw()
                 break
             }
         }

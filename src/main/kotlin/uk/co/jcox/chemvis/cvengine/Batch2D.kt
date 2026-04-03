@@ -11,7 +11,8 @@ class Batch2D (
     //[3 float pos] [2 float texture] = 5 floats = (Standard Vertex Set)
     //todo there is an error if during one #addToBatch call it overloads the whole buffer everthing breaks
     //so for the meantime the capacity has been increased
-    private val vertexCapacity: Int = 500
+    private val metrics: CVMetrics,
+    private val vertexCapacity: Int = 500,
 ) : AutoCloseable {
 
     private val batchSizeBytes = vertexCapacity * VERTEX_SIZE_BYTES
@@ -121,7 +122,7 @@ class Batch2D (
 
         GL30.glBindVertexArray(0)
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
-
+        metrics.completeDraw()
         return mode
     }
 
