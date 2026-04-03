@@ -28,6 +28,8 @@ class AtomInsertionAction (
     private var wasVisibleBefore = false
 
     override fun execute(levelContainer: LevelContainer) {
+
+        wasVisibleBefore = srcAtom.visible
        //Turn off required hydrogens
         disableHydrogensForCarbon(levelContainer)
 
@@ -80,9 +82,6 @@ class AtomInsertionAction (
 
 
     private fun disableHydrogensForCarbon(levelContainer: LevelContainer) {
-        wasVisibleBefore = srcAtom.visible
-
-
         val srcAtomSymbol = srcAtom.getSymbol()
 
         if (srcAtomSymbol == AtomInsert.CARBON.symbol) {

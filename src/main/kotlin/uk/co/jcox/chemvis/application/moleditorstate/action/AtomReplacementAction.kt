@@ -11,10 +11,13 @@ open class AtomReplacementAction (
 
     private var oldAtom = "C"
 
+    private var wasVisible = false
+
     override fun execute(levelContainer: LevelContainer) {
         val parent = atom.parent
         oldAtom = atom.getSymbol()
         parent.updateSymbol(atom, toReplace)
+        wasVisible = atom.visible
         atom.visible = toReplace != "C"
     }
 
@@ -22,6 +25,6 @@ open class AtomReplacementAction (
         val parent = atom.parent
         parent.updateSymbol(atom, oldAtom)
 
-        atom.visible = oldAtom != "C"
+        atom.visible = wasVisible
     }
 }
