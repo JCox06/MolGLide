@@ -127,7 +127,7 @@ class LevelRenderer(
         renderX -= dx / 2
         renderY -= dy / 2
 
-        batcher.begin(Batch2D.Mode.TRIANGLES)
+        batcher.begin(PrimitiveMode.TRIANGLES)
 
         for (c in label) {
             var character = c
@@ -225,19 +225,36 @@ class LevelRenderer(
         shapeProgram.uniform("uLight", themeStyleManager.lineColour)
         shapeProgram.uniform("uModel", Matrix4f())
 
-        //todo instance this - THis is the cause of performance problems = Too many draw calls
-        batcher.begin(Batch2D.Mode.FAN)
+//        //todo instance this - THis is the cause of performance problems = Too many draw calls
+//        batcher.begin(PrimitiveMode.FAN)
+//        for (bond in bonds) {
+//            val atomAPos = bond.start
+//            val atomBPos = bond.end
+//
+//            val meshA = Shaper2D.circle(atomAPos.x, atomAPos.y, size)
+//            val meshB = Shaper2D.circle(atomBPos.x, atomBPos.y, size)
+//
+//            batcher.addBatch(meshA.pack(), meshA.indices)
+//            batcher.addBatch(meshB.pack(), meshB.indices)
+//        }
+//        batcher.end()
+//
+
+
+        val instanceData = mutableListOf<Float>()
         for (bond in bonds) {
-            val atomAPos = bond.start
-            val atomBPos = bond.end
-
-            val meshA = Shaper2D.circle(atomAPos.x, atomAPos.y, size)
-            val meshB = Shaper2D.circle(atomBPos.x, atomBPos.y, size)
-
-            batcher.addBatch(meshA.pack(), meshA.indices)
-            batcher.addBatch(meshB.pack(), meshB.indices)
+            instanceData.add(bond.start.x)
+            instanceData.add(bond.start.y)
+            instanceData.add(bond.start.z)
+            instanceData.add(size)
+            instanceData.add(bond.end.x)
+            instanceData.add(bond.end.y)
+            instanceData.add(bond.end.z)
+            instanceData.add(size)
         }
-        batcher.end()
+
+        val mesh = resources.getMesh(MolGLide.BOND_CAPS_MESH)
+        instancer.drawMeshes(mesh, instanceData)
 
         shapeProgram.uniform("uIgnoreTextures", 0)
 

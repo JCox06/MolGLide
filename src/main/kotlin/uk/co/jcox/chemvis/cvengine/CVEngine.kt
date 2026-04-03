@@ -18,7 +18,9 @@ import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL30
+import org.lwjgl.opengl.GL33
 import org.lwjgl.opengl.GL43
 import org.lwjgl.opengl.GLDebugMessageCallback
 import org.lwjgl.system.Callback
@@ -441,5 +443,16 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         const val VERTEX_SIZE_BYTES = 5 * Float.SIZE_BYTES
 
         val NO_MAP: () -> Int = {0}
+
+
+        val POS_SCALE_MAP: () -> Int = {
+            GL20.glVertexAttribPointer(2, 3, GL11.GL_FLOAT, false, 4 * Float.SIZE_BYTES, 0L)
+            GL20.glVertexAttribPointer(3, 1, GL11.GL_FLOAT, false, 4 * Float.SIZE_BYTES, 3L * Float.SIZE_BYTES)
+            GL20.glEnableVertexAttribArray(2)
+            GL20.glEnableVertexAttribArray(3)
+            GL33.glVertexAttribDivisor(2, 1)
+            GL33.glVertexAttribDivisor(3, 1)
+            4
+        }
     }
 }

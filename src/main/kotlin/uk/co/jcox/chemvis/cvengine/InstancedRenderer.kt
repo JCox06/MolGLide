@@ -32,7 +32,7 @@ class InstancedRenderer(private val metrics: CVMetrics) : AutoCloseable {
         while (true) {
             if (instancedData.size - loopRun * packed > packed) {
                 val splice = instancedData.slice(loopRun * packed..<packed * (1 + loopRun))
-                drawInstancedMesh(sharedVertexBuffer, splice.toFloatArray(), mesh.vertices, packed / mesh.openGLMappings)
+                drawInstancedMesh(mesh.primitiveMode, sharedVertexBuffer, splice.toFloatArray(), mesh.vertices, packed / mesh.openGLMappings)
                 metrics.completeDraw()
                 loopRun++
             } else {
@@ -40,18 +40,18 @@ class InstancedRenderer(private val metrics: CVMetrics) : AutoCloseable {
 
                 //If the count parameter is wrong, it looks like the level view and the struct view get out of the sync
                 //Because I can only assume data is left on the GPU and it just renders the data there
-                drawInstancedMesh(sharedVertexBuffer, data.toFloatArray(), mesh.vertices, data.size / mesh.openGLMappings)
+                drawInstancedMesh(mesh.primitiveMode, sharedVertexBuffer, data.toFloatArray(), mesh.vertices, data.size / mesh.openGLMappings)
                 metrics.completeDraw()
                 break
             }
         }
     }
 
-    private fun drawInstancedMesh(bufferObject: Int, splicedData: FloatArray, vertices: Int, count: Int) {
+    private fun drawInstancedMesh(primitive: PrimitiveMode, bufferObject: Int, splicedData: FloatArray, vertices: Int, count: Int) {
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, bufferObject)
         GL15.glBufferSubData(GL15.GL_ARRAY_BUFFER, 0L, splicedData)
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0)
-        GL33.glDrawElementsInstanced(GL11.GL_POINTS, vertices, GL11.GL_UNSIGNED_INT, 0,count)
+        GL33.glDrawElementsInstanced(primitive.openGlID, vertices, GL11.GL_UNSIGNED_INT, 0,count)
     }
 
     private fun getMaxPackedData(mesh: GLMesh, limitedSize: Int) : Int {

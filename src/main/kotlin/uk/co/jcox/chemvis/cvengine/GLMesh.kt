@@ -5,4 +5,5 @@ data class GLMesh(
     val buffers: List<Int>,
     val vertices: Int,
     val openGLMappings: Int,
+    val primitiveMode: PrimitiveMode,
 )

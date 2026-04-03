@@ -51,9 +51,9 @@ class Batch2D (
     }
 
     private var ready = false
-    private var mode = Mode.TRIANGLES
+    private var mode = PrimitiveMode.TRIANGLES
 
-    fun begin(mode: Mode) {
+    fun begin(mode: PrimitiveMode) {
         if (this.ready) {
             throw RuntimeException("Begin called twice - Batcher was already ready")
         }
@@ -90,7 +90,7 @@ class Batch2D (
     }
 
 
-    fun end() : Mode {
+    fun end() : PrimitiveMode {
         if (!this.ready) {
             throw RuntimeException("End called twice - Batcher has already finished")
         }
@@ -139,9 +139,5 @@ class Batch2D (
         GL30.glDeleteVertexArrays(this.glVertexArray)
     }
 
-    enum class Mode (val openGlID: Int) {
-        TRIANGLES(GL11.GL_TRIANGLES),
-        FAN(GL11.GL_TRIANGLE_FAN),
-        LINE(GL11.GL_LINES),
-    }
+
 }

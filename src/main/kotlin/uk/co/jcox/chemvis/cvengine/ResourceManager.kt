@@ -75,12 +75,12 @@ class ResourceManager : IResourceManager{
         }
     }
 
-    override fun manageMesh(id: String, mesh: Mesh, instancedRenderer: InstancedRenderer, attributeMapper: () -> Int) {
+    override fun manageMesh(id: String, mesh: Mesh, instancedRenderer: InstancedRenderer, mode: PrimitiveMode,  attributeMapper: () -> Int) {
         Logger.info { "Managing external mesh and loading into OpenGL $id" }
 
         //Meshes that are sent to the ResourceManager need to be first loaded into OpenGL
         //Once loaded they can be retrieved as a VAO
-        meshes[id] = loadMeshIntoOpenGL(id, mesh, instancedRenderer, attributeMapper)
+        meshes[id] = loadMeshIntoOpenGL(id, mesh, instancedRenderer, mode, attributeMapper)
     }
 
     override fun destroyMesh(id: String) {
@@ -432,7 +432,7 @@ class ResourceManager : IResourceManager{
     }
 
 
-    private fun loadMeshIntoOpenGL(meshID: String, mesh: Mesh, instancedRenderer: InstancedRenderer, attributeMapper: () -> Int) : GLMesh {
+    private fun loadMeshIntoOpenGL(meshID: String, mesh: Mesh, instancedRenderer: InstancedRenderer, mode: PrimitiveMode, attributeMapper: () -> Int) : GLMesh {
 
         //Currently only supports meshes that should be lines
 
@@ -462,7 +462,7 @@ class ResourceManager : IResourceManager{
 
         val bufferList = listOf(vertexBuffer, elementBuffer)
 
-        val gpuSideMesh = GLMesh(vertexArray, bufferList, mesh.indices.size, mappings)
+        val gpuSideMesh = GLMesh(vertexArray, bufferList, mesh.indices.size, mappings, mode)
 
         GL30.glBindVertexArray(0)
 
