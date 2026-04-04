@@ -1,8 +1,6 @@
 package uk.co.jcox.chemvis.application.mainstate
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+
 import org.apache.commons.logging.Log
 import org.apache.jena.atlas.io.IO
 import org.joml.Vector2f
@@ -88,7 +86,7 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
         session.actionManager.markNotDirty()
         session.actionManager.clearHistory()
 
-        services.getMainEngineScope().launch (Dispatchers.IO) {
+        services.getScheduler().runAsync {
             try {
                 val fileOutput = FileOutputStream(file)
                 ObjectOutputStream(fileOutput).use {
@@ -112,9 +110,9 @@ class MainState (val services: ICVServices, renderContext: IRenderTargetContext)
             return
         }
 
-        services.getMainEngineScope().launch(Dispatchers.IO) {
+        services.getScheduler().runAsync {
             val levelContainer = levelLoader.loadLevel(file)
-            services.getMainEngineScope().launch {
+            services.getScheduler().runSync {
                 Logger.info { "Creating OrganicEditorState and associated RenderTarget" }
                 createNewEditor(samples, levelContainer, file)
                 bulkOperationMode = false

@@ -6,9 +6,7 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiKey
 import imgui.type.ImBoolean
 import imgui.type.ImString
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+
 import org.checkerframework.checker.units.qual.mol
 import org.openscience.cdk.config.Elements
 import org.openscience.cdk.depict.DepictionGenerator
@@ -35,7 +33,6 @@ class ClickMenu (
     private val selectionManager: SelectionManager,
     private val actionManager: ActionManager,
     private val levelContainer: LevelContainer,
-    private val engineScope: CoroutineScope,
     private val services: ICVServices,
 ) {
 
@@ -208,7 +205,7 @@ class ClickMenu (
 
             if (ImGui.menuItem("Copy SMILES")) {
                 val content = molecule.getCanonicalString()
-                services.setClipboardContent(content)
+                services.getSystemServices().setClipboardContent(content)
             }
             ImGui.endMenu()
             }
@@ -287,9 +284,11 @@ class ClickMenu (
             val depiction = dg.depict(popup.molecule.iContainer)
             val file = File("image.svg")
 
-            engineScope.launch(Dispatchers.IO) {
+            services.getScheduler().runAsync {
                 file.writeText(depiction.toSvgStr())
-                Desktop.getDesktop().open(file)
+                services.getScheduler().runSync {
+                    services.getSystemServices().openResource(file.absoluteFile.toString())
+                }
             }
 
             activePopup = ActivePopup.None

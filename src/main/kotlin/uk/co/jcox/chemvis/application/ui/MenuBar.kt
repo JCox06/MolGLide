@@ -6,10 +6,8 @@ import uk.co.jcox.chemvis.application.ToolRegistry
 import uk.co.jcox.chemvis.application.mainstate.MainState
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.cvengine.ICVServices
-import uk.co.jcox.chemvis.cvengine.IFileServices
-import java.awt.Desktop
+import uk.co.jcox.chemvis.cvengine.ISystemService
 import java.io.File
-import java.net.URI
 
 class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
@@ -207,9 +205,9 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
         }
 
         if (ImGui.menuItem("${Icons.DATABASE_ICON} Load From Disc")) {
-            val fileOperations: IFileServices = engineManager.getFileServices()
+            val fileOperations: ISystemService = engineManager.getSystemServices()
             val file= fileOperations.askUserChooseFile("mgf", "MolGLide Graph File")
-            if (file is IFileServices.FileOperation.FileRetrieved) {
+            if (file is ISystemService.FileOperation.FileRetrieved) {
                 openProject(file.file)
             }
         }
@@ -226,9 +224,9 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
 
     private fun askAndSave() {
-        val fileOperations: IFileServices = engineManager.getFileServices()
+        val fileOperations: ISystemService = engineManager.getSystemServices()
         val file = fileOperations.askUserSaveFile("mgf", "MolGLide Graph File")
-        if (file is IFileServices.FileOperation.FileRetrieved) {
+        if (file is ISystemService.FileOperation.FileRetrieved) {
             saveProjectAs(file.file)
         }
     }
@@ -245,7 +243,7 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
     private fun drawAboutMenu() {
         if (ImGui.menuItem("${Icons.GITHUB_ICON} Visit Repository")) {
-            engineManager.openResource(MolGLide.WEBSITE)
+            engineManager.getSystemServices().openResource(MolGLide.WEBSITE)
         }
 
         if (ImGui.menuItem("About MolGLide")) {

@@ -16,7 +16,6 @@ import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.cvengine.ICVServices
-import uk.co.jcox.chemvis.cvengine.IInputSubscriber
 import uk.co.jcox.chemvis.cvengine.RenderTarget
 import java.io.File
 
@@ -24,8 +23,6 @@ class ApplicationUI (
     val appManager: MainState,
     val engineManager: ICVServices,
 ) {
-
-
 
     private val menuBar = MenuBar(appManager, engineManager)
     private val welcomeUI = WelcomeUI(engineManager)
@@ -115,7 +112,7 @@ class ApplicationUI (
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, renderTarget.getSamplableFrameBuffer())
         GL11.glReadPixels(0, 0, width, height, GL11.GL_RGBA, GL11.GL_UNSIGNED_INT, imgBuff)
 
-        val saveImgThread = Runnable {
+       engineManager.getScheduler().runAsync() {
             val home = System.getProperty("user.home")
             val dateTime = LocalDateTime.now()
             val molphoto = File(home, "Pictures/MolGLide")
@@ -123,11 +120,11 @@ class ApplicationUI (
                 molphoto.mkdir()
             }
 
-            Utils.saveBufferToImg(File(molphoto.toString(), dateTime.toString()), imgBuff, width, height, engineManager)
+           val file =  Utils.saveBufferToImg(File(molphoto.toString(), dateTime.toString()), imgBuff, width, height)
+           engineManager.getScheduler().runSync {
+               engineManager.getSystemServices().openResource(file.absolutePath.toString())
+           }
         }
-
-        val thread = Thread(saveImgThread)
-        thread.start()
     }
 
 

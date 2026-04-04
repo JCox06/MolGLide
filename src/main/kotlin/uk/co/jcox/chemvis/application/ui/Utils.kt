@@ -11,7 +11,7 @@ import javax.imageio.ImageIO
 
 object Utils {
 
-    fun saveBufferToImg(file: File, imgBuff: IntBuffer, width: Int, height: Int, services: ICVServices) {
+    fun saveBufferToImg(file: File, imgBuff: IntBuffer, width: Int, height: Int) : File {
 
 
         val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
@@ -33,6 +33,6 @@ object Utils {
         } catch (e: IOException) {
             Logger.error { "Error when saving image ${e.message}"}
         }
-        services.openResource(file.absolutePath.toString())
+        return file
     }
 }

@@ -7,8 +7,6 @@ import imgui.ImVec2
 import imgui.flag.ImGuiConfigFlags
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import org.joml.Vector2f
 import org.joml.Vector2i
 import org.lwjgl.glfw.Callbacks
@@ -19,7 +17,6 @@ import org.lwjgl.system.Callback
 import org.tinylog.Logger
 import java.io.File
 import java.lang.AutoCloseable
-import java.net.URI
 import java.util.Locale.getDefault
 
 class CVEngine(private val name: String) : ICVServices, AutoCloseable {
@@ -32,9 +29,9 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private lateinit var batcher: Batch2D
     private lateinit var instancer: InstancedRenderer
     private lateinit var resourceManager: IResourceManager
-    private lateinit var fileService: IFileServices
+    private lateinit var fileService: ISystemService
 
-
+    private val taskDispatcher = CVScheduler()
 
     private val appRenderStates: MutableMap<String?, ApplicationState> = mutableMapOf()
 
@@ -45,11 +42,6 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private var callback: GLDebugMessageCallback? = null
 
     private val metrics = CVMetrics()
-
-    private val mainTaskDispatcher = SynchronousTaskDispatcher()
-    private val workerJobs = SupervisorJob()
-    private val mainEngineScope = CoroutineScope(workerJobs + mainTaskDispatcher)
-
 
 
     private val viewport = Vector2f()
@@ -117,7 +109,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         this.batcher = Batch2D(metrics)
         this.instancer = InstancedRenderer(metrics)
         this.resourceManager = ResourceManager()
-        this.fileService = NativeFIleService()
+        this.fileService = NativeSystemService()
         this.fileService.init(windowHandle)
         Logger.info{"Success! InputManager, Batcher, Instancer, ResourceManager, and LevelRenderer have all started"}
     }
@@ -218,7 +210,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
             renderAndUpdateStates()
 
-            mainTaskDispatcher.runJobs()
+            taskDispatcher.runAwaitingSyncTasks()
 
             ImGui.render()
             openGlImGui.renderDrawData(ImGui.getDrawData())
@@ -363,7 +355,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         instancer.close()
         resourceManager.destroy()
 
-        workerJobs.cancel()
+        taskDispatcher.close()
 
         this.lwjglErrorCallback?.close()
 
@@ -415,38 +407,16 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
         return GL11.glGetInteger(GL30.GL_MAX_SAMPLES)
     }
 
-
-    override fun getMainEngineScope(): CoroutineScope {
-        return mainEngineScope
+    override fun getScheduler(): IScheduler {
+        return taskDispatcher
     }
 
-    override fun getFileServices(): IFileServices {
+    override fun getSystemServices(): ISystemService {
         return this.fileService
     }
 
     override fun getMetrics(): CVMetrics {
         return metrics
-    }
-
-    override fun setClipboardContent(content: String) {
-        GLFW.glfwSetClipboardString(windowHandle, content)
-    }
-
-    override fun getClipboardContent(): String? {
-        return GLFW.glfwGetClipboardString(windowHandle)
-    }
-
-
-    override fun openResource(resourceLocation: String) {
-        val os = System.getProperty("os.name").lowercase(getDefault())
-        var pb: ProcessBuilder? = null
-
-        if (os.contains("linux")) {
-            pb = ProcessBuilder("xdg-open", resourceLocation)
-        }
-
-        pb?.redirectErrorStream(true)
-        pb?.start()
     }
 
     companion object {

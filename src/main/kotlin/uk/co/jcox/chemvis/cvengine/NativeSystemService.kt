@@ -1,7 +1,5 @@
 package uk.co.jcox.chemvis.cvengine
 
-import org.apache.commons.logging.Log
-import org.lwjgl.PointerBuffer
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWNativeCocoa
 import org.lwjgl.glfw.GLFWNativeWin32
@@ -15,11 +13,11 @@ import org.lwjgl.util.nfd.NFDWindowHandle
 import org.lwjgl.util.nfd.NativeFileDialog
 import org.tinylog.Logger
 import java.io.File
-import java.nio.Buffer
 import java.nio.ByteBuffer
+import java.util.Locale.getDefault
 
-class NativeFIleService (
-) : IFileServices {
+class NativeSystemService (
+) : ISystemService {
 
     private var windowHandle: Long = 0
 
@@ -28,7 +26,7 @@ class NativeFIleService (
         this.windowHandle = windowHandle
     }
 
-    override fun askUserSaveFile(extension: String, description: String): IFileServices.FileOperation {
+    override fun askUserSaveFile(extension: String, description: String): ISystemService.FileOperation {
 
         MemoryStack.stackPush().use { stack ->
             val pointerToFile = stack.mallocPointer(1)
@@ -50,7 +48,7 @@ class NativeFIleService (
     }
 
 
-    override fun askUserChooseFile(extension: String, description: String): IFileServices.FileOperation {
+    override fun askUserChooseFile(extension: String, description: String): ISystemService.FileOperation {
         MemoryStack.stackPush().use { stack ->
 
             val pointerToFile = stack.mallocPointer(1)
@@ -65,17 +63,17 @@ class NativeFIleService (
         }
     }
 
-    private fun validateResult(result: Int, resource: Long) : IFileServices.FileOperation {
+    private fun validateResult(result: Int, resource: Long) : ISystemService.FileOperation {
         if (result == NativeFileDialog.NFD_OKAY) {
             Logger.info { "Success - NFD returned Okay" }
             val path = MemoryUtil.memUTF8(resource)
             NativeFileDialog.NFD_FreePath(resource)
 
-            return IFileServices.FileOperation.FileRetrieved(File(path))
+            return ISystemService.FileOperation.FileRetrieved(File(path))
         }
 
         Logger.error { "NFD input failed" }
-        return IFileServices.FileOperation.Error
+        return ISystemService.FileOperation.Error
     }
 
     private fun getWindowHandle() : NFDWindowHandle {
@@ -98,5 +96,26 @@ class NativeFIleService (
         win.type(platform.toLong())
 
         return win
+    }
+
+    override fun setClipboardContent(content: String) {
+        GLFW.glfwSetClipboardString(windowHandle, content)
+    }
+
+    override fun getClipboardContent(): String? {
+        return GLFW.glfwGetClipboardString(windowHandle)
+    }
+
+
+    override fun openResource(resourceLocation: String) {
+        val os = System.getProperty("os.name").lowercase(getDefault())
+        var pb: ProcessBuilder? = null
+
+        if (os.contains("linux")) {
+            pb = ProcessBuilder("xdg-open", resourceLocation)
+        }
+
+        pb?.redirectErrorStream(true)
+        pb?.start()
     }
 }
