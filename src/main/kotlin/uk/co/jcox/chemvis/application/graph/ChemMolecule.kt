@@ -11,6 +11,8 @@ import org.openscience.cdk.interfaces.IAtom
 import org.openscience.cdk.interfaces.IAtomContainer
 import org.openscience.cdk.interfaces.IBond
 import org.openscience.cdk.silent.MolecularFormula
+import org.openscience.cdk.smiles.SmiFlavor
+import org.openscience.cdk.smiles.SmilesGenerator
 import org.openscience.cdk.tools.CDKHydrogenAdder
 import org.openscience.cdk.tools.manipulator.AtomContainerManipulator
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
@@ -153,5 +155,10 @@ class ChemMolecule (
     fun getMolecularWeight() : Double {
         val mass = AtomContainerManipulator.getMass(iContainer)
         return mass
+    }
+
+    fun getCanonicalString() : String {
+        val generator = SmilesGenerator(SmiFlavor.Canonical)
+        return generator.create(iContainer)
     }
 }

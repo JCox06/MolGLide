@@ -64,6 +64,10 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private fun init() {
         Logger.info{"Starting CV3D Engine..."}
 
+
+        //Find a way to make AWT run headless
+//        System.setProperty("java.awt.headless", "true")
+
         GLFW.glfwSetErrorCallback { code: Int, desc: Long ->
             Logger.error { "[GLFW ERROR] " + code + GLFWErrorCallback.getDescription(desc) }
         }

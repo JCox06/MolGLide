@@ -9,6 +9,7 @@ import imgui.type.ImString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.checkerframework.checker.units.qual.mol
 import org.openscience.cdk.config.Elements
 import org.openscience.cdk.depict.DepictionGenerator
 import org.openscience.cdk.interfaces.IBond
@@ -25,6 +26,8 @@ import uk.co.jcox.chemvis.application.moleditorstate.action.AtomDeletionAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.FlipBondAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.InsertExplicitMethylAction
 import java.awt.Desktop
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import java.io.File
 
 class ClickMenu (
@@ -200,6 +203,12 @@ class ClickMenu (
             if (ImGui.menuItem("SVG Molecule Export")) {
                 activePopup = ActivePopup.CDKSVGExporter(molecule)
                 }
+
+            if (ImGui.menuItem("Copy SMILES")) {
+                val stringSelection = StringSelection(molecule.getCanonicalString())
+                val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+                clipboard.setContents(stringSelection, null)
+            }
             ImGui.endMenu()
             }
         }
