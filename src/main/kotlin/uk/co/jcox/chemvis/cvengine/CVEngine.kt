@@ -8,26 +8,19 @@ import imgui.flag.ImGuiConfigFlags
 import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.SupervisorJob
 import org.joml.Vector2f
 import org.joml.Vector2i
 import org.lwjgl.glfw.Callbacks
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFWErrorCallback
-import org.lwjgl.opengl.GL
-import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL20
-import org.lwjgl.opengl.GL30
-import org.lwjgl.opengl.GL33
-import org.lwjgl.opengl.GL43
-import org.lwjgl.opengl.GLDebugMessageCallback
+import org.lwjgl.opengl.*
 import org.lwjgl.system.Callback
 import org.tinylog.Logger
 import java.io.File
 import java.lang.AutoCloseable
-import java.util.concurrent.ConcurrentLinkedDeque
+import java.net.URI
+import java.util.Locale.getDefault
 
 class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private val lwjglErrorCallback: Callback? = null
@@ -64,9 +57,7 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
     private fun init() {
         Logger.info{"Starting CV3D Engine..."}
 
-
-        //Find a way to make AWT run headless
-//        System.setProperty("java.awt.headless", "true")
+        System.setProperty("java.awt.headless", "true")
 
         GLFW.glfwSetErrorCallback { code: Int, desc: Long ->
             Logger.error { "[GLFW ERROR] " + code + GLFWErrorCallback.getDescription(desc) }
@@ -435,6 +426,27 @@ class CVEngine(private val name: String) : ICVServices, AutoCloseable {
 
     override fun getMetrics(): CVMetrics {
         return metrics
+    }
+
+    override fun setClipboardContent(content: String) {
+        GLFW.glfwSetClipboardString(windowHandle, content)
+    }
+
+    override fun getClipboardContent(): String? {
+        return GLFW.glfwGetClipboardString(windowHandle)
+    }
+
+
+    override fun openResource(resourceLocation: String) {
+        val os = System.getProperty("os.name").lowercase(getDefault())
+        var pb: ProcessBuilder? = null
+
+        if (os.contains("linux")) {
+            pb = ProcessBuilder("xdg-open", resourceLocation)
+        }
+
+        pb?.redirectErrorStream(true)
+        pb?.start()
     }
 
     companion object {

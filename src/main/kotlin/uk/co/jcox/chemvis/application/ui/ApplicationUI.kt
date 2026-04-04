@@ -123,7 +123,7 @@ class ApplicationUI (
                 molphoto.mkdir()
             }
 
-            Utils.saveBufferToImg(File(molphoto.toString(), dateTime.toString()), imgBuff, width, height)
+            Utils.saveBufferToImg(File(molphoto.toString(), dateTime.toString()), imgBuff, width, height, engineManager)
         }
 
         val thread = Thread(saveImgThread)

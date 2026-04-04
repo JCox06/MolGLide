@@ -1,6 +1,7 @@
 package uk.co.jcox.chemvis.application.ui
 
 import org.tinylog.Logger
+import uk.co.jcox.chemvis.cvengine.ICVServices
 import java.awt.Desktop
 import java.awt.image.BufferedImage
 import java.io.File
@@ -10,7 +11,7 @@ import javax.imageio.ImageIO
 
 object Utils {
 
-    fun saveBufferToImg(file: File, imgBuff: IntBuffer, width: Int, height: Int) {
+    fun saveBufferToImg(file: File, imgBuff: IntBuffer, width: Int, height: Int, services: ICVServices) {
 
 
         val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
@@ -32,6 +33,6 @@ object Utils {
         } catch (e: IOException) {
             Logger.error { "Error when saving image ${e.message}"}
         }
-        Desktop.getDesktop().open(file)
+        services.openResource(file.absolutePath.toString())
     }
 }

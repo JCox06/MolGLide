@@ -25,6 +25,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomDeletionAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.FlipBondAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.InsertExplicitMethylAction
+import uk.co.jcox.chemvis.cvengine.ICVServices
 import java.awt.Desktop
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
@@ -35,6 +36,7 @@ class ClickMenu (
     private val actionManager: ActionManager,
     private val levelContainer: LevelContainer,
     private val engineScope: CoroutineScope,
+    private val services: ICVServices,
 ) {
 
     var showBondMenu = false
@@ -205,9 +207,8 @@ class ClickMenu (
                 }
 
             if (ImGui.menuItem("Copy SMILES")) {
-                val stringSelection = StringSelection(molecule.getCanonicalString())
-                val clipboard = Toolkit.getDefaultToolkit().systemClipboard
-                clipboard.setContents(stringSelection, null)
+                val content = molecule.getCanonicalString()
+                services.setClipboardContent(content)
             }
             ImGui.endMenu()
             }

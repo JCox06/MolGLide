@@ -35,7 +35,7 @@ class OrganicEditorState (
     val actionManager = ActionManager(levelContainer)
     val camera = Camera2D(renderingContext.getWidth().toInt(), renderingContext.getHeight().toInt())
     val selectionManager = SelectionManager()
-    val clickMenu = ClickMenu(selectionManager, actionManager, levelContainer, services.getMainEngineScope())
+    val clickMenu = ClickMenu(selectionManager, actionManager, levelContainer, services.getMainEngineScope(), services)
 
     private val commonRenderer = CommonRenderer(levelContainer, themeStyleManager)
 

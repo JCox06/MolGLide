@@ -2,6 +2,8 @@ package uk.co.jcox.chemvis.cvengine
 
 import kotlinx.coroutines.CoroutineScope
 import org.joml.Vector2i
+import java.io.File
+import java.net.URI
 
 /**
  * This class is implemented by the main engine class (CVEngine)
@@ -54,4 +56,10 @@ interface ICVServices {
     fun getFileServices() : IFileServices
 
     fun getMetrics() : CVMetrics
+
+    fun setClipboardContent(content: String)
+
+    fun getClipboardContent() : String?
+
+    fun openResource(resourceLocation: String)
 }

@@ -245,7 +245,7 @@ class MenuBar(val appManager: MainState, val engineManager: ICVServices) {
 
     private fun drawAboutMenu() {
         if (ImGui.menuItem("${Icons.GITHUB_ICON} Visit Repository")) {
-            Desktop.getDesktop().browse(URI(MolGLide.WEBSITE))
+            engineManager.openResource(MolGLide.WEBSITE)
         }
 
         if (ImGui.menuItem("About MolGLide")) {
