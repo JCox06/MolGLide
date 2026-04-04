@@ -80,6 +80,22 @@ class AtomInsertionAction (
 
     }
 
+    override fun redo(levelContainer: LevelContainer) {
+
+        val bondResotre = newLevelBond
+        val atomRestore = newLevelAtom
+
+        if (bondResotre == null || atomRestore == null) {
+            return
+        }
+
+        wasVisibleBefore = srcAtom.visible
+        //Turn off required hydrogens
+        disableHydrogensForCarbon(levelContainer)
+
+        srcMol.addAtom(atomRestore)
+        srcMol.addBond(bondResotre)
+    }
 
     private fun disableHydrogensForCarbon(levelContainer: LevelContainer) {
         val srcAtomSymbol = srcAtom.getSymbol()

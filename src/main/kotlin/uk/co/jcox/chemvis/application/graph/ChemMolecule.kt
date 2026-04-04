@@ -48,10 +48,26 @@ class ChemMolecule (
         return chemAtom
     }
 
+    fun addAtom(chemAtom: ChemAtom) : ChemAtom {
+        atoms.add(chemAtom)
+        chemAtom.parent = this
+        iContainer.addAtom(chemAtom.iAtom)
+        calculateAtomTypes()
+        return chemAtom
+    }
+
     fun addBond(atomA: ChemAtom, atomB: ChemAtom, iBond: IBond) : ChemBond {
         val chemBond = ChemBond(atomA, atomB, iBond)
         bonds.add(chemBond)
         iContainer.addBond(iBond)
+        calculateAtomTypes()
+
+        return chemBond
+    }
+
+    fun addBond(chemBond: ChemBond) : ChemBond {
+        bonds.add(chemBond)
+        iContainer.addBond(chemBond.iBond)
         calculateAtomTypes()
 
         return chemBond

@@ -78,5 +78,7 @@ class WelcomeUI (
             showCVMetrics = false
         }
         ImGui.end()
+
+        ImGui.showMetricsWindow()
     }
 }

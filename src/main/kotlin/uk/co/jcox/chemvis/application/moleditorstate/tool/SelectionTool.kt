@@ -64,6 +64,10 @@ class SelectionTool(toolViewUI: ToolViewUI,
 
     }
 
+    override fun onCustomTransientUIRender() {
+        println("Hello World")
+    }
+
     sealed class Mode {
         object None : Mode()
         class AtomDrag(val atom: ChemAtom, val startX: Float, val startY: Float) : Mode()

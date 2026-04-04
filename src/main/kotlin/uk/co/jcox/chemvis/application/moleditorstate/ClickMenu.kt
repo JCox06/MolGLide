@@ -6,23 +6,12 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiKey
 import imgui.type.ImBoolean
 import imgui.type.ImString
-import jdk.internal.org.jline.keymap.KeyMap.display
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.checkerframework.checker.units.qual.mol
-import org.lwjgl.BufferUtils
-import org.lwjgl.PointerBuffer
-import org.lwjgl.system.MemoryStack
-import org.lwjgl.util.nfd.NativeFileDialog
-import org.openscience.cdk.Atom
-import org.openscience.cdk.Element
 import org.openscience.cdk.config.Elements
 import org.openscience.cdk.depict.DepictionGenerator
 import org.openscience.cdk.interfaces.IBond
-import org.openscience.cdk.io.MDLRXNWriter
-import org.openscience.cdk.isomorphism.TransformOp
-import org.tinylog.Level
 import uk.co.jcox.chemvis.application.graph.ChemBond
 import uk.co.jcox.chemvis.application.graph.ChemMolecule
 import uk.co.jcox.chemvis.application.graph.LevelContainer
@@ -32,11 +21,11 @@ import uk.co.jcox.chemvis.application.moleditorstate.action.CentreBondAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeAromacityAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeBondOrderAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.AtomDeletionAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.FlipBondAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.InsertExplicitMethylAction
 import java.awt.Desktop
 import java.io.File
-import java.nio.ByteBuffer
 
 class ClickMenu (
     private val selectionManager: SelectionManager,
@@ -245,7 +234,8 @@ class ClickMenu (
             ImGui.separator()
 
             if (ImGui.menuItem("Delete")) {
-                TODO("Create Delete Action")
+                val action = AtomDeletionAction(selection.atom)
+                actionManager.executeAction(action)
             }
 
             ImGui.separator()

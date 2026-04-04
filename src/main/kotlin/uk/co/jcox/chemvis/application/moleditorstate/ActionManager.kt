@@ -11,11 +11,17 @@ class ActionManager (
     private val discardedActions = ArrayDeque<IAction>()
     var isDirty = true
     private set
+    private var restartQueue = false
 
     fun executeAction(action: IAction) {
         action.execute(levelContainer)
         pastActions.addLast(action)
         isDirty = true
+
+        if (restartQueue) {
+            discardedActions.clear()
+            restartQueue = false
+        }
     }
 
 
@@ -25,6 +31,7 @@ class ActionManager (
             last.undo(levelContainer)
             discardedActions.addLast(last)
             isDirty = true
+            restartQueue = true
         }
     }
 

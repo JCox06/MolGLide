@@ -85,6 +85,8 @@ class OrganicEditorState (
         if (selection is SelectionManager.Type.ActiveBond && transientTool.allowIndividualBondInteractions()) {
             renderTransientSelectionMarker(services.resourceManager(), selection.bond.getMidpoint(), false)
         }
+
+        transientTool.onCustomTransientUIRender()
     }
 
 
