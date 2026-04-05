@@ -54,6 +54,8 @@ class AtomDeletionAction (private val atomToDelete: ChemAtom) : IAction {
         if (deletionMethod !is DeletionMethod.PathDelete) {
             super.redo(levelContainer)
         }
+
+        //Special Redo is required so that the molecule reference is still valid after being removed, and previous undo and redo operations still work
         val method = deletionMethod
         if (method is DeletionMethod.PathDelete) {
             method.moleculeModified.removeAtom(method.atomRemoved)

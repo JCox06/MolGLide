@@ -21,6 +21,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeAromacityActio
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeBondOrderAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.ChangeStereoAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.AtomDeletionAction
+import uk.co.jcox.chemvis.application.moleditorstate.action.BondDeletionAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.FlipBondAction
 import uk.co.jcox.chemvis.application.moleditorstate.action.InsertExplicitMethylAction
 import uk.co.jcox.chemvis.cvengine.ICVServices
@@ -183,7 +184,8 @@ class ClickMenu (
             ImGui.separator()
 
             if (ImGui.menuItem("Delete")) {
-                TODO("Create Delete Option")
+                val action = BondDeletionAction(bond)
+                actionManager.executeAction(action)
             }
 
             ImGui.separator()
