@@ -1,12 +1,14 @@
 package uk.co.jcox.chemvis.application.graph
 
 import org.apache.commons.logging.Log
+import org.apache.jena.vocabulary.OWLTest.level
 import org.joml.Vector2f
 import org.joml.Vector3f
 import org.openscience.cdk.AtomContainer
 import org.openscience.cdk.CDK
 import org.openscience.cdk.atomtype.CDKAtomTypeMatcher
 import org.openscience.cdk.exception.CDKException
+import org.openscience.cdk.graph.ConnectivityChecker
 import org.openscience.cdk.interfaces.IAtom
 import org.openscience.cdk.interfaces.IAtomContainer
 import org.openscience.cdk.interfaces.IBond
@@ -18,6 +20,8 @@ import org.openscience.cdk.tools.manipulator.AtomContainerManipulator
 import org.openscience.cdk.tools.manipulator.AtomTypeManipulator
 import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator
 import org.tinylog.Logger
+import uk.co.jcox.chemvis.application.data.LevelLoader
+import uk.co.jcox.chemvis.application.data.LevelSerializer
 import uk.co.jcox.chemvis.application.moleditorstate.AtomInsert
 import uk.co.jcox.chemvis.application.moleditorstate.OrganicEditorState
 import java.util.UUID
@@ -160,5 +164,35 @@ class ChemMolecule (
     fun getCanonicalString() : String {
         val generator = SmilesGenerator(SmiFlavor.Canonical)
         return generator.create(iContainer)
+    }
+
+    fun isFragmented() : Boolean {
+        return !ConnectivityChecker.isConnected(this.iContainer)
+    }
+
+    /**
+     * Returns a new level containing a list of fragments from this molecule after bond cleavage
+     */
+    fun splitIntoFragments() : List<ChemMolecule> {
+        if (! isFragmented()) {
+            return emptyList()
+        }
+
+        val containers = mutableListOf<ChemMolecule>()
+        val levelSerializer = LevelSerializer()
+        val levelLoader = LevelLoader()
+
+        val cdkFragments = ConnectivityChecker.partitionIntoMolecules(iContainer)
+        cdkFragments.forEach { cdkFragment ->
+            //Find the bonds that are specific to this fragment from the original container
+            val specificAtoms = atoms.filter { cdkFragment.atoms().contains(it.iAtom) }
+            val specificBonds = bonds.filter { cdkFragment.bonds().contains(it.iBond) }
+
+            val dataSaveFile = levelSerializer.serializeSpecificMoleculeData(this, specificAtoms, specificBonds)
+            val newLevel = levelLoader.reconstructCDKLevel(dataSaveFile)
+            containers.addAll(newLevel.sceneMolecules)
+        }
+
+        return containers
     }
 }

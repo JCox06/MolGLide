@@ -34,7 +34,7 @@ class LevelLoader {
         return level
     }
 
-    private fun reconstructCDKLevel(saveFile: DataSaveFile) : LevelContainer {
+    fun reconstructCDKLevel(saveFile: DataSaveFile) : LevelContainer {
         val levelContainer = LevelContainer()
         val levelActionBuilder = ActionManager(levelContainer)
 

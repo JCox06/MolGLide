@@ -1,5 +1,6 @@
 package uk.co.jcox.chemvis.application.moleditorstate.action
 
+import org.openscience.cdk.graph.ConnectivityChecker
 import org.openscience.cdk.ringsearch.RingSearch
 import uk.co.jcox.chemvis.application.graph.ChemAtom
 import uk.co.jcox.chemvis.application.graph.ChemBond
@@ -31,22 +32,13 @@ class AtomDeletionAction (private val atomToDelete: ChemAtom) : IAction {
 
             return
         }
-
-        val ringSearch = RingSearch(atomToDelete.parent.iContainer)
-        if (bondCount == 2) {
-            val result = ringSearch.cyclic(atomToDelete.iAtom)
-            //The two bonds MUST be both cyclic if result is true
-            if (!result) {
-                return
-            }
-            val bondsFound = atomToDelete.parent.bonds.filter { it.atomA == atomToDelete || it.atomB == atomToDelete }
-            val method = DeletionMethod.PathDelete(atomToDelete.parent, atomToDelete, bondsFound[0], bondsFound[1])
+        if (bondCount > 1) { val bondsFound = atomToDelete.parent.bonds.filter { it.atomA == atomToDelete || it.atomB == atomToDelete }
+            val method = DeletionMethod.PathDelete(atomToDelete.parent, atomToDelete, bondsFound, null)
             deletionMethod = method
             deletePathAtom(levelContainer, method)
 
             return
         }
-
     }
 
     override fun undo(levelContainer: LevelContainer) {
@@ -56,6 +48,22 @@ class AtomDeletionAction (private val atomToDelete: ChemAtom) : IAction {
             is DeletionMethod.TerminalDelete -> restoreTerminalAtom(levelContainer, method)
             is DeletionMethod.PathDelete -> restorePathAtom(levelContainer, method)
         }
+    }
+
+    override fun redo(levelContainer: LevelContainer) {
+        if (deletionMethod !is DeletionMethod.PathDelete) {
+            super.redo(levelContainer)
+        }
+        val method = deletionMethod
+        if (method is DeletionMethod.PathDelete) {
+            method.moleculeModified.removeAtom(method.atomRemoved)
+            method.bondsRemoved.forEach { method.moleculeModified.removeBond(it) }
+
+            levelContainer.sceneMolecules.remove((method.moleculeModified))
+            method.fragmentsPlaced?.let { levelContainer.sceneMolecules.addAll(it)}
+        }
+
+
     }
 
     private fun deleteDiscreteAtom(levelContainer: LevelContainer, method: DeletionMethod.DiscreteDelete) {
@@ -78,14 +86,23 @@ class AtomDeletionAction (private val atomToDelete: ChemAtom) : IAction {
 
     private fun deletePathAtom(levelContainer: LevelContainer, method: DeletionMethod.PathDelete) {
         method.moleculeModified.removeAtom(method.atomRemoved)
-        method.moleculeModified.removeBond(method.bondRemovedA)
-        method.moleculeModified.removeBond(method.bondRemovedB)
+        method.bondsRemoved.forEach { method.moleculeModified.removeBond(it) }
+
+        //Find fragments of the molecule that are no longer connected - If everything is connected just ignore
+        if (method.moleculeModified.isFragmented()) {
+            val fragments = method.moleculeModified.splitIntoFragments()
+            levelContainer.sceneMolecules.remove(method.moleculeModified)
+            levelContainer.sceneMolecules.addAll(fragments)
+            method.fragmentsPlaced = fragments
+        }
     }
 
     private fun restorePathAtom(levelContainer: LevelContainer, method: DeletionMethod.PathDelete) {
         method.moleculeModified.addAtom(method.atomRemoved)
-        method.moleculeModified.addBond(method.bondRemovedA)
-        method.moleculeModified.addBond(method.bondRemovedB)
+        method.bondsRemoved.forEach { method.moleculeModified.addBond(it) }
+
+        levelContainer.sceneMolecules.add((method.moleculeModified))
+        method.fragmentsPlaced?.let { levelContainer.sceneMolecules.removeAll(it)}
     }
 
     //Returns the number of bonds, does not include implicit hydrogens!
@@ -93,11 +110,12 @@ class AtomDeletionAction (private val atomToDelete: ChemAtom) : IAction {
         return atomToDelete.parent.iContainer.getConnectedBondsCount(atomToDelete.iAtom)
     }
 
+
     private sealed class DeletionMethod {
         object None: DeletionMethod()
         class DiscreteDelete(val moleculeRemoved: ChemMolecule) : DeletionMethod() //Delete an atom if its the only atom in a molecule
         class TerminalDelete(val moleculeModified: ChemMolecule, val atomRemoved: ChemAtom, val bondRemoved: ChemBond) : DeletionMethod() //Delete an atom if its connected to a molecule by one bond
-        class PathDelete(val moleculeModified: ChemMolecule, val atomRemoved: ChemAtom, val bondRemovedA: ChemBond, val bondRemovedB: ChemBond) : DeletionMethod() //Delete an atom with two or more connections, where once removed, everythign is still connected through x or more bonds
+        class PathDelete(val moleculeModified: ChemMolecule, val atomRemoved: ChemAtom, val bondsRemoved: List<ChemBond>, var fragmentsPlaced: List<ChemMolecule>?) : DeletionMethod() //Delete an atom with two or more connections, where once removed, everythign is still connected through x or more bonds
         //^^^ Like removing an atom in a ring system, everything is still connected as part of the same molecule
     }
 }
