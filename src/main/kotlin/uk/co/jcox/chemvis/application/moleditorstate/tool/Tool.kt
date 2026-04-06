@@ -14,6 +14,7 @@ import uk.co.jcox.chemvis.application.moleditorstate.SelectionManager
 import uk.co.jcox.chemvis.application.ui.tool.ToolViewUI
 import uk.co.jcox.chemvis.cvengine.CVEngine
 import uk.co.jcox.chemvis.cvengine.Camera2D
+import uk.co.jcox.chemvis.cvengine.ICVServices
 import uk.co.jcox.chemvis.cvengine.IRenderTargetContext
 import uk.co.jcox.chemvis.cvengine.IResourceManager
 import uk.co.jcox.chemvis.cvengine.InputManager
@@ -77,5 +78,5 @@ abstract class Tool<T : ToolViewUI>(
     }
 
     @Deprecated("Temp method while I think of somethign better to handle compelx transient UI")
-    open fun onCustomTransientUIRender() {}
+    open fun onCustomTransientUIRender(services: ICVServices) {}
 }

@@ -1,10 +1,10 @@
-# MolGLide (v0.2.0 - ALPHA)
+# MolGLide (v0.2.1 - ALPHA)
 **MolGLide is an open source simple molecular editor. You can draw simple molecules, and export them _for free_ to png image files.**
 
 >MolGLide is alpha software and is unstable!
 
 MolGLide is a molecular editor or sketcher, written in OpenGL. It is powered by, and interfaces directly with the CDK (Chemistry Development kit). 
-It's a fun little project, that while doesn't have an end goal, I would like to create an actually useful piece of software. See the checklist!
+It's a fun little project, that while doesn't have an end goal, I would like to create a useful piece of software. See the checklist!
 
 -  [x] Create basic molecules by connecting atoms through bonds
 -  [x] Create molecules from common templates (Benzene, Other Rings)
@@ -45,7 +45,7 @@ To build the project make sure you have Java 23 installed.
 6) Now you should have a .jar archive produced in the target directory. 
 7) Run the jar with `java -jar filename.jar`
 
-_Note that only Windows AMD64 and Linux AMD64 are currently supported_
+_Note that only Windows AMD64 and Linux AMD64 are currently supported, but I do provide untested binaries for OS X (Intel and Apple Silicon x64)_
 
 ## Running
 1) Install a JDK 23 (although I have been testing on 17)

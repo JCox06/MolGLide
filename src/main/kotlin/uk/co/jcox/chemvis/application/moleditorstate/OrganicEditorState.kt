@@ -86,7 +86,7 @@ class OrganicEditorState (
             renderTransientSelectionMarker(services.resourceManager(), selection.bond.getMidpoint(), false)
         }
 
-        transientTool.onCustomTransientUIRender()
+        transientTool.onCustomTransientUIRender(services)
     }
 
 

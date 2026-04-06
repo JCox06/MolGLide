@@ -95,7 +95,7 @@ class SelectionManager {
     }
 
     companion object {
-        private const val MIN_SELECTION_DISTANCE = 30.0f
+        private const val MIN_SELECTION_DISTANCE = 15.0f
         private const val MIN_BOND_SELECTION_DISTANCE = MIN_SELECTION_DISTANCE *2f
     }
 }

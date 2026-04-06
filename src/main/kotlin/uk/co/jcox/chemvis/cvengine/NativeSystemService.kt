@@ -13,6 +13,7 @@ import org.lwjgl.util.nfd.NFDWindowHandle
 import org.lwjgl.util.nfd.NativeFileDialog
 import org.tinylog.Logger
 import java.io.File
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.Locale.getDefault
 
@@ -111,11 +112,26 @@ class NativeSystemService (
         val os = System.getProperty("os.name").lowercase(getDefault())
         var pb: ProcessBuilder? = null
 
+        Logger.info { "Operating system detected as ${os}" }
+
         if (os.contains("linux")) {
             pb = ProcessBuilder("xdg-open", resourceLocation)
         }
 
-        pb?.redirectErrorStream(true)
-        pb?.start()
+        if (os.contains("windows")) {
+            pb = ProcessBuilder("rundll32 url.dll,FileProtocolHandler $resourceLocation")
+        }
+
+        if (os.contains("mac")) {
+            pb = ProcessBuilder("open $resourceLocation")
+        }
+
+        try {
+            pb?.redirectErrorStream(true)
+            pb?.start()
+        } catch (e: IOException) {
+            Logger.error("Could not open $resourceLocation", e)
+        }
+
     }
 }
