@@ -89,6 +89,10 @@ class Batch2D (
         this.indices.addAll(mappedIndices)
     }
 
+    fun addBatch(mesh: Mesh) {
+        addBatch(mesh.pack(), mesh.indices)
+    }
+
 
     fun end() : PrimitiveMode {
         if (!this.ready) {

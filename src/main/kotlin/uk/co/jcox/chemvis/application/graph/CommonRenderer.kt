@@ -6,8 +6,7 @@ import org.joml.plus
 import org.joml.times
 import org.joml.unaryMinus
 import org.openscience.cdk.interfaces.IBond
-import org.openscience.cdk.renderer.elements.TextGroupElement
-import org.openscience.cdk.tools.manipulator.MolecularFormulaManipulator.elements
+import kotlin.math.min
 
 
 /**
@@ -98,13 +97,49 @@ class CommonRenderer (
             if (bond.flipDoubleBond) vec.negate()
 
 
+            val valueA = getExtraShorteningModifier(bond, atomA)
+            val valueB = getExtraShorteningModifier(bond, atomB)
+            val highStart = getEffectiveBond(start, end, valueA)
+            val highEnd = getEffectiveBond(end, start, valueB)
+
             if (bond.iBond.order == IBond.Order.DOUBLE || bond.iBond.order == IBond.Order.TRIPLE) {
-                normalLines += applyBondTransform(start, end, vec + modVector)
+                normalLines += applyBondTransform(highStart, highEnd, vec + modVector)
             }
             if (bond.iBond.order == IBond.Order.TRIPLE) {
-                normalLines += applyBondTransform(start, end, -vec + modVector)
+                normalLines += applyBondTransform(highStart, highEnd, -vec + modVector)
+            }
+
+        }
+    }
+
+
+    private fun getExtraShorteningModifier(bond: ChemBond, changingAtom: ChemAtom) : Float {
+        if (bond.centredBond) {
+            return 1.0f
+        }
+
+        var minimumValue = 1.0f
+
+        val bondLength = (bond.atomA.getWorldPosition() - bond.atomB.getWorldPosition()).length()
+
+        //Now shorten based on single bonds around this one
+        //This kind of works, but is more qualitative than quantitative method
+        val molecule = changingAtom.parent
+        val bonds = molecule.getConnectedBonds(changingAtom)
+        bonds.forEach { adjacentBond ->
+            val randomAtom = adjacentBond.getOtherAtom(changingAtom)
+            val distanceAtom = bond.getOtherAtom(changingAtom)
+            if (randomAtom != distanceAtom && randomAtom != null && distanceAtom != null) {
+                val distance = randomAtom.getWorldPosition() - distanceAtom.getWorldPosition()
+                //divide further by two, as the line segment considered is 2 full bond lengths, and so we want a proportion of that
+                val newValue =  distance.length() / bondLength * 0.5f
+                if (newValue < minimumValue) {
+                    minimumValue = newValue
+                }
             }
         }
+
+        return minimumValue
     }
 
 
@@ -152,6 +187,11 @@ class CommonRenderer (
     }
 
 
+    /**
+     * Although bonds have a length from atom X to atom Y
+     * They need to be cut off at the end to ensure the atom level text is not being drawn over
+     * The effective length takes into account, and takes a bond from the benchmark to the changing atom minus a modifier, usually 0.70
+     */
     private fun getEffectiveBond(changingAtom: ChemAtom, benchmark: ChemAtom) : Vector3f {
         if (changingAtom.visible) {
             return getEffectiveBond(changingAtom.getWorldPosition(), benchmark.getWorldPosition())
@@ -159,7 +199,7 @@ class CommonRenderer (
         return changingAtom.getWorldPosition()
     }
 
-    private fun getEffectiveBond(changingAtom: Vector3f, benchmark: Vector3f, factor: Float = 0.75f) : Vector3f {
+    private fun getEffectiveBond(changingAtom: Vector3f, benchmark: Vector3f, factor: Float = 0.70f) : Vector3f {
         val vector = changingAtom - benchmark
         val newPoint = benchmark + (vector * factor)
         return newPoint

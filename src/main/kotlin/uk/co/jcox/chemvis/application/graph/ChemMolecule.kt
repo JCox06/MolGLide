@@ -195,4 +195,10 @@ class ChemMolecule (
 
         return containers
     }
+
+    fun getConnectedBonds(atom: ChemAtom) : List<ChemBond> {
+        val bondList = iContainer.getConnectedBondsList(atom.iAtom)
+        val bondsFound = mutableListOf<ChemBond>()
+        return bonds.filter { bondList.contains(it.iBond) }
+    }
 }

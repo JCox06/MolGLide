@@ -65,4 +65,14 @@ class ChemBond(
             else -> null
         }
     }
+
+    fun getOtherAtom(shared: ChemAtom) : ChemAtom? {
+        if (shared == atomA) {
+            return atomB
+        }
+        if (shared == atomB) {
+            return atomA
+        }
+        return null
+    }
 }
