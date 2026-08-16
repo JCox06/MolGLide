@@ -1,8 +1,14 @@
 # MolGLide (v0.2.1 - ALPHA)
-**MolGLide is an open source simple molecular editor. You can draw simple molecules, and export them _for free_ to png image files.**
+___
 
->MolGLide is alpha software and is unstable!
 
+
+> [!NOTE]
+> **Development has moved to https://github.com/JCox06/MolGLideX ! This version of the software is no longer actively developed!**
+
+
+
+___
 MolGLide is a molecular editor or sketcher, written in OpenGL. It is powered by, and interfaces directly with the CDK (Chemistry Development kit). 
 It's a fun little project, that while doesn't have an end goal, I would like to create a useful piece of software. See the checklist!
 
